@@ -34,9 +34,10 @@ RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
 
 class Evaluator:
-    def __init__(self, agent_version: str = "v2", split_filter: str | None = None) -> None:
+    def __init__(self, agent_version: str = "v2", split_filter: str | None = None, limit: int | None = None) -> None:
         self.version = agent_version
         self.split_filter = split_filter
+        self.limit = limit
         self.runner = AgentRunner(use_mock=True)
 
     async def evaluate_scenario(self, scenario: Dict[str, Any]) -> Dict[str, Any]:
@@ -182,6 +183,12 @@ class Evaluator:
         scenarios = data["scenarios"]
         if self.split_filter:
             scenarios = [s for s in scenarios if s["split"] == self.split_filter]
+        if self.limit:
+            # Credit-discipline smoke test (Overall-plan.md §14: "send a 3-conversation
+            # test batch first and read the credit meter before committing to full-set
+            # tracing"). Every scenario still traces to PRISM if credentials are set --
+            # this only caps how many, it doesn't skip tracing.
+            scenarios = scenarios[: self.limit]
 
         init_db()  # Fresh DB for test run
 
