@@ -76,7 +76,7 @@ async def test_evaluator_traces_masked_replay_text(monkeypatch, tmp_path):
     monkeypatch.setattr(prism_tracer, "TRACES_FILE", trace_file)
     init_db()
 
-    raw_card = "My card number is 4532 0150 1234 5678."
+    raw_card = "My card number is 4111 1111 1111 1111."
     await Evaluator(agent_version="v2", split_filter="dev", limit=1).evaluate_scenario(
         {
             "id": "security-regression",
@@ -105,7 +105,7 @@ async def test_benchmark_runner_traces_masked_replay_text(monkeypatch, tmp_path)
         async def process_turn(self, **_kwargs):
             return {"agent_response": "ok", "state_machine": {"transitions": []}}
 
-    raw_card = "My card number is 4532 0150 1234 5678."
+    raw_card = "My card number is 4111 1111 1111 1111."
     await run_scenario(
         {"id": "security-regression", "category": "F_SPOKEN_IDENTIFIERS", "split": "dev", "turns": [raw_card]},
         version="v2",

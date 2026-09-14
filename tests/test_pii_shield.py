@@ -23,7 +23,7 @@ class TestPIIShield(unittest.TestCase):
             "4532015012345671",      # Visa 16 digits (checksum = 1)
             "4532 0150 1234 5671",  # Visa with spaces
             "4532-0150-1234-5671",  # Visa with dashes
-            "4532 0150 1234 5678",  # Handover brief canonical test card
+            "4111 1111 1111 1111",  # Handover brief canonical test card
             "5412751234123452",      # Mastercard 16 digits
             "378282246310005",       # Amex 15 digits
             "6011111111111117",      # Discover 16 digits
@@ -76,11 +76,11 @@ class TestPIIShield(unittest.TestCase):
     # -------------------------------------------------------------
     def test_redact_card_in_fnol_transcript(self):
         # Example from docs/HANDOVER.md §4.1
-        raw = "Wait, don't send the tow truck, my cousin just showed up! Mera card number 4532 0150 1234 5678 hai for claim."
+        raw = "Wait, don't send the tow truck, my cousin just showed up! Mera card number 4111 1111 1111 1111 hai for claim."
         result = self.shield.mask(raw)
 
         self.assertIn("[CARD REDACTED]", result.masked_transcript)
-        self.assertNotIn("4532 0150 1234 5678", result.masked_transcript)
+        self.assertNotIn("4111 1111 1111 1111", result.masked_transcript)
         self.assertEqual(len(result.redacted_pii), 1)
         self.assertEqual(result.redacted_pii[0].type, "CARD_NUMBER")
         self.assertTrue(result.redacted_pii[0].valid_luhn)
@@ -153,7 +153,7 @@ class TestPIIShield(unittest.TestCase):
         self.assertNotIn("[CARD REDACTED]", res.masked_transcript)
 
     def test_convenience_function(self):
-        res = redact_pii("Card 4532 0150 1234 5678")
+        res = redact_pii("Card 4111 1111 1111 1111")
         self.assertIn("[CARD REDACTED]", res.masked_transcript)
 
 

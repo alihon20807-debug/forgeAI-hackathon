@@ -52,7 +52,7 @@
     "category": "B_TRUE_REVOCATION",
     "filename": "clip_05_cat_b_revocation.wav",
     "duration_sec": 4.2,
-    "transcript": "Wait, don't send the tow truck, my cousin just showed up! Mera card number 4532 0150 1234 5678 hai for claim.",
+    "transcript": "Wait, don't send the tow truck, my cousin just showed up! Mera card number 4111 1111 1111 1111 hai for claim.",
     "has_pii": true,
     "pii_types": [
       "CARD_NUMBER"
@@ -227,7 +227,7 @@
     "category": "F_SPOKEN_IDENTIFIERS",
     "filename": "clip_19_cat_f_card_visa.wav",
     "duration_sec": 4.3,
-    "transcript": "Charge towing to my corporate Visa card 4532 0150 1234 5678 expiring next year.",
+    "transcript": "Charge towing to my corporate Visa card 4111 1111 1111 1111 expiring next year.",
     "has_pii": true,
     "pii_types": [
       "CARD_NUMBER"

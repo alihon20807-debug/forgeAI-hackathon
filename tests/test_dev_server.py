@@ -22,14 +22,14 @@ class TestDevServerAPI(unittest.TestCase):
             "session_id": "cg-sess-test-01",
             "turn_id": 3,
             "caller_id": "caller_test",
-            "raw_transcript": "Wait, don't send the tow truck, my cousin just showed up! Mera card number 4532 0150 1234 5678 hai for claim."
+            "raw_transcript": "Wait, don't send the tow truck, my cousin just showed up! Mera card number 4111 1111 1111 1111 hai for claim."
         }
         resp = self.client.post("/api/call/turn", json=payload)
         self.assertEqual(resp.status_code, 200)
         data = resp.json()
 
         self.assertIn("[CARD REDACTED]", data["masked_transcript"])
-        self.assertNotIn("4532 0150 1234 5678", data["masked_transcript"])
+        self.assertNotIn("4111 1111 1111 1111", data["masked_transcript"])
         self.assertEqual(len(data["redacted_pii"]), 1)
         self.assertEqual(data["redacted_pii"][0]["type"], "CARD_NUMBER")
 

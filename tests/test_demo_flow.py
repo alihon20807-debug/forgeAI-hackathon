@@ -61,7 +61,7 @@ def test_full_demo_flow():
         # -------------------------------------------------------------
         # Turn 2: Revocation + Spoken Card Leak (Hero Beat)
         # -------------------------------------------------------------
-        t2_text = "Wait, don't send the tow truck, my cousin just showed up! Mera card number 4532 0150 1234 5678 hai for claim."
+        t2_text = "Wait, don't send the tow truck, my cousin just showed up! Mera card number 4111 1111 1111 1111 hai for claim."
         r2 = client.post("/api/call/turn", json={
             "session_id": session_id,
             "turn_id": 2,

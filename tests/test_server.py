@@ -81,10 +81,10 @@ def test_turn_handover_contract_cat_b_revocation(client):
         "session_id": session_id,
         "turn_id": 2,
         "caller_id": "caller_9921",
-        "raw_transcript": "Wait, don't send the tow truck, my cousin just showed up! Mera card number 4532 0150 1234 5678 hai for claim.",
+        "raw_transcript": "Wait, don't send the tow truck, my cousin just showed up! Mera card number 4111 1111 1111 1111 hai for claim.",
         "masked_transcript": "Wait, don't send the tow truck, my cousin just showed up! Mera card number [CARD REDACTED] hai for claim.",
         "redacted_pii": [
-            {"type": "CARD_NUMBER", "matched": "4532 0150 1234 5678", "valid_luhn": True}
+            {"type": "CARD_NUMBER", "matched": "4111 1111 1111 1111", "valid_luhn": True}
         ],
         "agent_version": "v2",
     }

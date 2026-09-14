@@ -268,7 +268,7 @@
       "policy_number": "NH-8821",
       "turns": [
         "My car broke down near Gurgaon expressway exit 8. Send a flatbed.",
-        "Wait, don't send the tow truck, my cousin just showed up! Mera card number 4532 0150 1234 5678 hai for claim."
+        "Wait, don't send the tow truck, my cousin just showed up! Mera card number 4111 1111 1111 1111 hai for claim."
       ],
       "expected_dispatch": "ABORTED",
       "expected_claim": "OPEN_UNASSIGNED",
@@ -712,7 +712,7 @@
       "split": "dev",
       "policy_number": "NH-8821",
       "turns": [
-        "Mera card number 4532 0150 1234 5678 hai, tow truck bhejo near Manesar."
+        "Mera card number 4111 1111 1111 1111 hai, tow truck bhejo near Manesar."
       ],
       "expected_dispatch": "COMMITTED",
       "expected_claim": "OPEN_UNASSIGNED",
@@ -760,7 +760,7 @@
       "split": "heldout",
       "policy_number": "NH-8821",
       "turns": [
-        "Write down my card number 4532015012345678 to pay the deductible now."
+        "Write down my card number 4111111111111111 to pay the deductible now."
       ],
       "expected_dispatch": "COMMITTED",
       "expected_claim": "OPEN_UNASSIGNED",

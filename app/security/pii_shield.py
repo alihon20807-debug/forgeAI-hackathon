@@ -43,25 +43,24 @@ VERHOEFF_P = [
 # Verhoeff Inverse Table
 VERHOEFF_INV = [0, 4, 3, 2, 1, 5, 6, 7, 8, 9]
 
-# Canonical hackathon sample vectors specified in docs/HANDOVER.md §4.1
-CANONICAL_TEST_CARDS = {
-    "4532015012345678",  # Specified directly in docs/HANDOVER.md §4.1 turn example
-}
-
-
 def validate_luhn(number_str: str) -> bool:
     """Validates whether a digit sequence passes the Luhn checksum algorithm.
-    
-    Accepts raw strings (non-digits stripped). Returns True if valid length (13-19)
-    and check formula holds (or matches canonical hackathon test vector).
+
+    Accepts raw strings (non-digits stripped). Returns True if valid length
+    (13-19) and the real check formula holds -- no hardcoded exceptions.
+    The project's canonical demo card, 4111 1111 1111 1111, is the
+    industry-standard dummy Visa test number and genuinely passes this
+    check on its own merits (verified: checksum total 30, divisible by 10).
+    An earlier version of this project used a different demo number
+    (4532 0150 1234 5678) that does NOT actually satisfy Luhn (checksum
+    total 57) and special-cased it into always validating -- a real
+    correctness bug in the exact module whose entire claim is "mathematical
+    validation, not a suggestion." Fixed by switching the demo number
+    project-wide rather than special-casing a number that fails the math.
     """
     clean_digits = [int(c) for c in number_str if c.isdigit()]
     if len(clean_digits) < 13 or len(clean_digits) > 19:
         return False
-    
-    raw_digits_str = "".join(str(d) for d in clean_digits)
-    if raw_digits_str in CANONICAL_TEST_CARDS:
-        return True
 
     total = 0
     reversed_digits = clean_digits[::-1]
@@ -157,7 +156,7 @@ class PIIShield:
     TAG_PHONE = "[PHONE REDACTED]"
 
     # Card patterns: 13-19 digits, possibly separated by spaces or hyphens
-    # Matches groups like 4532 0150 1234 5678 or 4532-0150-1234-5678 or continuous 13-19 digits
+    # Matches groups like 4111 1111 1111 1111 or 4532-0150-1234-5678 or continuous 13-19 digits
     CARD_REGEX = re.compile(
         r"(?<!\d)(?:\d{4}[ -]\d{4}[ -]\d{4}[ -]\d{1,7}|\d{4}[ -]\d{6}[ -]\d{4,5}|\d{13,19})(?!\d)"
     )

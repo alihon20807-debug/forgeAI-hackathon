@@ -10,7 +10,7 @@ class TestVoiceTranscriber(unittest.TestCase):
 
     def test_mock_transcribe_audio_bytes_pii_shielding(self):
         # Transcribing simulated audio should return mock turns and mask PII
-        # Golden scenario B has card number 4532 0150 1234 5678
+        # Golden scenario B has card number 4111 1111 1111 1111
         # Rotate until scenario B is processed
         found_b = False
         for _ in range(len(GOLDEN_MOCK_SCENARIOS) + 1):
@@ -18,7 +18,7 @@ class TestVoiceTranscriber(unittest.TestCase):
             if "cousin just showed up" in res.raw_transcript:
                 found_b = True
                 self.assertIn("[CARD REDACTED]", res.masked_transcript)
-                self.assertNotIn("4532 0150 1234 5678", res.masked_transcript)
+                self.assertNotIn("4111 1111 1111 1111", res.masked_transcript)
                 self.assertEqual(len(res.redacted_pii), 1)
                 self.assertEqual(res.redacted_pii[0]["type"], "CARD_NUMBER")
                 break

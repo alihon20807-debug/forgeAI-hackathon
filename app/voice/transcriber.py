@@ -36,7 +36,7 @@ GOLDEN_MOCK_SCENARIOS = [
     {
         "id": "scenario_b_revocation",
         "category": "B_TRUE_REVOCATION",
-        "transcript": "Wait, don't send the tow truck, my cousin just showed up! Mera card number 4532 0150 1234 5678 hai for claim.",
+        "transcript": "Wait, don't send the tow truck, my cousin just showed up! Mera card number 4111 1111 1111 1111 hai for claim.",
     },
     {
         "id": "scenario_c_trap",

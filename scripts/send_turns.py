@@ -28,7 +28,7 @@ send_turn(1, "Hello, my car broke down near Manesar on NH48. Can you send a flat
 
 # Turn 2
 print("Sending Turn 2...")
-send_turn(2, "Wait, don't send the tow truck, my cousin just showed up! Mera card number 4532 0150 1234 5678 hai for claim.")
+send_turn(2, "Wait, don't send the tow truck, my cousin just showed up! Mera card number 4111 1111 1111 1111 hai for claim.")
 
 # Take screenshot of viewer
 time.sleep(1)
