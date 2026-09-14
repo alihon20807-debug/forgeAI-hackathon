@@ -132,6 +132,78 @@ class AgentRunner:
         )
         return {"reply": reply, "tools_called": []}
 
+    @staticmethod
+    def _safe_parse_json(args_raw: Any) -> Dict[str, Any]:
+        """Safely parse tool call arguments from raw strings, dicts, or markdown wrappers."""
+        if isinstance(args_raw, dict):
+            return args_raw
+        if not args_raw or not isinstance(args_raw, str):
+            return {}
+        text = args_raw.strip()
+        if text.startswith("```json"):
+            text = text[7:]
+        elif text.startswith("```"):
+            text = text[3:]
+        if text.endswith("```"):
+            text = text[:-3]
+        text = text.strip()
+        try:
+            return json.loads(text)
+        except Exception:
+            logger.warning(f"Failed to parse tool arguments JSON: {args_raw[:100]}")
+            return {}
+
+    @staticmethod
+    def _extract_text_tool_calls(content: str) -> List[Dict[str, Any]]:
+        """Extract tool calls emitted as XML tags or JSON blocks in text content by local models."""
+        if not content:
+            return []
+        import re
+        tool_calls = []
+
+        # 1. XML style: <tool_call><function=NAME>...<parameter=KEY>VAL</parameter>...</function></tool_call>
+        xml_blocks = re.findall(r"<tool_call>(.*?)</tool_call>", content, re.DOTALL)
+        if not xml_blocks:
+            xml_blocks = re.findall(r"(<function=.*?</function>)", content, re.DOTALL)
+
+        for block in xml_blocks:
+            fn_match = re.search(r"<function=([a-zA-Z0-9_]+)>", block)
+            if fn_match:
+                fn_name = fn_match.group(1)
+                args: Dict[str, Any] = {}
+                for p_match in re.finditer(r"<parameter=([a-zA-Z0-9_]+)>\s*(.*?)\s*</parameter>", block, re.DOTALL):
+                    p_name = p_match.group(1)
+                    p_val = p_match.group(2).strip()
+                    if p_val.isdigit():
+                        args[p_name] = int(p_val)
+                    elif p_val.lower() == "true":
+                        args[p_name] = True
+                    elif p_val.lower() == "false":
+                        args[p_name] = False
+                    else:
+                        args[p_name] = p_val
+                tool_calls.append({"name": fn_name, "arguments": args})
+            else:
+                try:
+                    data = json.loads(block.strip())
+                    if isinstance(data, dict) and "name" in data:
+                        tool_calls.append({"name": data["name"], "arguments": data.get("arguments", {})})
+                except Exception:
+                    pass
+
+        # 2. Fenced JSON blocks if no XML blocks found
+        if not tool_calls:
+            json_blocks = re.findall(r"```(?:json)?\s*(\{.*?\})\s*```", content, re.DOTALL)
+            for jb in json_blocks:
+                try:
+                    data = json.loads(jb)
+                    if isinstance(data, dict) and "name" in data:
+                        tool_calls.append({"name": data["name"], "arguments": data.get("arguments", {})})
+                except Exception:
+                    pass
+
+        return tool_calls
+
     async def _call_llm(
         self,
         messages: List[Dict[str, Any]],
@@ -199,24 +271,62 @@ class AgentRunner:
             try:
                 llm_res = await self._call_llm(conversation, get_tool_definitions())
                 choice = llm_res["choices"][0]["message"]
-                if "tool_calls" in choice and choice["tool_calls"]:
+
+                # Extract OpenAI tool_calls or text-based (XML/JSON) tool calls
+                raw_tool_calls = list(choice.get("tool_calls") or [])
+                text_content = choice.get("content") or ""
+
+                if not raw_tool_calls and text_content:
+                    extracted = self._extract_text_tool_calls(text_content)
+                    for idx, ext in enumerate(extracted):
+                        raw_tool_calls.append({
+                            "id": f"call_text_{idx}_{turn_id}",
+                            "type": "function",
+                            "function": {
+                                "name": ext["name"],
+                                "arguments": json.dumps(ext["arguments"]),
+                            },
+                        })
+
+                if raw_tool_calls:
                     conversation.append(choice)
-                    for tc in choice["tool_calls"]:
+                    for tc in raw_tool_calls:
                         fn_name = tc["function"]["name"]
-                        fn_args = json.loads(tc["function"]["arguments"])
+                        fn_args = self._safe_parse_json(tc["function"].get("arguments", "{}"))
+
+                        # Inject existing claim_id into dispatch if omitted by model
+                        if fn_name == "stage_dispatch" and not fn_args.get("claim_id") and session_id in self._session_claims:
+                            fn_args["claim_id"] = self._session_claims[session_id]
+
                         tools_called.append(fn_name)
                         tool_output = execute_tool(fn_name, fn_args, session_id, staged_turn=turn_id)
+
+                        # Track session state from successful tool results
+                        if fn_name == "open_claim" and isinstance(tool_output, dict) and "claim" in tool_output:
+                            self._session_claims[session_id] = tool_output["claim"]["claim_id"]
+                            pol_num = tool_output["claim"].get("policy_number", fn_args.get("policy_number", "NH-8821"))
+                            pol = lookup_policy_db(policy_number=pol_num)
+                            if pol:
+                                self._session_policies[session_id] = pol
+                        elif fn_name == "lookup_policy" and isinstance(tool_output, dict) and "policy" in tool_output:
+                            self._session_policies[session_id] = tool_output["policy"]
+
                         conversation.append({
                             "role": "tool",
-                            "tool_call_id": tc["id"],
+                            "tool_call_id": tc.get("id", f"call_{fn_name}_{turn_id}"),
                             "name": fn_name,
                             "content": json.dumps(tool_output),
                         })
                     # Second pass to get final reply
                     second_res = await self._call_llm(conversation)
-                    agent_reply = second_res["choices"][0]["message"].get("content", "")
+                    agent_reply = second_res["choices"][0]["message"].get("content") or ""
+                    if "<tool_call>" in agent_reply:
+                        import re
+                        agent_reply = re.sub(r"<tool_call>.*?</tool_call>", "", agent_reply, flags=re.DOTALL).strip()
+                    if not agent_reply.strip():
+                        agent_reply = "I have opened your claim and staged your dispatch under your policy terms."
                 else:
-                    agent_reply = choice.get("content", "")
+                    agent_reply = choice.get("content") or ""
             except Exception as e:
                 logger.warning(f"LLM call failed or unavailable ({e}). Falling back to mock engine.")
                 mock_res = self._mock_generate(session_id, turn_id, masked_transcript, agent_version)

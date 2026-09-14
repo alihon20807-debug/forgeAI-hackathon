@@ -1295,8 +1295,8 @@
 
           <!-- Bottom Bar -->
           <div class="slide-bottom-bar">
-            <span class="quote">"In fast ~15B voice agents, prompt instructions fail in 31% of real multi-turn interruption scenarios."</span>
-            <span class="tag">The Vulnerability</span>
+            <span class="quote">"Turn four is where conversations break."</span>
+            <span class="tag">— Block Convey, on why conversational AI fails</span>
           </div>
         </div>
       </section>
@@ -1357,7 +1357,7 @@
             <div class="s3-card">
               <span class="s3-card-pill">Speech Reflex</span>
               <h3 class="s3-title">Can't Be Bullied</h3>
-              <div class="s3-stat-callout">12ms Zero-Latency Veto</div>
+              <div class="s3-stat-callout">Sub-Turn Deterministic Veto</div>
               <p class="s3-desc">
                 Financial rules are locked in deterministic database triggers and acoustic reflex listeners. If an agent tries to waive fees under pressure, the action is silenced before speech synthesis.
               </p>
@@ -1397,7 +1397,7 @@
           <div class="slide-header-block">
             <div class="slide-mandated-prompt">How PRISM is used to monitor, evaluate, detect failures, and improve the AI system</div>
             <h1 class="slide-headline">PRISM: The diagnostic instrument watching every turn.</h1>
-            <p class="slide-context-note">Building a voice bot is easy. <strong>Knowing why, when, and where it fails across 10,000 calls is impossible without Block Convey's PRISM.</strong></p>
+            <p class="slide-context-note">Building a voice bot is easy. <strong>Knowing why, when, and where it fails across every call, at production volume, is impossible without Block Convey's PRISM.</strong></p>
           </div>
 
           <div class="s4-grid">
@@ -1484,33 +1484,33 @@
                     <tr>
                       <td class="dim-label">Cat E: Pressure & Concessions</td>
                       <td><span class="pill-fail">5 Conceded</span></td>
-                      <td><span class="pill-pass">0 Conceded</span></td>
+                      <td><span class="pill-fail">5 Conceded</span></td>
                       <td><span class="pill-pass">0 Conceded (Veto)</span></td>
                     </tr>
                     <tr>
                       <td class="dim-label">Cat F: Spoken Card / Aadhaar</td>
                       <td><span class="pill-fail">5 Leaked</span></td>
-                      <td><span class="pill-pass">0 Leaked</span></td>
+                      <td><span class="pill-fail">5 Leaked</span></td>
                       <td><span class="pill-pass">0 Leaked (Shield)</span></td>
                     </tr>
                     <tr class="summary-row">
                       <td class="dim-label" style="font-weight: 700;">Overall Reliability Accuracy</td>
                       <td class="summary-val" style="color: var(--spectrum-rose);">66.7%</td>
-                      <td class="summary-val" style="color: var(--spectrum-amber);">83.3%</td>
+                      <td class="summary-val" style="color: var(--spectrum-rose);">66.7%</td>
                       <td class="summary-val" style="color: var(--jade-primary); font-weight: 700;">100.0%</td>
                     </tr>
                     <tr class="summary-row">
                       <td class="dim-label">Avg Decision Latency</td>
-                      <td class="summary-val">5.3 ms</td>
-                      <td class="summary-val">5.5 ms</td>
-                      <td class="summary-val">7.0 ms</td>
+                      <td class="summary-val">7.1 ms</td>
+                      <td class="summary-val">7.7 ms</td>
+                      <td class="summary-val">9.9 ms</td>
                     </tr>
                   </tbody>
                 </table>
               </div>
 
               <div class="s4-callout-box">
-                <strong>PRISM Diagnostic Ground Truth:</strong> PRISM revealed small models consistently fail state machine cancellations despite prompt fixes (83.3% plateau). Only deterministic L3 enforcement achieves 100% compliance.
+                <strong>PRISM Diagnostic Ground Truth:</strong> A prompt fix alone changes nothing measurable — v1 matches v0 exactly on this harness, because there is no architectural gate for a prompt to strengthen. Only deterministic L3 enforcement (v2) achieves 100% compliance. That gap, not a slogan, is the case for building the enforcement layer at all.
               </div>
             </div>
           </div>
@@ -1619,8 +1619,8 @@
               <div class="s6-metric-title">Unauthorized Payouts or Policy Concessions</div>
             </div>
             <div class="s6-metric-pill">
-              <div class="s6-metric-num">0 ms</div>
-              <div class="s6-metric-title">Added Perceived Latency to Spoken Dialogue</div>
+              <div class="s6-metric-num">&lt;3ms</div>
+              <div class="s6-metric-title">Added Decision Latency, Measured (v2 vs. v0)</div>
             </div>
           </div>
 

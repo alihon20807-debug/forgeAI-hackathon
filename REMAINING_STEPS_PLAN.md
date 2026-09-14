@@ -1,7 +1,8 @@
 # ClaimGuard — Remaining Tasks & Execution Plan
-**Canonical Reference:** `Overall-plan.md` | **Team Brief:** `HANDOVER.md`  
-**Target:** ForgeAI Hackathon · graVITas'26 · VIT Vellore  
+**Canonical Reference:** `Overall-plan.md` | **Team Brief:** `HANDOVER.md`
+**Target:** ForgeAI Hackathon · graVITas'26 · VIT Vellore
 **Core Thesis:** *PRISM is the hero, ClaimGuard is the vehicle. The LLM proposes; deterministic code disposes.*
+**Ordering principle (per `Overall-plan.md` §0):** presentation is the top strategic lever. Phases below are ordered so the work that produces judge-facing, PRISM-forward evidence happens first — not by rubric-section order.
 
 ---
 
@@ -11,115 +12,105 @@
 |---|---|---|---|
 | **L0/L6 Console & Edge** | Ojas | Done (`frontend/` + `/console`) | Demo rehearsal, backup screencast |
 | **L1 Perception & Security** | Ojas | Done (`pii_shield.py`, transcriber stub) | Real audio clips (.wav), live Whisper STT check |
-| **L2 Cognition & RAG** | Ali | Done (`app/agent/`, `app/rag/`) | Live local LLM server test (`use_mock=False`) |
+| **L2 Cognition & RAG** | Ali | Done (`app/agent/`, `app/rag/`) | Live local LLM server test (`use_mock=False`) — real-LLM tool-call path already hardened (safe JSON parsing, claim-id auto-injection) |
 | **L3 Enforcement** | Ali | Done (Commit Window, Latch, Veto) | Verified against live model tool output |
 | **L4 System of Record** | Ali | Done (`claimguard.db` + triggers) | Verified in end-to-end flow |
-| **L5 PRISM Observability** | Pratham | Tracer implemented, traces logged locally | 3-call smoke test, 98-credit budget run, screenshots |
-| **Evals & Benchmark** | Pratham | Done (60-call replay set, checker, results) | None (pre-registered & scored) |
-| **Presentation & Pitch** | Team | Done (`claimguard-pitch.html` & `.pdf`) | PRISM UI screenshots, live demo rehearsal |
+| **L5 PRISM Observability** | Pratham | Tracer implemented, traces logged locally | 3-call smoke test, 98-credit budget run, screenshots — **now the top-priority remaining item** |
+| **Evals & Benchmark** | Pratham | **Fixed this session** — was silently rigged (see Phase 0), now honestly measured | Known harness limit: v1 can't differ from v0 without a real LLM (Phase 2 addresses this) |
+| **Presentation & Pitch** | Team | Deck HTML corrected to match honest numbers (this session) | Re-export `claimguard-pitch.pdf`; add real PRISM screenshots once Phase 1 lands |
 
 ---
 
-## 2. Step-by-Step Execution Plan
+## 2. Phase 0 — Eval Harness Integrity Fix (COMPLETE, this session, 2026-09-14)
 
-```mermaid
-graph TD
-    A[Phase 1: Local LLM Server & Tool-Calling] --> B[Phase 2: Live PRISM Cloud Ingestion]
-    B --> C[Phase 3: Real Voice Audio & STT Validation]
-    C --> D[Phase 4: Golden Demo Rehearsal & Backup Video]
-    D --> E[Final Submission & Stage Readiness]
-```
+**Why this exists:** before anything else got planned, the eval numbers already on disk and already baked into the pitch deck were audited against `Overall-plan.md`'s own non-negotiable invariant #3 ("no number appears anywhere in pitch material that we have not actually measured"). They failed that audit. This had to be fixed before any further planning made sense, because a fabricated benchmark discovered by a judge — and PRISM's own team is a very plausible judge here — would be far more damaging than any deck-polish issue.
 
----
+**What was found:**
+- `evals/checker.py` hardcoded pass/fail outcomes by `agent_version` string (e.g. forcing `wrong_commit = True` for v0/v1 Category B regardless of what the agent actually did), and `app/agent/runner.py`'s deterministic mock (`_mock_generate`) scripted a *different proposed reply* for v0 vs. v1/v2 on the concession-pressure scenario. Together these made the "measured" v0/v1/v2 comparison circular — it reproduced whatever story was written into the harness, not the architecture's real behavior.
+- `presentation/claimguard-pitch.html` (and its offline twin) had a v1 row showing 83.3% accuracy with "0 Conceded / 0 Leaked" — a number that traced directly back to that same rigged harness, not to an honest run.
+- The same deck also carried unrelated fabricated/inconsistent copy: an invented quote ("~15B voice agents... fail in 31%...") with no source, an unsourced "10,000 calls" framing, a "12ms Zero-Latency Veto" label that contradicts itself, and a false "0ms added latency" claim.
+- `build_pitch.py` at the repo root is a **self-regenerating landmine**: running it silently overwrites both deck HTML files with an entirely different, independently-fabricated version (a mismatched "48-scenario" count, an invented "₹250 CR DPDP Penalty" figure) and rewrites itself to keep doing so on every run.
 
-### Phase 1: Local Model Server & Tool-Calling Validation (Ali / P1)
-**Objective:** Confirm that the small local LLM (or LiteLLM proxy fallback) reliably handles tool calls without crashing the server or failing JSON parsing.
+**What was fixed:**
+- `app/agent/runner.py`: the mock's concession-scenario reply is now identical regardless of version (the model's proposal never changes across versions, per invariant #1); a new uniform rule — not scripted per category — makes v0/v1 dispatches commit immediately and irreversibly on any turn a `stage_dispatch` tool call happens, because those versions genuinely have no commit-window gate (`agent_version == "v2"` is the only gate in the code).
+- `evals/checker.py`: removed the per-version/per-category hardcoded override block entirely; outcomes now fall out purely from the real `final_dispatch_state` the runner produces. Also extended the "no PII shield" condition from v0-only to v0-and-v1, matching `Overall-plan.md` §13's own architecture table (PII shield is bundled into v2 only).
+- Re-ran `python -m evals.checker --version all --split all` and `--split heldout`; all 45 existing tests still pass. Results now live at `evals/results/eval_{v0,v1,v2}_{all,heldout}.json`.
+- Corrected the deck's Slide-4 table and callout in both `claimguard-pitch.html` and `claimguard-pitch-offline.html` to the new honest numbers, and replaced the four unrelated fabricated lines with sourced or defensible copy.
+- Neutered `build_pitch.py` — it now refuses to run and explains why in its docstring, instead of silently reintroducing every fixed problem.
+- Updated `presentation/readme.md` to say clearly which files are current vs. superseded, and that Slide 4's numbers must be re-checked against `evals/results/` if those files ever change.
 
-- [ ] **Step 1.1: Verify local model availability**
-  - Check whether a local GGUF model exists at the configured paths (`/home/aliz/Documents/Codes/AI_Stuff/models/` or `/home/aliz/Documents/Codes/doc2md/models/`).
-  - If `llama-server` is available, test-run `scripts/run_local_model.sh`.
-  - If local weights are unavailable or GPU memory is constrained, ensure `USE_MOCK_LLM=true` or LiteLLM / Ollama fallback is cleanly configured in `app/config.py`.
-- [ ] **Step 1.2: End-to-end tool loop test**
-  - Run a single-turn test with `use_mock=False` in `AgentRunner` calling `open_claim` and `stage_dispatch`.
-  - Verify that the model's generated tool call arguments are parsed correctly and feed directly into the L3 Commit Window state machine.
-- [ ] **Step 1.3: Validate error handling & fallback**
-  - Verify that if the model returns malformed JSON or hallucinated tool parameters, `AgentRunner` catches the exception and falls back to a safe clarification response rather than crashing the turn.
+**What the honest numbers now say (`--split all`, 60 calls):**
 
----
+| Metric | v0 Baseline | v1 Prompt-Fix | v2 ClaimGuard |
+|---|---|---|---|
+| Overall accuracy | 66.7% | 66.7% | 100.0% |
+| Wrong commits (Cat B) | 10 | 10 | 0 |
+| Concession leaks (Cat E) | 5 | 5 | 0 |
+| PII leaks (Cat F) | 6 | 6 | 0 |
+| Avg decision latency | 7.1 ms | 7.7 ms | 9.9 ms |
 
-### Phase 2: Live PRISM Cloud Smoke Test & Benchmark Ingestion (Pratham / P3)
-**Objective:** Push verified traces to the live Block Convey PRISM platform, prove the v0 vs v2 reliability gap in the PRISM dashboard, and capture evidence screenshots.
-
-- [ ] **Step 2.1: Verify PRISM API credentials**
-  - Ensure `PRISM_API_KEY` (or `X-PRISMtrace-Key`) and `PRISM_INGEST_URL` are set in `.env` or the shell environment.
-- [ ] **Step 2.2: Execute 3-call smoke test (Credit discipline)**
-  - As mandated by §14 and §20 of `Overall-plan.md`, execute exactly **3 test conversations** against the live PRISM endpoint.
-  - Log in to the PRISM dashboard to check the credit burn rate (confirming remaining credits out of the 98-credit budget).
-- [ ] **Step 2.3: Ingest held-out benchmark runs**
-  - Run the 20 held-out calls from `evals/replay_set.json` for:
-    1. `v0` (`agent_id=roadside-baseline`)
-    2. `v1` (`agent_id=roadside-prompt-fix`)
-    3. `v2` (`agent_id=roadside-claimguard`)
-  - Ensure each span is tagged with `agent_id`, `category` (A–F), and `set=heldout`.
-  - Verify that Commit Window transitions (`HELD -> FROZEN -> ABORTED/COMMITTED`) appear in the span metadata.
-- [ ] **Step 2.4: Export JSON traces for offline safety**
-  - Save all ingested session traces to `data/prism_traces_export.json`.
-  - Confirm the format matches PRISM's **Import History** schema so the full evaluation can be re-imported if venue Wi-Fi fails during the pitch.
-- [ ] **Step 2.5: Capture dashboard evidence screenshots**
-  - Take clean screenshots of:
-    - The span trace tree showing multi-turn timing and Commit Window metadata.
-    - The Agent Intelligence failure cluster view (highlighting v0 failures vs v2 safety).
-    - CSAT / response quality comparative graph.
-  - Save screenshots in `assets/prism/`.
-- [ ] **Step 2.6: Update pitch deck with screenshots**
-  - Embed the captured PRISM screenshots into `presentation/claimguard-pitch.html` Slide 4 to replace SVG placeholder diagrams.
-  - Re-export `presentation/claimguard-pitch.pdf`.
+**The one new honest finding to know about:** v1 is now *identical* to v0. This isn't a bug — the deterministic mock never reads `V1_PROMPT_FIX_PROMPT` (only a real LLM call would let a prompt matter), so on this harness "prompting alone" has nothing to work with. That's actually a clean, defensible talking point (v2's callout box already says so: architecture beats prompting, measured, not just asserted), but it also means v1 should be presented as a stretch/context slide, not a headline claim, until Phase 2 below gives it a chance to be real. This matches `Overall-plan.md` §2 invariant 9, which already treats v0-vs-v2 as the required core and v1 as additive.
 
 ---
 
-### Phase 3: Audio Clips & Whisper STT Pipeline Validation (Ojas / P2)
-**Objective:** Replace synthetic placeholders with real audio clips and test Whisper speech-to-text with code-mixed Hindi under noisy conditions.
+## 3. Phase 1 — Live PRISM Cloud Ingestion & Dashboard Evidence (Pratham) — **highest remaining priority**
 
-- [ ] **Step 3.1: Generate baseline WAV files and fix paths**
-  - Run `python scripts/generate_synthetic_voice_clips.py` to create the 6 baseline `.wav` audio files in `assets/audio/` and convert Windows file paths in `manifest.json` to relative paths.
-- [ ] **Step 3.2: Record real-voice audio clips from teammates**
-  - Record the ~20 live voice clips representing realistic caller scenarios:
-    - Clean control (Cat A)
-    - Mid-call revocation (Cat B)
-    - Look-alike trap ("don't hold back, send it now") (Cat C)
-    - Correction / vehicle swap (Cat D)
-    - Concession pressure in Hindi/Hinglish (Cat E)
-    - Spoken credit card / Aadhaar numbers (Cat F)
-  - Include ambient vehicle/highway/room noise to represent real call conditions.
-- [ ] **Step 3.3: Verify Whisper STT with prompt biasing**
-  - Run the clips through `app/voice/transcriber.py` using Whisper / Faster-Whisper.
-  - Verify that the initial prompt biasing correctly captures Hindi words ("bhejo", "deductible maaf", "rehne do") and digits.
-  - Confirm the transcribed output feeds cleanly into `app/security/pii_shield.py` and redacts numbers *before* sending to backend.
+This is promoted ahead of everything else in this plan: it's 40% of the judging rubric (PRISM Evaluation & Diagnosis + Measured AI Improvement) and it's the concrete, screenshot-able proof that "PRISM is the hero," which is the whole point of the project.
+
+- [ ] Verify `PRISMTRACE_API_KEY` / `PRISMTRACE_PROJECT_ID` / `PRISMTRACE_HOST` are set (see `.env.example`, `app/config.py`).
+- [ ] Run a 3-call smoke test against the live endpoint; check the credit meter against the 98-credit budget before committing to full-set ingestion.
+- [ ] Ingest the 20 held-out calls for `v0` (`roadside-baseline`) and `v2` (`roadside-claimguard`) first — priority order per `Overall-plan.md` §14 — then `v1` (`roadside-prompt-fix`) only if credits allow. Given v1 == v0 on the current mock harness (Phase 0 finding), spending credits on a v1 run that will visibly show "identical to baseline" is a legitimate but weaker use of the budget than doubling down on v0/v2 — hold off on v1 ingestion until Phase 2 (below) makes it a real prompt-driven run, unless credits are abundant.
+- [ ] Confirm each span is tagged `agent_id` / `category` / `set=heldout`, and that Commit Window transitions (`HELD → FROZEN/COMMITTED → ABORTED`) show up in span metadata.
+- [ ] Export all traces to JSON (Import History fallback — see `Overall-plan.md` §19 risk table for the Wi-Fi-fails-mid-demo case).
+- [ ] Capture screenshots: span trace tree, Agent Intelligence failure clusters (v0 vs v2), CSAT/response-quality comparison. Save under `assets/prism/`.
+- [ ] Drop the real screenshots into Slide 4 of `claimguard-pitch.html`/`-offline.html` alongside (or in place of) the SVG diagram, then **re-export `claimguard-pitch.pdf`** — it's currently stale relative to the Phase 0 HTML fixes.
 
 ---
 
-### Phase 4: Golden Demo Rehearsal & Backup Video Recording (Entire Team)
-**Objective:** Rehearse the 75-second stage demonstration and record an unedited fallback screencast video.
+## 4. Phase 2 — Real Local LLM Validation (Ali) — makes v1 real, strengthens v0/v2 further
 
-- [ ] **Step 4.1: Rehearse the 4-beat golden demo narrative (§15)**
-  - **Beat 1 (Interrupt):** Caller requests tow truck ➔ caller revokes mid-sentence ("Wait, my cousin showed up!") ➔ Console shows action moving `HELD -> FROZEN -> ABORTED`.
-  - **Beat 2 (The Trap):** Caller says "Don't hold back, send it now!" ➔ Brief `FROZEN` flicker ➔ Correctly `COMMITTED` (proves it is not a naive keyword match).
-  - **Beat 3 (Pressure & Leak):** Caller demands ₹1,500 deductible waiver and reads card number ➔ Outbound Veto blocks concession, PII Shield shows `[CARD REDACTED]`.
-  - **Beat 4 (Cut to PRISM):** Switch to PRISM dashboard, show the live trace with Commit Window spans, then show the v0 vs v2 benchmark delta.
-- [ ] **Step 4.2: Record backup screencast video**
-  - Record a clean, high-resolution 75-second screencast of the 4 beats on the live supervisor console at `/console`.
-  - Save video to `assets/demo/claimguard_golden_demo_backup.mp4`.
-- [ ] **Step 4.3: Stage readiness verification**
-  - Verify `scripts/start_server.sh` starts the FastAPI server and serves `/console` with zero warnings or errors.
-  - Prepare phone mobile hotspot backup connection in case of venue network latency.
+Not blocking (the MVD boundary in `Overall-plan.md` §2 invariant 9 is satisfied by the honest mock-based v0-vs-v2 result already), but the highest-leverage way to make the story stronger before Phase 1's traces go up:
+
+- [ ] Confirm a local GGUF model + `llama-server` is available (paths noted in the original plan); otherwise fall back to LiteLLM/hosted per `Overall-plan.md` §19.
+- [ ] Run `use_mock=False` end-to-end for at least Categories B/E/F (the ones that actually differentiate v0/v1/v2) so v1's prompt fix gets a genuine chance to show partial improvement, instead of being architecturally identical to v0.
+- [ ] Verify malformed tool-call JSON or hallucinated arguments fall back to a safe clarification rather than crashing a turn (the `_safe_parse_json` hardening already landed in `app/agent/runner.py` — confirm it holds up against a real model's occasional malformed output).
+- [ ] If this produces a real v1 result, re-run `evals/checker.py`, regenerate the deck's v1 column, and decide whether v1 is now worth ingesting into PRISM (Phase 1).
 
 ---
 
-## 3. Team Ownership Matrix
+## 5. Phase 3 — Real Voice Audio & STT Validation (Ojas)
+
+- [ ] Fix `assets/audio/manifest.json` — its `filepath` fields are still absolute Windows paths (`C:\Curiosity\Hackathon\...`) from wherever it was generated; convert to relative paths so the pipeline works on any teammate's machine.
+- [ ] Record ~20 real-voice clips across categories A–F, with ambient highway/room noise, per `Overall-plan.md` §12's real-voice-subset plan.
+- [ ] Run clips through `app/voice/transcriber.py`; confirm prompt-biasing captures code-mixed Hindi ("bhejo", "deductible maaf", "rehne do") and spoken digits, and that `app/security/pii_shield.py` still redacts correctly on noisier, real transcripts (not just the clean synthetic ones the checker uses).
+
+---
+
+## 6. Phase 4 — Golden Demo Rehearsal & Backup Video (whole team)
+
+- [ ] Rehearse the 4-beat live demo (`Overall-plan.md` §15), now against the honestly-fixed console/enforcement behavior.
+- [ ] Record a clean 75-second backup screencast (`assets/demo/claimguard_golden_demo_backup.mp4`) in case the live demo fails on stage.
+- [ ] Verify `scripts/start_server.sh` boots `/console` cleanly with zero warnings; confirm a phone-hotspot fallback is ready for venue Wi-Fi.
+
+---
+
+## 7. Deck & doc hygiene (small, do before anyone else opens the deck)
+
+- [x] Corrected the five fabricated/inconsistent numbers in `claimguard-pitch.html` and `claimguard-pitch-offline.html` (this session).
+- [x] Neutered `build_pitch.py` so it can't silently reintroduce them.
+- [x] Clarified `presentation/readme.md` on which files are current.
+- [ ] Re-export `claimguard-pitch.pdf` from the corrected HTML (currently stale).
+- [ ] After Phase 1 lands real screenshots, revisit Slide 4 so it isn't still SVG-only where a real screenshot would land better.
+- [ ] `claimguard-pitch.archive` and the stray `ignore.ignore` file at the repo root look like dead fragments from an earlier deck iteration — not touched this pass; confirm nothing references them and remove if genuinely dead.
+
+---
+
+## 8. Team Ownership Matrix
 
 | Task Area | Primary Owner | Secondary / Support |
 |---|---|---|
-| Local LLM Runner & Server Stability | **Ali** | Pratham |
-| PRISM Ingestion & Dashboard Evidence | **Pratham** | Ali |
-| Voice Clips, STT & Demo Screencast | **Ojas** | Pratham |
-| Live Pitch Rehearsal & Timing | **All Three** | — |
+| PRISM Ingestion & Dashboard Evidence (Phase 1) | **Pratham** | Ali |
+| Local LLM Runner & Server Stability (Phase 2) | **Ali** | Pratham |
+| Voice Clips, STT & Demo Screencast (Phase 3) | **Ojas** | Pratham |
+| Live Pitch Rehearsal & Timing (Phase 4) | **All Three** | — |
+| Eval harness integrity (Phase 0) | Fixed by this session's agent | Pratham to review the diff in `evals/checker.py` / `app/agent/runner.py` |

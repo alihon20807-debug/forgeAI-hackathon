@@ -13,3 +13,6 @@ Hinglish reads as unprofessional in written pitch material. Use it sparingly: **
 
 ## Process rule
 Do not turn a plan into a built deliverable (deck, code, submission) without the user explicitly confirming that specific plan first. "We discussed this earlier" is not confirmation.
+
+## Documentation policy — architecture and implementation notes live in markdown
+Project architecture, implementation notes, and "what's actually built" status must be written down in markdown files, not left implicit in code or in a built HTML deck. A built artifact (`presentation/claimguard-pitch.html` and its offline twin, or any future rendered output) is a publish target, not a source of project information — do not read it to figure out what the project does or what's decided. Read `Overall-plan.md` (and other project markdown, e.g. `REMAINING_STEPS_PLAN.md`, `HANDOVER.md`) instead. If a fact needed for future work isn't captured in markdown yet, write it down in a focused new markdown file (e.g. `architecture.md`) rather than re-deriving it from code or HTML on every future pass — this is meant to be a one-time investment, not repeated effort each session.

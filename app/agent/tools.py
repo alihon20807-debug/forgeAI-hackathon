@@ -131,19 +131,19 @@ def execute_tool(
     elif name == "open_claim":
         return tool_open_claim(
             policy_number=arguments.get("policy_number", "NH-8821"),
-            incident_location=arguments.get("incident_location", "NH48 corridor"),
-            incident_description=arguments.get("incident_description", "Roadside breakdown"),
+            incident_location=arguments.get("incident_location") or arguments.get("location", "NH48 corridor"),
+            incident_description=arguments.get("incident_description") or arguments.get("description", "Roadside breakdown"),
             session_id=session_id,
             staged_turn=staged_turn,
         )
     elif name == "stage_dispatch":
         return tool_stage_dispatch(
             claim_id=arguments.get("claim_id", ""),
-            service_type=arguments.get("service_type", "towing"),
-            pickup_location=arguments.get("pickup_location", "NH48"),
+            service_type=arguments.get("service_type") or arguments.get("service", "towing"),
+            pickup_location=arguments.get("pickup_location") or arguments.get("location", "NH48 corridor"),
             session_id=session_id,
             vendor_name=arguments.get("vendor_name", "NH48 Rapid Towing"),
-            eta_minutes=arguments.get("eta_minutes", 25),
+            eta_minutes=int(arguments.get("eta_minutes", 25)),
             staged_turn=staged_turn,
         )
     elif name == "update_claim":
