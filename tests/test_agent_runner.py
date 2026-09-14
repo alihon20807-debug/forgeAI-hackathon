@@ -185,3 +185,36 @@ def test_llama_cpp_server_wrapper(tmp_path):
     assert status["host"] == "127.0.0.1"
     assert status["port"] == 8080
 
+
+@pytest.mark.asyncio
+async def test_card_security_advisory_and_dispatch_grounding():
+    """Verify security protocol advisory on card disclosure and grounded dispatch references."""
+    runner = AgentRunner(use_mock=True)
+    session_id = "test-security-advisory-sess"
+
+    # Turn 1: Dispatch staging with grounded references
+    res1 = await runner.process_turn(
+        session_id=session_id,
+        turn_id=1,
+        caller_id="caller_grounding",
+        raw_transcript="My car broke down on NH48 near Manesar.",
+        masked_transcript="My car broke down on NH48 near Manesar.",
+        agent_version="v2",
+    )
+    assert "DISP-NH-8821-NH48" in res1["agent_response"]
+    assert "1033" in res1["agent_response"]
+    assert "ETA 20-25 minutes" in res1["agent_response"]
+
+    # Turn 2: Caller provides card number -> security advisory prepended
+    res2 = await runner.process_turn(
+        session_id=session_id,
+        turn_id=2,
+        caller_id="caller_grounding",
+        raw_transcript="Can I pay using card 4532 0150 1234 5678?",
+        masked_transcript="Can I pay using card [CARD REDACTED]?",
+        redacted_pii=[{"type": "CARD_NUMBER", "matched": "4532 0150 1234 5678", "valid_luhn": True}],
+        agent_version="v2",
+    )
+    assert "do not share card or identity numbers over voice" in res2["agent_response"]
+    assert "100% cashless" in res2["agent_response"]
+
