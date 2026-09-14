@@ -1,8 +1,20 @@
 """End-to-End Verification Test for ClaimGuard Mobile Call & Judge Viewer."""
 
 import json
+import pytest
 from fastapi.testclient import TestClient
 from app.server import app
+
+
+@pytest.fixture(autouse=True)
+def setup_mock_runner():
+    from app.agent.runner import get_agent_runner
+    runner = get_agent_runner()
+    orig_mock = runner.use_mock
+    runner.use_mock = True
+    yield
+    runner.use_mock = orig_mock
+
 
 def test_full_demo_flow():
     client = TestClient(app)
