@@ -107,7 +107,7 @@ async def run_scenario(
 
         turn_tracer = TurnTracer(
             session_id=session_id,
-            user_utterance=raw_utterance,
+            user_utterance=masked_text,
             agent_version=version,
             category=category,
             eval_set=split,
@@ -227,6 +227,8 @@ def main():
         export_traces_to_json()
     else:
         parser.print_help()
+
+    tracer_client.flush()
 
 
 if __name__ == "__main__":

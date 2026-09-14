@@ -17,6 +17,7 @@ import json
 import logging
 import os
 import threading
+import time
 import uuid
 from contextlib import contextmanager
 from datetime import datetime, timezone
@@ -67,6 +68,7 @@ class PRISMTracer:
             "Content-Type": "application/json",
         }
         self._client: Optional[httpx.Client] = None
+        self._send_threads: List[threading.Thread] = []
         if self.api_key:
             self._client = httpx.Client(headers=self.headers, timeout=15.0)
 
@@ -112,7 +114,15 @@ class PRISMTracer:
             except Exception as exc:
                 logger.warning(f"[PRISM] Ingest request failed: {exc}")
 
-        threading.Thread(target=_send, daemon=True).start()
+        thread = threading.Thread(target=_send, daemon=True)
+        self._send_threads.append(thread)
+        thread.start()
+
+    def flush(self, timeout: float = 5.0) -> None:
+        """Wait briefly for background sends before a short-lived process exits."""
+        deadline = time.monotonic() + timeout
+        for thread in self._send_threads:
+            thread.join(max(0.0, deadline - time.monotonic()))
 
 
 class TurnTracer:
@@ -246,6 +256,7 @@ def get_prism_tracer() -> PRISMTracer:
 
 def close() -> None:
     """Flush and close the shared client on shutdown. Idempotent, fail-open."""
+    _GLOBAL_TRACER.flush()
     client = _GLOBAL_TRACER._client
     if client is not None:
         try:
