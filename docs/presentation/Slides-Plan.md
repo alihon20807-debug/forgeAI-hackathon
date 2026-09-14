@@ -3,7 +3,7 @@
 **Mode**: **AUTONOMOUS JUDGE REVIEW** (Zero presenter presence; completely self-contained, self-playing, and self-explanatory)  
 **Target Audience**: Judges at ForgeAI Hackathon (graVITas'26, VIT Vellore / Block Convey Founders & Technical Staff)  
 **Deliverable Targets**: `presentation/claimguard-pitch.html` (Online/CDN) & `presentation/claimguard-pitch-offline.html` (Standalone Offline)  
-**Authority**: Canonical build specification derived from `Overall-plan.md`, `CLAUDE.md`, and verified research in `research/prism/`.
+**Authority**: Canonical build specification derived from `docs/Overall-plan.md`, `CLAUDE.md`, and verified research in `docs/research/prism/`.
 
 ---
 

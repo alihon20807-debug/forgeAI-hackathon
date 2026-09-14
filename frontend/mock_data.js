@@ -1,6 +1,6 @@
 /**
  * ClaimGuard × PRISM — Pre-registered Replay Scenarios & Mock Engine
- * Strictly aligned with Overall-plan.md §12 and HANDOVER.md §4.
+ * Strictly aligned with docs/Overall-plan.md §12 and docs/HANDOVER.md §4.
  */
 
 const REPLAY_SCENARIOS = {

@@ -32,6 +32,13 @@ if ! command -v "$LLAMA_SERVER" &>/dev/null; then
     fi
 fi
 
+EXPOSE="${EXPOSE:-0}"
+for arg in "$@"; do
+    if [ "$arg" == "--expose" ] || [ "$arg" == "--tunnel" ]; then
+        EXPOSE=1
+    fi
+done
+
 HOST="${HOST:-0.0.0.0}"
 PORT="${PORT:-8080}"
 N_GPU_LAYERS="${N_GPU_LAYERS:-99}"
@@ -44,6 +51,24 @@ echo " GPU Offload: $N_GPU_LAYERS layers"
 echo " Context Size: $CTX_SIZE"
 echo " Endpoint: http://$HOST:$PORT/v1"
 echo "========================================================="
+
+TUNNEL_PID=""
+cleanup() {
+    if [ -n "$TUNNEL_PID" ] && kill -0 "$TUNNEL_PID" 2>/dev/null; then
+        echo "Stopping tunnel..."
+        kill "$TUNNEL_PID" 2>/dev/null || true
+    fi
+}
+trap cleanup EXIT INT TERM
+
+if [ "$EXPOSE" = "1" ]; then
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    echo "Starting public tunnel in background..."
+    "$SCRIPT_DIR/expose_local_model.sh" "$PORT" &
+    TUNNEL_PID=$!
+    # Brief pause so banner prints before llama-server logs start
+    sleep 2
+fi
 
 exec "$LLAMA_SERVER" \
     -m "$MODEL" \

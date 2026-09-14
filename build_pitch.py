@@ -10,13 +10,13 @@ run, so the fabricated content kept regenerating.
 
 The current deck (presentation/claimguard-pitch.html and its offline
 twin) has since been hand-corrected to match the real, honestly-measured
-numbers in evals/results/eval_*_all.json — see REMAINING_STEPS_PLAN.md
+numbers in evals/results/eval_*_all.json — see docs/REMAINING_STEPS_PLAN.md
 for how those numbers were produced. Running this script would silently
 overwrite that correction and reintroduce fabricated statistics.
 
 If the deck needs to be regenerated, edit presentation/claimguard-pitch.html
 and presentation/claimguard-pitch-offline.html directly, following
-presentation/Slides-Plan.md, and re-check every number against
+docs/presentation/Slides-Plan.md, and re-check every number against
 evals/results/*.json before publishing. Do not resurrect this script.
 """
 

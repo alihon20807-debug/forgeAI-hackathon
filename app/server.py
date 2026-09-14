@@ -62,7 +62,7 @@ if FRONTEND_DIR.exists():
 
 
 # -----------------------------------------------------------------------------
-# Request & Response Models (Strictly matching HANDOVER.md §4.1 & §4.2)
+# Request & Response Models (Strictly matching docs/HANDOVER.md §4.1 & §4.2)
 # -----------------------------------------------------------------------------
 
 class RedactedPII(BaseModel):
@@ -240,10 +240,13 @@ async def transcribe_voice(
     caller_id: Optional[str] = Form("caller_edge"),
 ):
     """Local ASR endpoint with Whisper and pre-LLM mathematical PII redaction."""
+    import time
     from app.voice.transcriber import get_default_transcriber
     transcriber = get_default_transcriber()
+    t0 = time.perf_counter()
     audio_bytes = await file.read()
     result = transcriber.transcribe_audio_bytes(audio_bytes, file.filename or "audio.wav")
+    latency_ms = round((time.perf_counter() - t0) * 1000, 2)
     return {
         "status": "success",
         "session_id": session_id or "session_edge",
@@ -251,9 +254,10 @@ async def transcribe_voice(
         "caller_id": caller_id,
         "raw_transcript": result.raw_transcript,
         "masked_transcript": result.masked_transcript,
-        "redacted_pii": [p.to_dict() for p in result.redacted_pii],
-        "latency_ms": result.latency_ms,
-        "language": result.language,
+        "redacted_pii": result.redacted_pii,
+        "latency_ms": latency_ms,
+        "language": result.detected_language,
+        "engine": result.engine,
     }
 
 

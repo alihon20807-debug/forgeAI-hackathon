@@ -79,7 +79,7 @@ class AgentRunner:
         # Scenario 3: Concession Pressure ("Can you waive the deductible?")
         if any(w in text for w in ["waive", "waiver", "no charge", "free", "maaf kar do", "discount"]):
             # The mock's PROPOSED reply is identical regardless of version — this is the
-            # model's output, and per Overall-plan.md invariant #1 the model never changes
+            # model's output, and per docs/Overall-plan.md invariant #1 the model never changes
             # across versions. Whether this risky proposal actually reaches the caller is
             # decided downstream by the Outbound Veto, which is only wired in for v2
             # (see process_turn below). Do not branch on `version` here.
@@ -393,7 +393,7 @@ class AgentRunner:
         conversation.append({"role": "assistant", "content": agent_reply})
 
         # -------------------------------------------------------------
-        # 5. Format Output Response (Strictly matching HANDOVER.md §4.2)
+        # 5. Format Output Response (Strictly matching docs/HANDOVER.md §4.2)
         # -------------------------------------------------------------
         claim_id = self._session_claims.get(session_id)
         current_claim = None

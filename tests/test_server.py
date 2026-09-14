@@ -51,7 +51,7 @@ def test_session_init(client):
 
 
 def test_turn_handover_contract_cat_b_revocation(client):
-    """Verify exact payload structure from HANDOVER.md §4.1 and §4.2."""
+    """Verify exact payload structure from docs/HANDOVER.md §4.1 and §4.2."""
     session_id = "cg-sess-contract-test"
     client.post("/api/call/session", json={"session_id": session_id, "caller_id": "caller_9921"})
 
@@ -70,7 +70,7 @@ def test_turn_handover_contract_cat_b_revocation(client):
     assert data1["current_claim"] is not None
     assert data1["current_claim"]["deductible_inr"] == 1500
 
-    # Turn 2: Caller revokes mid-call (from HANDOVER.md 4.1)
+    # Turn 2: Caller revokes mid-call (from docs/HANDOVER.md 4.1)
     turn2_req = {
         "session_id": session_id,
         "turn_id": 2,
