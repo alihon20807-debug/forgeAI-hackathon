@@ -112,6 +112,7 @@ async def run_scenario(
             category=category,
             eval_set=split,
             tracer=tracer_client,
+            is_mock=runner.use_mock,
         )
 
         turn_res = await runner.process_turn(

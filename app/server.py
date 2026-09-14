@@ -188,14 +188,16 @@ async def process_turn(req: TurnRequest):
             for item in shield_res.redacted_pii:
                 redacted_pii.append(item.to_dict())
 
+    runner = get_agent_runner()
+
     # Initialize PRISM turn tracer
     tracer = TurnTracer(
         session_id=req.session_id,
         user_utterance=masked_transcript,
         agent_version=req.agent_version or "v2",
+        is_mock=runner.use_mock,
     )
 
-    runner = get_agent_runner()
     result = await runner.process_turn(
         session_id=req.session_id,
         turn_id=req.turn_id,

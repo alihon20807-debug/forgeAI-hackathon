@@ -143,6 +143,7 @@ class TurnTracer:
         category: Optional[str] = None,
         eval_set: str = "dev",
         tracer: Optional[PRISMTracer] = None,
+        is_mock: Optional[bool] = None,
     ) -> None:
         self.session_id = session_id
         self.agent_version = agent_version
@@ -155,6 +156,13 @@ class TurnTracer:
         self.start_iso = _iso_now()
         self.spans: List[Dict[str, Any]] = []
         self.tracer = tracer or get_prism_tracer()
+        # Which model actually produced this turn's reply. Callers that
+        # build an AgentRunner with an explicit use_mock (evals/checker.py,
+        # scripts/prism_benchmark.py both hardcode use_mock=True regardless
+        # of the USE_MOCK_LLM env var) must pass that value here -- falling
+        # back to the global env var would mislabel a mocked call with a
+        # real model name on the PRISM dashboard.
+        self.is_mock = USE_MOCK_LLM if is_mock is None else is_mock
 
     @contextmanager
     def span(self, name: str, span_type: str = "custom", attributes: Optional[Dict[str, Any]] = None):
@@ -223,7 +231,7 @@ class TurnTracer:
         extra_metadata: Optional[Dict[str, Any]] = None,
     ) -> None:
         end_iso = _iso_now()
-        model_name = "mock-deterministic" if USE_MOCK_LLM else LLM_MODEL
+        model_name = "mock-deterministic" if self.is_mock else LLM_MODEL
         root = {
             "span_id": self.root_span_id,
             "parent_span_id": None,

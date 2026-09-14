@@ -88,6 +88,7 @@ class Evaluator:
                 agent_version=self.version,
                 category=category,
                 eval_set=scenario["split"],
+                is_mock=self.runner.use_mock,
             )
 
             turn_res = await self.runner.process_turn(

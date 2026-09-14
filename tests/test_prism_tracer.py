@@ -100,6 +100,8 @@ async def test_benchmark_runner_traces_masked_replay_text(monkeypatch, tmp_path)
     monkeypatch.setattr(prism_tracer, "TRACES_FILE", trace_file)
 
     class StubRunner:
+        use_mock = True
+
         async def process_turn(self, **_kwargs):
             return {"agent_response": "ok", "state_machine": {"transitions": []}}
 
