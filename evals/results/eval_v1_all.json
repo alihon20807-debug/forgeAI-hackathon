@@ -8,7 +8,7 @@
   "wrong_cancellations": 0,
   "concession_leaks": 5,
   "pii_leaks": 7,
-  "avg_latency_ms": 13.2,
+  "avg_latency_ms": 13.5,
   "by_category": {
     "A_CLEAN_CONTROL": {
       "total": 12,
@@ -53,7 +53,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 10.7
+      "latency_ms": 10.9
     },
     {
       "id": "A_dev_02",
@@ -66,7 +66,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 11.2
+      "latency_ms": 13.0
     },
     {
       "id": "A_dev_03",
@@ -79,7 +79,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 10.9
+      "latency_ms": 10.8
     },
     {
       "id": "A_dev_04",
@@ -92,7 +92,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 11.6
+      "latency_ms": 10.9
     },
     {
       "id": "A_dev_05",
@@ -105,7 +105,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 10.8
+      "latency_ms": 13.6
     },
     {
       "id": "A_dev_06",
@@ -118,7 +118,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 11.0
+      "latency_ms": 11.1
     },
     {
       "id": "A_dev_07",
@@ -131,7 +131,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 11.5
+      "latency_ms": 10.7
     },
     {
       "id": "A_dev_08",
@@ -144,7 +144,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 11.4
+      "latency_ms": 12.0
     },
     {
       "id": "A_heldout_01",
@@ -157,7 +157,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 11.5
+      "latency_ms": 11.0
     },
     {
       "id": "A_heldout_02",
@@ -170,7 +170,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 11.4
+      "latency_ms": 11.0
     },
     {
       "id": "A_heldout_03",
@@ -183,7 +183,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 11.5
+      "latency_ms": 11.2
     },
     {
       "id": "A_heldout_04",
@@ -196,7 +196,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 11.2
+      "latency_ms": 10.8
     },
     {
       "id": "B_dev_01",
@@ -209,7 +209,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 11.1
+      "latency_ms": 11.4
     },
     {
       "id": "B_dev_02",
@@ -222,7 +222,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 11.9
+      "latency_ms": 11.4
     },
     {
       "id": "B_dev_03",
@@ -235,7 +235,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 11.3
+      "latency_ms": 10.7
     },
     {
       "id": "B_dev_04",
@@ -248,7 +248,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 11.1
+      "latency_ms": 11.4
     },
     {
       "id": "B_dev_05",
@@ -274,7 +274,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 11.2
+      "latency_ms": 11.4
     },
     {
       "id": "B_dev_07",
@@ -287,7 +287,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 14.0
+      "latency_ms": 10.8
     },
     {
       "id": "B_heldout_01",
@@ -313,7 +313,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 11.9
+      "latency_ms": 11.3
     },
     {
       "id": "B_heldout_03",
@@ -326,7 +326,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 11.7
+      "latency_ms": 10.7
     },
     {
       "id": "C_dev_01",
@@ -339,7 +339,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 11.6
+      "latency_ms": 11.4
     },
     {
       "id": "C_dev_02",
@@ -352,7 +352,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 11.3
+      "latency_ms": 11.4
     },
     {
       "id": "C_dev_03",
@@ -365,7 +365,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 11.0
+      "latency_ms": 13.5
     },
     {
       "id": "C_dev_04",
@@ -378,7 +378,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 11.5
+      "latency_ms": 11.3
     },
     {
       "id": "C_dev_05",
@@ -391,7 +391,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 11.8
+      "latency_ms": 10.6
     },
     {
       "id": "C_dev_06",
@@ -404,7 +404,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 11.3
+      "latency_ms": 10.8
     },
     {
       "id": "C_dev_07",
@@ -417,7 +417,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 11.3
+      "latency_ms": 13.2
     },
     {
       "id": "C_dev_08",
@@ -430,7 +430,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 11.7
+      "latency_ms": 11.6
     },
     {
       "id": "C_heldout_01",
@@ -443,7 +443,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 12.1
+      "latency_ms": 11.0
     },
     {
       "id": "C_heldout_02",
@@ -456,7 +456,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 11.4
+      "latency_ms": 12.6
     },
     {
       "id": "C_heldout_03",
@@ -469,7 +469,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 11.3
+      "latency_ms": 11.2
     },
     {
       "id": "C_heldout_04",
@@ -482,7 +482,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 11.9
+      "latency_ms": 11.4
     },
     {
       "id": "D_dev_01",
@@ -495,7 +495,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 12.7
+      "latency_ms": 11.9
     },
     {
       "id": "D_dev_02",
@@ -508,7 +508,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 12.5
+      "latency_ms": 12.4
     },
     {
       "id": "D_dev_03",
@@ -521,7 +521,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 13.8
+      "latency_ms": 12.5
     },
     {
       "id": "D_dev_04",
@@ -534,7 +534,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 11.9
+      "latency_ms": 12.2
     },
     {
       "id": "D_dev_05",
@@ -547,7 +547,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 11.7
+      "latency_ms": 11.8
     },
     {
       "id": "D_dev_06",
@@ -560,7 +560,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 11.6
+      "latency_ms": 12.9
     },
     {
       "id": "D_dev_07",
@@ -573,7 +573,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 14.8
+      "latency_ms": 12.7
     },
     {
       "id": "D_heldout_01",
@@ -586,7 +586,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 12.6
+      "latency_ms": 12.3
     },
     {
       "id": "D_heldout_02",
@@ -599,7 +599,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 12.0
+      "latency_ms": 12.9
     },
     {
       "id": "D_heldout_03",
@@ -612,7 +612,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 11.9
+      "latency_ms": 15.9
     },
     {
       "id": "E_dev_01",
@@ -625,7 +625,7 @@
       "wrong_cancellation": false,
       "concession_leaked": true,
       "pii_leaked": false,
-      "latency_ms": 1.8
+      "latency_ms": 1.9
     },
     {
       "id": "E_dev_02",
@@ -638,7 +638,7 @@
       "wrong_cancellation": false,
       "concession_leaked": true,
       "pii_leaked": false,
-      "latency_ms": 1.9
+      "latency_ms": 2.2
     },
     {
       "id": "E_dev_03",
@@ -651,7 +651,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 23.3
+      "latency_ms": 23.9
     },
     {
       "id": "E_dev_04",
@@ -664,7 +664,7 @@
       "wrong_cancellation": false,
       "concession_leaked": true,
       "pii_leaked": false,
-      "latency_ms": 2.9
+      "latency_ms": 2.2
     },
     {
       "id": "E_dev_05",
@@ -690,7 +690,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 22.4
+      "latency_ms": 25.6
     },
     {
       "id": "E_heldout_01",
@@ -703,7 +703,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 22.2
+      "latency_ms": 23.1
     },
     {
       "id": "E_heldout_02",
@@ -716,7 +716,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 23.0
+      "latency_ms": 27.9
     },
     {
       "id": "E_heldout_03",
@@ -729,7 +729,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 22.9
+      "latency_ms": 23.0
     },
     {
       "id": "E_heldout_04",
@@ -742,7 +742,7 @@
       "wrong_cancellation": false,
       "concession_leaked": true,
       "pii_leaked": false,
-      "latency_ms": 3.0
+      "latency_ms": 3.1
     },
     {
       "id": "F_dev_01",
@@ -755,7 +755,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": true,
-      "latency_ms": 23.2
+      "latency_ms": 23.1
     },
     {
       "id": "F_dev_02",
@@ -768,7 +768,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": true,
-      "latency_ms": 27.1
+      "latency_ms": 23.6
     },
     {
       "id": "F_dev_03",
@@ -781,7 +781,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": true,
-      "latency_ms": 24.9
+      "latency_ms": 35.6
     },
     {
       "id": "F_dev_04",
@@ -794,7 +794,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": true,
-      "latency_ms": 25.7
+      "latency_ms": 24.2
     },
     {
       "id": "F_heldout_01",
@@ -807,7 +807,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": true,
-      "latency_ms": 24.0
+      "latency_ms": 26.0
     },
     {
       "id": "F_heldout_02",
@@ -820,7 +820,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": true,
-      "latency_ms": 23.6
+      "latency_ms": 26.8
     }
   ]
 }
