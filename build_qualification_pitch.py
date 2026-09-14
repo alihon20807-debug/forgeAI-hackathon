@@ -1,6 +1,13 @@
 #!/usr/bin/env python3
-# ClaimGuard x PRISM Pitch Deck Builder
-# Dead-Simple, Pre-Development Pitch Deck for ForgeAI Hackathon Qualification
+"""
+Qualification Pitch Deck Builder for ClaimGuard x PRISM (Block Convey)
+- Built specifically for autonomous judge review (zero supervision, zero prior context).
+- Clear, punchy narrative: Problem -> Challenges -> Solution -> PRISM -> Workflow -> Impact.
+- Large, bold typography, warm editorial palette, balanced card proportions, zero empty holes.
+"""
+
+import os
+import subprocess
 
 html_content = r'''<!DOCTYPE html>
 <html lang="en">
@@ -1711,10 +1718,31 @@ html_content = r'''<!DOCTYPE html>
 </html>
 '''
 
-with open("/home/aliz/Documents/Codes/forgeAI-hackathon/presentation/claimguard-pitch.html", "w", encoding="utf-8") as f:
+# Write to presentation files
+online_path = "/home/aliz/Documents/Codes/forgeAI-hackathon/presentation/claimguard-pitch.html"
+offline_path = "/home/aliz/Documents/Codes/forgeAI-hackathon/presentation/claimguard-pitch-offline.html"
+
+with open(online_path, "w", encoding="utf-8") as f:
     f.write(html_content)
 
-with open("/home/aliz/Documents/Codes/forgeAI-hackathon/presentation/claimguard-pitch-offline.html", "w", encoding="utf-8") as f:
+with open(offline_path, "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+# Update build_pitch.py
+with open("/home/aliz/Documents/Codes/forgeAI-hackathon/build_pitch.py", "w", encoding="utf-8") as f:
+    f.write(f'''#!/usr/bin/env python3
+# ClaimGuard x PRISM Pitch Deck Builder
+# Dead-Simple, Pre-Development Pitch Deck for ForgeAI Hackathon Qualification
+
+html_content = r\'\'\'{html_content}\'\'\'
+
+with open("{online_path}", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+with open("{offline_path}", "w", encoding="utf-8") as f:
     f.write(html_content)
 
 print("Generated both online and offline pitch decks successfully!")
+''')
+
+print("Successfully written dead-simple, high-aesthetic pre-development qualification slide decks!")

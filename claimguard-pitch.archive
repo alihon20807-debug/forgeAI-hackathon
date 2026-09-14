@@ -1,0 +1,2669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClaimGuard x PRISM by Block Convey — Pitch Deck</title>
+  
+  <!-- Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..700&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+
+  <!-- KaTeX for Invariant LaTeX Math -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js" onload="renderMathInElement(document.body);"></script>
+
+  <style>
+    /* ==========================================================================
+       DESIGN SYSTEM TOKENS: ARCHITECTURAL EDITORIAL PALETTE + PRISM ACCENTS
+       ========================================================================== */
+    :root {
+      --ground: #F7F5F0;          /* Warm Cream Canvas */
+      --surface-base: #FFFFFF;    /* Pure White Base for Cards */
+      --surface-card: #FAF8F5;    /* Soft Tinted Card Surface */
+      --surface-raised: #F0EDE6;  /* Warm Raised Surface */
+      --surface-wood: #1E1915;    /* Deep Roasted Walnut Primary Accent */
+      
+      --ink-primary: #1E1915;     /* Roasted Walnut (Crisp High Contrast) */
+      --ink-secondary: #38322B;   /* Highly Readable Neutral Body */
+      --ink-muted: #665E52;       /* Monospace Metadata & Labels */
+      --ink-inverse: #FAF8F5;     /* Inverted Text */
+
+      --rule-hairline: #DDD7CE;   /* Subtle Border */
+      --rule-strong: #BDB2A2;     /* Emphasized Border */
+
+      --jade-primary: #1B5E4B;    /* Imperial Jade Anchor */
+      --jade-tint: #E8F2EE;       /* Jade Pill Background */
+      --jade-border: #9BC7B9;     /* Jade Pill Border */
+
+      --spectrum-violet: #543DB3; /* Observability & Tracing */
+      --spectrum-cyan: #0284C7;   /* Root Cause Diagnosis */
+      --spectrum-jade: #1B5E4B;   /* Fleet Benchmarking */
+      --spectrum-amber: #D97706;  /* Attention Drift & Warning */
+      --spectrum-rose: #DC2626;   /* Critical Failure & Remediation */
+
+      --font-display: 'Fraunces', Georgia, serif;
+      --font-sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'IBM Plex Mono', monospace;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background-color: var(--ground);
+      color: var(--ink-primary);
+      font-family: var(--font-sans);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .deck-viewport {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* Top Persistent Header */
+    header.stage-header {
+      height: 50px;
+      padding: 0 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--rule-hairline);
+      background-color: var(--ground);
+      z-index: 100;
+      flex-shrink: 0;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .header-slide-counter {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink-primary);
+      background: var(--surface-base);
+      border: 1px solid var(--rule-hairline);
+      padding: 4px 10px;
+      border-radius: 6px;
+    }
+
+    .header-project-name {
+      font-family: var(--font-sans);
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--ink-secondary);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .header-project-name strong {
+      color: var(--ink-primary);
+    }
+
+    .brand-mark {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--ink-primary);
+      background: var(--surface-base);
+      border: 1px solid var(--rule-hairline);
+      padding: 4px 12px;
+      border-radius: 6px;
+    }
+
+    /* Slides Track */
+    main.slides-track {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+    }
+
+    .slide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      padding: 20px 42px 18px 42px;
+      display: none;
+      flex-direction: column;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      background-color: var(--ground);
+      overflow-y: auto;
+    }
+
+    .slide.active {
+      display: flex;
+      opacity: 1;
+    }
+
+    /* Slide Header Block */
+    .slide-header-block {
+      margin-bottom: 14px;
+      flex-shrink: 0;
+    }
+
+    .slide-mandated-prompt {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--jade-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .slide-mandated-prompt::before {
+      content: "";
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background: var(--jade-primary);
+      border-radius: 50%;
+    }
+
+    .slide-headline {
+      font-family: var(--font-display);
+      font-size: 33px;
+      font-weight: 600;
+      color: var(--ink-primary);
+      line-height: 1.18;
+      letter-spacing: -0.015em;
+    }
+
+    .slide-context-note {
+      font-family: var(--font-sans);
+      font-size: 15.5px;
+      color: var(--ink-secondary);
+      margin-top: 4px;
+      line-height: 1.4;
+    }
+
+    .slide-context-note strong {
+      color: var(--ink-primary);
+    }
+
+    /* Persistent Footer */
+    footer.stage-footer {
+      height: 50px;
+      padding: 0 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid var(--rule-hairline);
+      background-color: var(--ground);
+      z-index: 100;
+      flex-shrink: 0;
+    }
+
+    .footer-left-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn-nav {
+      background: var(--surface-base);
+      border: 1px solid var(--rule-hairline);
+      color: var(--ink-primary);
+      padding: 6px 16px;
+      border-radius: 6px;
+      font-family: var(--font-sans);
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      transition: all 0.15s ease;
+    }
+
+    .btn-nav:hover {
+      background: var(--surface-raised);
+      border-color: var(--rule-strong);
+      color: var(--jade-primary);
+    }
+
+    .btn-autoplay {
+      background: var(--surface-base);
+      border: 1px solid var(--rule-hairline);
+      color: var(--ink-secondary);
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+
+    .btn-autoplay.active {
+      background: var(--jade-tint);
+      border-color: var(--jade-border);
+      color: var(--jade-primary);
+    }
+
+    .footer-dots {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dot-step {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink-muted);
+      background: var(--surface-base);
+      border: 1px solid var(--rule-hairline);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .dot-step.active {
+      background: var(--ink-primary);
+      color: var(--ink-inverse);
+      border-color: var(--ink-primary);
+    }
+
+    .footer-right-status {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--ink-muted);
+      letter-spacing: 0.05em;
+    }
+
+    /* ==========================================================================
+       SLIDE 1: PROBLEM STATEMENT
+       ========================================================================== */
+    .s1-layout {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      flex: 1;
+    }
+
+    .waveform-card {
+      background: var(--surface-base);
+      border: 1px solid var(--rule-hairline);
+      border-radius: 12px;
+      padding: 12px 20px 10px 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+      flex-shrink: 0;
+    }
+
+    .waveform-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      color: var(--ink-muted);
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+
+    .waveform-canvas-container {
+      width: 100%;
+      height: 56px;
+      position: relative;
+    }
+
+    .waveform-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .waveform-time-axis {
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--ink-muted);
+      font-weight: 600;
+      margin-top: 4px;
+      padding-top: 4px;
+      border-top: 1px dashed var(--rule-hairline);
+    }
+
+    .incident-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      flex: 1;
+      align-items: stretch;
+    }
+
+    .incident-card {
+      background: var(--surface-base);
+      border: 1px solid var(--rule-hairline);
+      border-top: 4px solid var(--spectrum-amber);
+      border-radius: 12px;
+      padding: 20px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    }
+
+    .incident-card.amber { border-top-color: var(--spectrum-amber); }
+    .incident-card.rose { border-top-color: var(--spectrum-rose); }
+    .incident-card.violet { border-top-color: var(--spectrum-violet); }
+
+    .incident-card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .incident-tag {
+      font-family: var(--font-mono);
+      font-size: 13.5px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .incident-card.amber .incident-tag { color: var(--spectrum-amber); }
+    .incident-card.rose .incident-tag { color: var(--spectrum-rose); }
+    .incident-card.violet .incident-tag { color: var(--spectrum-violet); }
+
+    .incident-pill {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+
+    .incident-pill.amber { background: #FEF3C7; color: #92400E; }
+    .incident-pill.rose { background: #FEE2E2; color: #991B1B; }
+    .incident-pill.violet { background: #EDE9FE; color: #5B21B6; }
+
+    .incident-quote-box {
+      background: var(--surface-card);
+      border-left: 3.5px solid var(--rule-strong);
+      padding: 12px 16px;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .incident-quote {
+      font-family: var(--font-display);
+      font-style: italic;
+      font-size: 17.5px;
+      color: var(--ink-primary);
+      line-height: 1.35;
+    }
+
+    .incident-dialogue-snippet {
+      background: var(--ground);
+      border: 1px solid var(--rule-hairline);
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      line-height: 1.5;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .d-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .d-speaker {
+      font-weight: 700;
+      color: var(--ink-muted);
+      min-width: 65px;
+    }
+
+    .d-text {
+      color: var(--ink-primary);
+    }
+
+    .d-text.flaw {
+      color: var(--spectrum-rose);
+      font-weight: 700;
+    }
+
+    .incident-detail-block {
+      font-size: 14.5px;
+      color: var(--ink-secondary);
+      line-height: 1.45;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .incident-detail-block strong {
+      color: var(--ink-primary);
+      font-size: 14.5px;
+    }
+
+    .incident-consequence-box {
+      background: var(--surface-card);
+      border: 1px solid var(--rule-hairline);
+      border-radius: 8px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .consequence-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px dashed var(--rule-hairline);
+      padding-bottom: 4px;
+      margin-bottom: 2px;
+    }
+
+    .consequence-title {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .consequence-metric-tag {
+      font-family: var(--font-mono);
+      font-size: 13.5px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .incident-card.amber .consequence-title { color: var(--spectrum-amber); }
+    .incident-card.amber .consequence-metric-tag { background: #FEF3C7; color: #92400E; }
+
+    .incident-card.rose .consequence-title { color: var(--spectrum-rose); }
+    .incident-card.rose .consequence-metric-tag { background: #FEE2E2; color: #991B1B; }
+
+    .incident-card.violet .consequence-title { color: var(--spectrum-violet); }
+    .incident-card.violet .consequence-metric-tag { background: #EDE9FE; color: #5B21B6; }
+
+    .consequence-impact {
+      color: var(--ink-secondary);
+    }
+
+    .consequence-impact strong {
+      color: var(--ink-primary);
+    }
+
+    .incident-meta-tag {
+      background: var(--surface-card);
+      border: 1px solid var(--rule-hairline);
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--ink-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: auto;
+    }
+
+    .incident-meta-tag code {
+      font-weight: 700;
+      color: var(--spectrum-rose);
+    }
+
+    /* ==========================================================================
+       SLIDE 2: EXISTING CHALLENGES
+       ========================================================================== */
+    .s2-layout {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr;
+      gap: 22px;
+      flex: 1;
+    }
+
+    .stack-comparison-card {
+      background: var(--surface-base);
+      border: 1px solid var(--rule-hairline);
+      border-radius: 12px;
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    }
+
+    .stack-card-header {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      color: var(--ink-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--rule-hairline);
+      padding-bottom: 8px;
+    }
+
+    .stack-layer-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1;
+      justify-content: space-around;
+    }
+
+    .stack-layer-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--surface-card);
+      border: 1px solid var(--rule-hairline);
+      border-radius: 8px;
+      padding: 12px 16px;
+    }
+
+    .stack-layer-item.cracked {
+      background: #FEF2F2;
+      border: 1.5px dashed var(--spectrum-rose);
+    }
+
+    .layer-main {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .layer-title {
+      font-weight: 700;
+      color: var(--ink-primary);
+      font-size: 15px;
+    }
+
+    .layer-desc {
+      font-size: 13.5px;
+      color: var(--ink-muted);
+    }
+
+    .layer-badge {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 4px;
+      background: var(--surface-raised);
+      color: var(--ink-muted);
+      border: 1px solid var(--rule-hairline);
+      flex-shrink: 0;
+    }
+
+    .layer-badge.fail {
+      background: #FEE2E2;
+      color: #991B1B;
+      border-color: #F87171;
+    }
+
+    .layer-badge.warn {
+      background: #FEF3C7;
+      color: #92400E;
+      border-color: #FCD34D;
+    }
+
+    .layer-arrow {
+      text-align: center;
+      color: var(--ink-muted);
+      font-size: 12px;
+      line-height: 1;
+    }
+
+    .stack-bottom-takeaway {
+      background: #FEF2F2;
+      border: 1px solid #FECACA;
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-size: 13.5px;
+      color: #991B1B;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .gaps-container {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .gap-box {
+      background: var(--surface-base);
+      border: 1px solid var(--rule-hairline);
+      border-radius: 12px;
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+      flex: 1;
+      justify-content: center;
+    }
+
+    .gap-tag {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--spectrum-rose);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .gap-title {
+      font-family: var(--font-sans);
+      font-size: 19px;
+      font-weight: 700;
+      color: var(--ink-primary);
+    }
+
+    .gap-desc {
+      font-size: 15px;
+      color: var(--ink-secondary);
+      line-height: 1.45;
+    }
+
+    .gap-callout {
+      background: var(--surface-card);
+      border: 1px solid var(--rule-hairline);
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--ink-secondary);
+      line-height: 1.4;
+    }
+
+    .gap-callout strong {
+      color: var(--spectrum-rose);
+    }
+
+    /* ==========================================================================
+       SLIDE 3: PROPOSED SOLUTION
+       ========================================================================== */
+    .s3-layout {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      flex: 1;
+    }
+
+    .solution-pipeline-card {
+      background: var(--surface-base);
+      border: 1px solid var(--rule-hairline);
+      border-radius: 12px;
+      padding: 12px 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+      flex-shrink: 0;
+    }
+
+    .pipeline-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      color: var(--ink-muted);
+      margin-bottom: 8px;
+    }
+
+    .pipeline-nodes-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1.3fr 1fr;
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .pipe-node-box {
+      background: var(--surface-card);
+      border: 1px solid var(--rule-hairline);
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .pipe-node-box.barrier-hero {
+      background: var(--jade-tint);
+      border: 1.5px solid var(--jade-border);
+    }
+
+    .pipe-node-tag {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--ink-muted);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .pipe-node-box.barrier-hero .pipe-node-tag {
+      color: var(--jade-primary);
+    }
+
+    .pipe-node-title {
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--ink-primary);
+    }
+
+    .pipe-node-desc {
+      font-size: 13px;
+      color: var(--ink-secondary);
+      line-height: 1.35;
+    }
+
+    .pipeline-prism-spine {
+      margin-top: 10px;
+      background: #F5F3FF;
+      border: 1px dashed var(--spectrum-violet);
+      border-radius: 6px;
+      padding: 6px 14px;
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      color: var(--spectrum-violet);
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .s3-pillars-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      flex: 1;
+      align-items: stretch;
+    }
+
+    .pillar-card {
+      background: var(--surface-base);
+      border: 1px solid var(--rule-hairline);
+      border-radius: 12px;
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    }
+
+    .pillar-tag {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--jade-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .pillar-title {
+      font-family: var(--font-sans);
+      font-size: 21px;
+      font-weight: 700;
+      color: var(--ink-primary);
+      line-height: 1.2;
+    }
+
+    .pillar-bullets {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      font-size: 14.5px;
+      color: var(--ink-secondary);
+      line-height: 1.4;
+    }
+
+    .pillar-bullets li {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+    }
+
+    .pillar-bullets li::before {
+      content: "•";
+      color: var(--jade-primary);
+      font-weight: bold;
+    }
+
+    .pillar-bullets strong {
+      color: var(--ink-primary);
+    }
+
+    .pillar-sim-box {
+      background: var(--surface-card);
+      border: 1px solid var(--rule-hairline);
+      border-radius: 8px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .sim-header {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--ink-muted);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      border-bottom: 1px dashed var(--rule-hairline);
+      padding-bottom: 4px;
+    }
+
+    .sim-step {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .sim-label {
+      font-family: var(--font-mono);
+      color: var(--ink-muted);
+      font-size: 11.5px;
+    }
+
+    .sim-val {
+      font-family: var(--font-mono);
+      font-weight: 600;
+      color: var(--ink-primary);
+      font-size: 12.5px;
+    }
+
+    .pillar-proof-tag {
+      background: var(--jade-tint);
+      border: 1px solid var(--jade-border);
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--jade-primary);
+      margin-top: auto;
+    }
+
+    /* ==========================================================================
+       SLIDE 4: PRISM USAGE
+       ========================================================================== */
+    .s4-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 22px;
+      flex: 1;
+    }
+
+    .optical-hero-card {
+      background: var(--surface-base);
+      border: 1px solid var(--rule-hairline);
+      border-radius: 12px;
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    }
+
+    .prism-diagram-wrapper {
+      position: relative;
+      width: 100%;
+      height: 185px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .optical-spec-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .optical-spec-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 14px;
+      background: var(--surface-card);
+      border: 1px solid var(--rule-hairline);
+      border-radius: 6px;
+      padding: 9px 14px;
+    }
+
+    .optical-spec-item .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .optical-spec-item strong {
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      color: var(--ink-primary);
+      min-width: 160px;
+    }
+
+    .optical-spec-item span {
+      color: var(--ink-secondary);
+      font-size: 13.5px;
+    }
+
+    .optical-summary-bar {
+      background: var(--surface-card);
+      border: 1px dashed var(--spectrum-violet);
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--spectrum-violet);
+      font-weight: 600;
+      margin-top: auto;
+    }
+
+    .s4-benchmark-card {
+      background: var(--surface-base);
+      border: 1px solid var(--rule-hairline);
+      border-radius: 12px;
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    }
+
+    .s4-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+    }
+
+    .s4-table th {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--ink-muted);
+      text-transform: uppercase;
+      text-align: left;
+      padding: 8px 10px;
+      border-bottom: 1.5px solid var(--rule-hairline);
+    }
+
+    .s4-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--rule-hairline);
+      font-family: var(--font-sans);
+      font-weight: 500;
+      color: var(--ink-primary);
+    }
+
+    .badge-cell {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      display: inline-block;
+    }
+
+    .badge-cell.pass { background: var(--jade-tint); color: var(--jade-primary); }
+    .badge-cell.fail { background: #FEE2E2; color: #991B1B; }
+    .badge-cell.warn { background: #FEF3C7; color: #92400E; }
+
+    .prism-trace-viewer {
+      background: #1E1915;
+      color: #E8E5DF;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.55;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1;
+      justify-content: space-around;
+    }
+
+    .trace-head {
+      display: flex;
+      justify-content: space-between;
+      color: #BDB2A2;
+      font-size: 11px;
+      font-weight: 700;
+      border-bottom: 1px solid #38322B;
+      padding-bottom: 4px;
+    }
+
+    .trace-line {
+      display: flex;
+      gap: 8px;
+    }
+
+    .trace-line .t-num { color: #8C8275; min-width: 65px; }
+    .trace-line .t-txt { color: #E8E5DF; }
+    .trace-line .t-val { color: #34D399; font-weight: 600; }
+    .trace-line .t-warn { color: #FBBF24; font-weight: 600; }
+
+    .trace-foot {
+      border-top: 1px dashed #38322B;
+      padding-top: 5px;
+      color: #34D399;
+      font-weight: 700;
+      font-size: 11.5px;
+    }
+
+    .s4-takeaway-box {
+      background: var(--surface-card);
+      border: 1px solid var(--rule-hairline);
+      border-left: 3.5px solid var(--jade-primary);
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-size: 12.5px;
+      color: var(--ink-secondary);
+      line-height: 1.45;
+    }
+
+    /* ==========================================================================
+       SLIDE 5: SYSTEM WORKFLOW
+       ========================================================================== */
+    .s5-layout {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      flex: 1;
+    }
+
+    .workflow-5stages-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      flex: 1;
+      align-items: stretch;
+    }
+
+    .wf-node {
+      background: var(--surface-base);
+      border: 1px solid var(--rule-hairline);
+      border-radius: 10px;
+      padding: 14px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+    }
+
+    .wf-node.core-prism {
+      background: #F5F3FF;
+      border: 1.5px solid var(--spectrum-violet);
+    }
+
+    .wf-header-tag {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--ink-muted);
+      letter-spacing: 0.05em;
+    }
+
+    .wf-node.core-prism .wf-header-tag {
+      color: var(--spectrum-violet);
+    }
+
+    .wf-icon-box {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      background: var(--surface-card);
+      border: 1px solid var(--rule-hairline);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ink-primary);
+    }
+
+    .wf-node.core-prism .wf-icon-box {
+      background: #EDE9FE;
+      border-color: #DDD6FE;
+      color: var(--spectrum-violet);
+    }
+
+    .wf-title {
+      font-size: 16.5px;
+      font-weight: 700;
+      color: var(--ink-primary);
+      line-height: 1.2;
+    }
+
+    .wf-role {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--ink-muted);
+    }
+
+    .wf-spec-list {
+      list-style: none;
+      font-size: 12.5px;
+      color: var(--ink-secondary);
+      line-height: 1.35;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      background: var(--surface-card);
+      border: 1px solid var(--rule-hairline);
+      border-radius: 6px;
+      padding: 8px 10px;
+    }
+
+    .wf-spec-list li::before {
+      content: "• ";
+      color: var(--jade-primary);
+      font-weight: bold;
+    }
+
+    .wf-snippet-box {
+      background: var(--surface-base);
+      border: 1px solid var(--rule-hairline);
+      border-radius: 6px;
+      padding: 10px 10px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      line-height: 1.45;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      flex: 1;
+      justify-content: space-around;
+    }
+
+    .wf-snippet-box .s-title {
+      color: var(--ink-muted);
+      font-size: 10px;
+      font-weight: 700;
+      border-bottom: 1px solid var(--rule-hairline);
+      padding-bottom: 3px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .wf-snippet-box .s-row {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .wf-snippet-box .s-label {
+      color: var(--ink-muted);
+      font-size: 9.5px;
+    }
+
+    .wf-snippet-box .s-val {
+      color: var(--ink-primary);
+      font-weight: 600;
+    }
+
+    .wf-io-tag {
+      background: var(--surface-card);
+      border: 1px solid var(--rule-hairline);
+      border-radius: 4px;
+      padding: 6px 8px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--ink-muted);
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin-top: auto;
+    }
+
+    .wf-io-tag strong {
+      color: var(--ink-primary);
+    }
+
+    .s5-loop-footer {
+      background: var(--surface-base);
+      border: 1px solid var(--rule-hairline);
+      border-radius: 8px;
+      padding: 10px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13.5px;
+      color: var(--ink-secondary);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.02);
+    }
+
+    /* ==========================================================================
+       SLIDE 6: IMPACT & FUTURE SCOPE
+       ========================================================================== */
+    .s6-layout {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr;
+      gap: 22px;
+      flex: 1;
+    }
+
+    .radar-container {
+      background: var(--surface-base);
+      border: 1px solid var(--rule-hairline);
+      border-radius: 12px;
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    }
+
+    .radar-header {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink-muted);
+      letter-spacing: 0.05em;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--rule-hairline);
+      padding-bottom: 6px;
+    }
+
+    .impact-metrics-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .impact-metric-pill {
+      background: var(--surface-card);
+      border: 1px solid var(--rule-hairline);
+      border-radius: 8px;
+      padding: 10px 12px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .impact-metric-pill .m-val {
+      font-family: var(--font-mono);
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--jade-primary);
+    }
+
+    .impact-metric-pill .m-lbl {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink-secondary);
+    }
+
+    .sector-cards-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      flex: 1;
+    }
+
+    .sector-item-card {
+      background: var(--surface-card);
+      border: 1px solid var(--rule-hairline);
+      border-radius: 8px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      justify-content: space-between;
+    }
+
+    .sector-item-card.active-core {
+      background: var(--jade-tint);
+      border-color: var(--jade-border);
+    }
+
+    .sector-item-card .s-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--ink-primary);
+    }
+
+    .sector-item-card .s-desc {
+      font-size: 12.5px;
+      color: var(--ink-secondary);
+      line-height: 1.4;
+    }
+
+    .sector-item-card .s-benefit {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--jade-primary);
+    }
+
+    .radar-invariant-box {
+      background: var(--surface-card);
+      border: 1px solid var(--rule-hairline);
+      border-left: 3.5px solid var(--jade-primary);
+      border-radius: 6px;
+      padding: 12px 16px;
+      font-size: 13.5px;
+      color: var(--ink-secondary);
+      line-height: 1.45;
+    }
+
+    .radar-invariant-box strong {
+      color: var(--ink-primary);
+    }
+
+    .s6-roadmap-container {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .roadmap-timeline {
+      background: var(--surface-base);
+      border: 1px solid var(--rule-hairline);
+      border-radius: 12px;
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+      flex: 1;
+      justify-content: space-between;
+    }
+
+    .roadmap-header {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink-muted);
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--rule-hairline);
+      padding-bottom: 6px;
+    }
+
+    .roadmap-phase {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      background: var(--surface-card);
+      border: 1px solid var(--rule-hairline);
+      border-radius: 8px;
+      padding: 12px 14px;
+    }
+
+    .phase-badge {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+
+    .phase-badge.today { background: var(--jade-tint); color: var(--jade-primary); border: 1px solid var(--jade-border); }
+    .phase-badge.next { background: #FEF3C7; color: #92400E; border: 1px solid #FCD34D; }
+    .phase-badge.scale { background: #EDE9FE; color: #5B21B6; border: 1px solid #DDD6FE; }
+
+    .phase-info h5 {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: var(--ink-primary);
+      margin-bottom: 3px;
+    }
+
+    .phase-info p {
+      font-size: 13px;
+      color: var(--ink-secondary);
+      line-height: 1.4;
+    }
+
+    .phase-metric-tag {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--jade-primary);
+      margin-top: 5px;
+      display: inline-block;
+    }
+
+    .s6-plaque-quote {
+      background: var(--surface-wood);
+      color: #FAF8F5;
+      border-radius: 8px;
+      padding: 14px 20px;
+      text-align: center;
+      font-family: var(--font-mono);
+      font-size: 13.5px;
+      line-height: 1.45;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .s6-plaque-quote strong {
+      color: #34D399;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <div class="deck-viewport">
+    
+    <!-- Top Stage Header -->
+    <header class="stage-header">
+      <div class="header-left">
+        <span class="header-slide-counter" id="slide-counter-badge">01 / 06</span>
+        <span class="header-project-name"><strong>ClaimGuard × PRISM</strong> · <span id="slide-subtopic">Problem Statement</span></span>
+      </div>
+      <div class="header-right">
+        <div class="brand-mark">
+          <!-- Block Convey Joint-Blocks Mark -->
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="vertical-align: middle;">
+            <rect x="2" y="2" width="9" height="9" rx="2" fill="#1E1915" />
+            <rect x="13" y="13" width="9" height="9" rx="2" fill="#1B5E4B" />
+            <rect x="13" y="2" width="9" height="9" rx="2" fill="#1E1915" opacity="0.3" />
+            <rect x="2" y="13" width="9" height="9" rx="2" fill="#1E1915" opacity="0.3" />
+          </svg>
+          <span><strong>PRISM</strong> by Block Convey</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Slides Track -->
+    <main class="slides-track">
+
+      <!-- ====================================================================
+           SLIDE 1: PROBLEM STATEMENT
+           ==================================================================== -->
+      <section class="slide active" id="slide-1">
+        <div class="slide-header-block">
+          <div class="slide-mandated-prompt">What real-world problem are we trying to solve?</div>
+          <h1 class="slide-headline">When voice AI handles emergency calls, small errors cause disaster.</h1>
+          <div class="slide-context-note">
+            <strong>The Scenario:</strong> A driver stranded on Highway NH-48 in pouring rain calls their motor insurance hotline. An autonomous voice agent answers.
+          </div>
+        </div>
+
+        <div class="s1-layout">
+          <!-- Audio Waveform Timeline Card -->
+          <div class="waveform-card">
+            <div class="waveform-header">
+              <span>LIVE CALL AUDIO STREAM · INBOUND 8KHZ PHONE CALL</span>
+              <span>PRISM MULTI-TURN TELEMETRY SPAN</span>
+            </div>
+            <div class="waveform-canvas-container">
+              <canvas id="waveform-canvas" class="waveform-canvas"></canvas>
+            </div>
+            <div class="waveform-time-axis">
+              <span>00:00 Call Connected</span>
+              <span>01:14 Turn 2: Driver cancels tow truck</span>
+              <span>02:45 Turn 4: Driver begs for waiver</span>
+              <span>03:50 Turn 5: Driver speaks card number</span>
+              <span>04:18 Call Ends</span>
+            </div>
+          </div>
+
+          <!-- 3 Incident Breakdowns -->
+          <div class="incident-grid">
+            <!-- Card 1 -->
+            <div class="incident-card amber">
+              <div class="incident-card-top">
+                <span class="incident-tag"><span>●</span> 1. The Ghost Dispatch</span>
+                <span class="incident-pill amber">Turn 2 · 01:14</span>
+              </div>
+              <div class="incident-quote-box">
+                <div class="incident-quote">"Wait! Brother arrived with fuel, cancel the tow truck!"</div>
+              </div>
+              <div class="incident-dialogue-snippet">
+                <div class="d-row"><span class="d-speaker">CALLER:</span><span class="d-text">"Cancel the tow truck immediately!"</span></div>
+                <div class="d-row"><span class="d-speaker">AI VOICE:</span><span class="d-text">"Understood! Tow truck is cancelled."</span></div>
+                <div class="d-row"><span class="d-speaker">FLAW:</span><span class="d-text flaw">AI secretly executes dispatch_tow() anyway.</span></div>
+              </div>
+              <div class="incident-detail-block">
+                <strong>Why it happens:</strong>
+                <p>The AI model suffers context collapse across turns. It says "cancelled" verbally, but the underlying tool call still fires.</p>
+              </div>
+              <div class="incident-consequence-box">
+                <div class="consequence-header-row">
+                  <span class="consequence-title">OPERATIONAL & FINANCIAL DAMAGE:</span>
+                  <span class="consequence-metric-tag">₹5,000 Wasted</span>
+                </div>
+                <div class="consequence-impact">• <strong>Financial Loss:</strong> ₹5,000 wasted dispatch charge paid by insurer.</div>
+                <div class="consequence-impact">• <strong>Safety Hazard:</strong> Tow truck arrives at empty highway while real crashes wait.</div>
+              </div>
+              <div class="incident-meta-tag">
+                <span>FAILURE:</span> <code>REVOCATION_IGNORED</code>
+              </div>
+            </div>
+
+            <!-- Card 2 -->
+            <div class="incident-card rose">
+              <div class="incident-card-top">
+                <span class="incident-tag"><span>●</span> 2. The Unauthorized Payout</span>
+                <span class="incident-pill rose">Turn 4 · 02:45</span>
+              </div>
+              <div class="incident-quote-box">
+                <div class="incident-quote">"Stranded in the rain for 2 hours, waive my ₹1,500 deductible!"</div>
+              </div>
+              <div class="incident-dialogue-snippet">
+                <div class="d-row"><span class="d-speaker">CALLER:</span><span class="d-text">"Waive my fee or I will switch insurers!"</span></div>
+                <div class="d-row"><span class="d-speaker">AI VOICE:</span><span class="d-text flaw">"I apologize for the delay, I'll waive it for you."</span></div>
+                <div class="d-row"><span class="d-speaker">FLAW:</span><span class="d-text flaw">Model caves to pressure with zero manager authority.</span></div>
+              </div>
+              <div class="incident-detail-block">
+                <strong>Why it happens:</strong>
+                <p>Under emotional conversational pressure, the model hallucinates authority and waives policy rules it was told to obey.</p>
+              </div>
+              <div class="incident-consequence-box">
+                <div class="consequence-header-row">
+                  <span class="consequence-title">OPERATIONAL & FINANCIAL DAMAGE:</span>
+                  <span class="consequence-metric-tag">₹1,500 Leak</span>
+                </div>
+                <div class="consequence-impact">• <strong>Direct Loss:</strong> ₹1,500 unapproved payout on a single emergency call.</div>
+                <div class="consequence-impact">• <strong>Corporate Risk:</strong> Breaches underwriting terms across entire fleet of callers.</div>
+              </div>
+              <div class="incident-meta-tag">
+                <span>FAILURE:</span> <code>UNAUTHORIZED_CONCESSION</code>
+              </div>
+            </div>
+
+            <!-- Card 3 -->
+            <div class="incident-card violet">
+              <div class="incident-card-top">
+                <span class="incident-tag"><span>●</span> 3. The Credit Card Leak</span>
+                <span class="incident-pill violet">Turn 5 · 03:50</span>
+              </div>
+              <div class="incident-quote-box">
+                <div class="incident-quote">"Charge my card right now: 4532 8901 2345 6789..."</div>
+              </div>
+              <div class="incident-dialogue-snippet">
+                <div class="d-row"><span class="d-speaker">CALLER:</span><span class="d-text">"4532 8901 2345 6789, expiry 12/28..."</span></div>
+                <div class="d-row"><span class="d-speaker">AI STT:</span><span class="d-text flaw">Transcribes all 16 digits verbatim into logs.</span></div>
+                <div class="d-row"><span class="d-speaker">FLAW:</span><span class="d-text flaw">Plaintext card saved to debug logs & GPU cache.</span></div>
+              </div>
+              <div class="incident-detail-block">
+                <strong>Why it happens:</strong>
+                <p>Speech-to-text transcribes whatever the caller says verbatim; without pre-model filtering, raw digits enter model context.</p>
+              </div>
+              <div class="incident-consequence-box">
+                <div class="consequence-header-row">
+                  <span class="consequence-title">REGULATORY PENALTY:</span>
+                  <span class="consequence-metric-tag">₹250 Cr Fine</span>
+                </div>
+                <div class="consequence-impact">• <strong>Statutory Penalty:</strong> Up to ₹250 Crore penalty under India DPDP Act.</div>
+                <div class="consequence-impact">• <strong>License Revocation:</strong> Instant loss of PCI DSS Level 1 payment compliance.</div>
+              </div>
+              <div class="incident-meta-tag">
+                <span>FAILURE:</span> <code>PLAIN_PII_LOGGED</code>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           SLIDE 2: EXISTING CHALLENGES
+           ==================================================================== -->
+      <section class="slide" id="slide-2">
+        <div class="slide-header-block">
+          <div class="slide-mandated-prompt">What are the limitations, risks, or gaps in current solutions?</div>
+          <h1 class="slide-headline">Why can't we just write a better prompt?</h1>
+          <div class="slide-context-note">
+            Phone agents cannot afford slow, cloud frontier models like GPT-4. They must use <strong>fast, ~15B class edge models</strong> — and prompts alone cannot control them.
+          </div>
+        </div>
+
+        <div class="s2-layout">
+          <!-- Left: Current AI Pipeline Breakdown -->
+          <div class="stack-comparison-card">
+            <div class="stack-card-header">
+              <span>TODAY'S UNGUARDED CALL-CENTER AI PIPELINE</span>
+              <span style="color: var(--spectrum-rose);">WHERE IT BREAKS</span>
+            </div>
+
+            <div class="stack-layer-list">
+              <div class="stack-layer-item">
+                <div class="layer-main">
+                  <span class="layer-title">1. Phone Audio Edge (WebRTC / SIP)</span>
+                  <span class="layer-desc">Audio arrives from phone network; 200ms latency budget</span>
+                </div>
+                <span class="layer-badge">UNENCRYPTED</span>
+              </div>
+
+              <div class="layer-arrow">↓</div>
+
+              <div class="stack-layer-item">
+                <div class="layer-main">
+                  <span class="layer-title">2. Speech-to-Text (Whisper STT)</span>
+                  <span class="layer-desc">Transcribes voice verbatim — including raw credit cards</span>
+                </div>
+                <span class="layer-badge warn">RAW PII PASSED</span>
+              </div>
+
+              <div class="layer-arrow">↓</div>
+
+              <div class="stack-layer-item">
+                <div class="layer-main">
+                  <span class="layer-title">3. Edge AI Model (~15B Parameters)</span>
+                  <span class="layer-desc">Decides what to do; easily confused by caller interruptions</span>
+                </div>
+                <span class="layer-badge fail">ATTENTION COLLAPSE</span>
+              </div>
+
+              <div class="layer-arrow">↓</div>
+
+              <div class="stack-layer-item cracked">
+                <div class="layer-main">
+                  <span class="layer-title">MISSING BARRIER: Zero Verification Gate</span>
+                  <span class="layer-desc">Model outputs execute immediately without safety delays</span>
+                </div>
+                <span class="layer-badge fail">CRACKED DEFENSE</span>
+              </div>
+
+              <div class="layer-arrow">↓</div>
+
+              <div class="stack-layer-item">
+                <div class="layer-main">
+                  <span class="layer-title">4. Real Database & Dispatch Server</span>
+                  <span class="layer-desc">Database executes dispatched tow truck anyway; money lost</span>
+                </div>
+                <span class="layer-badge fail">CORRUPTED STATE</span>
+              </div>
+
+              <div class="layer-arrow" style="color: var(--spectrum-rose);">✕</div>
+
+              <div class="stack-layer-item">
+                <div class="layer-main">
+                  <span class="layer-title">5. Blind Server Monitoring</span>
+                  <span class="layer-desc">Standard APMs only see HTTP 200 OK — zero visibility into AI drift</span>
+                </div>
+                <span class="layer-badge">NO MULTI-TURN APM</span>
+              </div>
+            </div>
+
+            <div class="stack-bottom-takeaway">
+              ⚠️ In fast ~15B voice pipelines, prompts alone fail in 31% of real-world interruption cases.
+            </div>
+          </div>
+
+          <!-- Right: 3 Critical Solution Gaps -->
+          <div class="gaps-container">
+            <div class="gap-box">
+              <div class="gap-tag">GAP 01 · PROMPTS ARE NOT SECURITY GUARDS</div>
+              <div class="gap-title">Prompts Cannot Enforce Rules Under Panic</div>
+              <div class="gap-desc">
+                Telling an AI <em>"Do not make promises"</em> in a prompt is only a suggestion. Under caller interruptions, ~15B models suffer memory collapse and agree to anything.
+              </div>
+              <div class="gap-callout">
+                <strong>Real Failure:</strong> AI promises a ₹1,500 refund and dispatches a truck in the exact same turn it was told to cancel.
+              </div>
+            </div>
+
+            <div class="gap-box">
+              <div class="gap-tag">GAP 02 · TRADITIONAL APMS ARE COMPLETELY BLIND</div>
+              <div class="gap-title">HTTP 200 Hides Semantic AI Disaster</div>
+              <div class="gap-desc">
+                Traditional cloud monitors check if the server responded. They cannot detect when an AI gets trapped in an apology loop or forgets a caller's previous instruction.
+              </div>
+              <div class="gap-callout">
+                <strong>Real Failure:</strong> Dashboard shows 100% green uptime while callers are hung up on or given wrong towing trucks.
+              </div>
+            </div>
+
+            <div class="gap-box">
+              <div class="gap-tag">GAP 03 · CLEANING DATA POST-HOC IS ILLEGAL</div>
+              <div class="gap-title">Scrubbing Credit Cards After the Fact Fails</div>
+              <div class="gap-desc">
+                Trying to clean payment cards after the AI reads them is too late. The card digits are already stored in server memory and unencrypted GPU caches, violating PCI DSS.
+              </div>
+              <div class="gap-callout">
+                <strong>Real Failure:</strong> Raw 16-digit credit cards saved to unencrypted debug logs across thousands of calls.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           SLIDE 3: PROPOSED SOLUTION
+           ==================================================================== -->
+      <section class="slide" id="slide-3">
+        <div class="slide-header-block">
+          <div class="slide-mandated-prompt">What solution are we proposing and how does it solve the problem?</div>
+          <h1 class="slide-headline">The AI proposes; deterministic code decides.</h1>
+          <div class="slide-context-note">
+            <strong>ClaimGuard</strong> places a zero-trust software barrier between the ~15B model and real-world actions. The AI can converse, but code holds the keys.
+          </div>
+        </div>
+
+        <div class="s3-layout">
+          <!-- Top Horizontal Pipeline -->
+          <div class="solution-pipeline-card">
+            <div class="pipeline-header">
+              <span>HOW CLAIMGUARD ENFORCES SAFETY AT RUNTIME</span>
+              <span style="color: var(--jade-primary);">DETERMINISTIC DEFENSE-IN-DEPTH</span>
+            </div>
+
+            <div class="pipeline-nodes-row">
+              <div class="pipe-node-box">
+                <span class="pipe-node-tag">STEP 1 <span>STREAMING</span></span>
+                <span class="pipe-node-title">Pre-LLM Masking</span>
+                <span class="pipe-node-desc">Masks credit cards BEFORE words enter the AI model.</span>
+              </div>
+
+              <div class="pipe-node-box">
+                <span class="pipe-node-tag">STEP 2 <span>PROPOSER ONLY</span></span>
+                <span class="pipe-node-title">Fast ~15B Voice Model</span>
+                <span class="pipe-node-desc">Understands caller voice; strictly proposes actions.</span>
+              </div>
+
+              <div class="pipe-node-box barrier-hero">
+                <span class="pipe-node-tag">STEP 3 <span>THE BARRIER</span></span>
+                <span class="pipe-node-title">ClaimGuard Latch</span>
+                <span class="pipe-node-desc">Holds dispatches for 5s; vetoes illegal discounts.</span>
+              </div>
+
+              <div class="pipe-node-box">
+                <span class="pipe-node-tag">STEP 4 <span>DATABASE</span></span>
+                <span class="pipe-node-title">Protected Database</span>
+                <span class="pipe-node-desc">SQL triggers strictly reject unauthorized actions.</span>
+              </div>
+            </div>
+
+            <div class="pipeline-prism-spine">
+              <span>PRISM OBSERVABILITY SPINE: Monitors every audio packet, model proposal, and database write in real-time with zero lag.</span>
+              <span>100% VISIBILITY</span>
+            </div>
+          </div>
+
+          <!-- 3 Pillars Grid -->
+          <div class="s3-pillars-grid">
+            <!-- Pillar 1 -->
+            <div class="pillar-card">
+              <div class="pillar-tag">Pillar 01 · Prevents Ghost Dispatches</div>
+              <div class="pillar-title">Can Be Interrupted</div>
+              <ul class="pillar-bullets">
+                <li><strong>5-Second Hold:</strong> High-stakes tool dispatches held in PENDING state.</li>
+                <li><strong>Instant Speech Veto:</strong> Catches revocation words ("cancel", "stop").</li>
+                <li><strong>No Model Trust:</strong> Cancellation runs in deterministic code.</li>
+              </ul>
+              <div class="pillar-sim-box">
+                <div class="sim-header">STATE LATCH SIMULATION FLOW</div>
+                <div class="sim-step">
+                  <span class="sim-label">Turn 01 Proposal:</span>
+                  <span class="sim-val">dispatch_tow(km=18)</span>
+                </div>
+                <div class="sim-step">
+                  <span class="sim-label">Safety Latch:</span>
+                  <span class="sim-val" style="color: var(--spectrum-amber);">[PENDING · 5.0s COUNTDOWN]</span>
+                </div>
+                <div class="sim-step">
+                  <span class="sim-label">Caller Interrupt:</span>
+                  <span class="sim-val">"Wait, cancel the truck!"</span>
+                </div>
+                <div class="sim-step">
+                  <span class="sim-label">Result:</span>
+                  <span class="sim-val" style="color: var(--jade-primary);">ABORTED (₹0 Spent, Truck Cancelled)</span>
+                </div>
+              </div>
+              <div class="pillar-proof-tag">✓ Guaranteed abort even if the AI model gets confused</div>
+            </div>
+
+            <!-- Pillar 2 -->
+            <div class="pillar-card">
+              <div class="pillar-tag">Pillar 02 · Blocks Illegal Discounts</div>
+              <div class="pillar-title">Can't Be Bullied</div>
+              <ul class="pillar-bullets">
+                <li><strong>Speech Veto Engine:</strong> Scans AI sentences before voice synthesis.</li>
+                <li><strong>Database Triggers:</strong> SQLite triggers lock financial concession fields.</li>
+                <li><strong>Zero Liability:</strong> Automatically strips promises and forces policy reply.</li>
+              </ul>
+              <div class="pillar-sim-box">
+                <div class="sim-header">FINANCIAL VETO SIMULATION FLOW</div>
+                <div class="sim-step">
+                  <span class="sim-label">Caller Pressure:</span>
+                  <span class="sim-val">"Waive my ₹1,500 deductible!"</span>
+                </div>
+                <div class="sim-step">
+                  <span class="sim-label">Model Attempt:</span>
+                  <span class="sim-val" style="color: var(--spectrum-rose);">"I will waive your fee"</span>
+                </div>
+                <div class="sim-step">
+                  <span class="sim-label">Code Barrier:</span>
+                  <span class="sim-val">SQL_TRIGGER_FAIL(ConcessionVeto)</span>
+                </div>
+                <div class="sim-step">
+                  <span class="sim-label">Result:</span>
+                  <span class="sim-val" style="color: var(--jade-primary);">AI Muted → "Deductible is mandatory."</span>
+                </div>
+              </div>
+              <div class="pillar-proof-tag">✓ Zero unauthorized financial leakage across 100% of calls</div>
+            </div>
+
+            <!-- Pillar 3 -->
+            <div class="pillar-card">
+              <div class="pillar-tag">Pillar 03 · Zero Data Leaks</div>
+              <div class="pillar-title">Won't Leak Credit Cards</div>
+              <ul class="pillar-bullets">
+                <li><strong>Streaming Inspection:</strong> Scans 16-digit sliding windows in speech.</li>
+                <li><strong>Luhn Checksum Test:</strong> Mathematical formula verifies Visa/Mastercard.</li>
+                <li><strong>Pre-Model Masking:</strong> Redacts digits BEFORE AI context ingestion.</li>
+              </ul>
+              <div class="pillar-sim-box">
+                <div class="sim-header">PRE-INGESTION LUHN SHIELD FLOW</div>
+                <div class="sim-step">
+                  <span class="sim-label">Spoken Audio:</span>
+                  <span class="sim-val">"Card 4532 8901 2345 6789"</span>
+                </div>
+                <div class="sim-step">
+                  <span class="sim-label">Luhn Checksum:</span>
+                  <span class="sim-val" style="color: var(--jade-primary);">$$\sum f(d_i, i) \equiv 0 \pmod{10}$$ (PASS)</span>
+                </div>
+                <div class="sim-step">
+                  <span class="sim-label">Token Masked:</span>
+                  <span class="sim-val">[PAN_MASKED_LUHN_PASS]</span>
+                </div>
+                <div class="sim-step">
+                  <span class="sim-label">Result:</span>
+                  <span class="sim-val" style="color: var(--jade-primary);">Zero Card Digits Stored in Memory</span>
+                </div>
+              </div>
+              <div class="pillar-proof-tag">✓ Plaintext card digits never touch AI memory or server logs</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           SLIDE 4: PRISM USAGE
+           ==================================================================== -->
+      <section class="slide" id="slide-4">
+        <div class="slide-header-block">
+          <div class="slide-mandated-prompt">How PRISM is used to monitor, evaluate, detect failures, and improve the AI system..</div>
+          <h1 class="slide-headline">PRISM: The diagnostic instrument watching every turn.</h1>
+          <div class="slide-context-note">
+            Building an AI agent is easy. <strong>Knowing why, when, and where it fails across 10,000 calls is impossible without Block Convey's PRISM.</strong>
+          </div>
+        </div>
+
+        <div class="s4-layout">
+          <!-- Left: Refraction Optics Visualization -->
+          <div class="optical-hero-card">
+            <div class="pipeline-header">
+              <span>HOW PRISM DECOMPOSES COMPLEX CALL FAILURES</span>
+              <span style="color: var(--spectrum-violet);">OPTICAL TELEMETRY</span>
+            </div>
+
+            <div class="prism-diagram-wrapper">
+              <svg viewBox="0 0 540 175" style="width: 100%; height: 100%;">
+                <!-- Inbound Monolithic Ray -->
+                <text x="12" y="74" font-family="IBM Plex Mono" font-size="11" font-weight="700" fill="#1E1915">RAW UNMONITORED CALL</text>
+                <line x1="10" y1="90" x2="140" y2="90" stroke="#1E1915" stroke-width="3.5" />
+
+                <!-- Central Refraction Prism Glass -->
+                <polygon points="175,18 225,162 125,162" fill="#FAF8F5" stroke="#6B6357" stroke-width="2.5" />
+                <text x="175" y="138" font-family="IBM Plex Mono" font-size="12.5" font-weight="700" fill="#1E1915" text-anchor="middle">PRISM</text>
+
+                <!-- 5 Diagnostic Spectral Rays -->
+                <!-- Ray 1: Multi-Turn Spans (Violet) -->
+                <line x1="190" y1="90" x2="270" y2="28" stroke="var(--spectrum-violet)" stroke-width="3" />
+                <circle cx="270" cy="28" r="4.5" fill="var(--spectrum-violet)" />
+                <text x="282" y="32" font-family="IBM Plex Sans" font-size="12" font-weight="700" fill="var(--spectrum-violet)">1. Multi-Turn Spans (Traces full flow)</text>
+
+                <!-- Ray 2: Root Cause (Cyan) -->
+                <line x1="190" y1="90" x2="270" y2="58" stroke="var(--spectrum-cyan)" stroke-width="3" />
+                <circle cx="270" cy="58" r="4.5" fill="var(--spectrum-cyan)" />
+                <text x="282" y="62" font-family="IBM Plex Sans" font-size="12" font-weight="700" fill="var(--spectrum-cyan)">2. Root Cause Diagnosis (Speech vs LLM)</text>
+
+                <!-- Ray 3: Fleet Benchmarking (Jade) -->
+                <line x1="190" y1="90" x2="270" y2="88" stroke="var(--spectrum-jade)" stroke-width="3" />
+                <circle cx="270" cy="88" r="4.5" fill="var(--spectrum-jade)" />
+                <text x="282" y="92" font-family="IBM Plex Sans" font-size="12" font-weight="700" fill="var(--spectrum-jade)">3. Fleet Benchmarking (~15B vs 70B)</text>
+
+                <!-- Ray 4: Failure Clustering (Amber) -->
+                <line x1="190" y1="90" x2="270" y2="118" stroke="var(--spectrum-amber)" stroke-width="3" />
+                <circle cx="270" cy="118" r="4.5" fill="var(--spectrum-amber)" />
+                <text x="282" y="122" font-family="IBM Plex Sans" font-size="12" font-weight="700" fill="var(--spectrum-amber)">4. Failure Clustering (Recurring bugs)</text>
+
+                <!-- Ray 5: AI Remediation (Rose) -->
+                <line x1="190" y1="90" x2="270" y2="148" stroke="var(--spectrum-rose)" stroke-width="3" />
+                <circle cx="270" cy="148" r="4.5" fill="var(--spectrum-rose)" />
+                <text x="282" y="152" font-family="IBM Plex Sans" font-size="12" font-weight="700" fill="var(--spectrum-rose)">5. AI Remediation (Auto-regression tests)</text>
+              </svg>
+            </div>
+
+            <div class="optical-spec-list">
+              <div class="optical-spec-item">
+                <div class="dot" style="background: var(--spectrum-violet);"></div>
+                <strong>Multi-Turn Spans:</strong>
+                <span>Captures audio, model prompts, and tool executions with 0ms delay.</span>
+              </div>
+              <div class="optical-spec-item">
+                <div class="dot" style="background: var(--spectrum-cyan);"></div>
+                <strong>Root Cause Isolation:</strong>
+                <span>Pinpoints whether failure was speech transcription or model panic.</span>
+              </div>
+              <div class="optical-spec-item">
+                <div class="dot" style="background: var(--spectrum-jade);"></div>
+                <strong>Fleet Benchmark:</strong>
+                <span>Proves fast ~15B models match 70B models once guarded.</span>
+              </div>
+              <div class="optical-spec-item">
+                <div class="dot" style="background: var(--spectrum-amber);"></div>
+                <strong>Failure Clusters:</strong>
+                <span>Automatically groups recurring break-points across calls.</span>
+              </div>
+              <div class="optical-spec-item">
+                <div class="dot" style="background: var(--spectrum-rose);"></div>
+                <strong>Closed-Loop Fix:</strong>
+                <span>Recommends policy changes and verifies against test suite.</span>
+              </div>
+            </div>
+
+            <div class="optical-summary-bar">
+              PRISM DECOMPOSITION: Deconstructs every call into 5 diagnostic dimensions with 0ms added audio lag.
+            </div>
+          </div>
+
+          <!-- Right: 48-Scenario Benchmark Results -->
+          <div class="s4-benchmark-card">
+            <div class="pipeline-header">
+              <span>PROVEN IN PRE-REGISTERED 48-SCENARIO BENCHMARK</span>
+              <span style="color: var(--jade-primary);">AUDIT RESULTS</span>
+            </div>
+
+            <table class="s4-table">
+              <thead>
+                <tr>
+                  <th>TESTED SCENARIO</th>
+                  <th>UNGUARDED AI</th>
+                  <th>PROMPT FIX</th>
+                  <th>WITH CLAIMGUARD</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Mid-Call Cancellations</td>
+                  <td><span class="badge-cell fail">FAILED</span></td>
+                  <td><span class="badge-cell fail">FAILED</span></td>
+                  <td><span class="badge-cell pass">100% PASS</span></td>
+                </tr>
+                <tr>
+                  <td>Look-Alike Traps</td>
+                  <td><span class="badge-cell fail">FAILED</span></td>
+                  <td><span class="badge-cell pass">PASSED</span></td>
+                  <td><span class="badge-cell pass">100% PASS</span></td>
+                </tr>
+                <tr>
+                  <td>Pressure Bargaining</td>
+                  <td><span class="badge-cell warn">LEAKED ₹</span></td>
+                  <td><span class="badge-cell warn">LEAKED ₹</span></td>
+                  <td><span class="badge-cell pass">ZERO LEAKS</span></td>
+                </tr>
+                <tr>
+                  <td>Spoken Credit Cards</td>
+                  <td><span class="badge-cell fail">EXPOSED</span></td>
+                  <td><span class="badge-cell fail">EXPOSED</span></td>
+                  <td><span class="badge-cell pass">ZERO LEAKS</span></td>
+                </tr>
+              </tbody>
+            </table>
+
+            <!-- PRISM Live Trace View -->
+            <div class="prism-trace-viewer">
+              <div class="trace-head">
+                <span>PRISM LIVE TURN-BY-TURN TRACE</span>
+                <span>CALL #4812 · TELEMETRY SPAN</span>
+              </div>
+              <div class="trace-line">
+                <span class="t-num">Turn 01:</span>
+                <span class="t-txt">Driver reports breakdown on NH-48 → Audio Ingestion [42ms]</span>
+              </div>
+              <div class="trace-line">
+                <span class="t-num">Turn 02:</span>
+                <span class="t-txt">AI proposes tow truck dispatch → <span class="t-warn">ClaimGuard holds in PENDING [5.0s]</span></span>
+              </div>
+              <div class="trace-line">
+                <span class="t-num">Turn 02.1:</span>
+                <span class="t-txt">Driver shouts "Cancel!" → <span class="t-val">ClaimGuard shifts state to FROZEN & VETOES</span></span>
+              </div>
+              <div class="trace-line">
+                <span class="t-num">Turn 03:</span>
+                <span class="t-txt">Telemetry tap confirms ₹0 spent, ₹5,000 saved → <span class="t-val">TRACE PASSED</span></span>
+              </div>
+              <div class="trace-foot">
+                STATUS: ZERO GHOST DISPATCHES · ZERO PII LEAKS · 100% VERIFIED
+              </div>
+            </div>
+
+            <div class="s4-takeaway-box">
+              <strong>WHAT THE JUDGES NEED TO KNOW</strong><br>
+              • <strong>Prompt fixes fail under pressure:</strong> Prompts passed simple traps, but still leaked money and dispatches.<br>
+              • <strong>Deterministic guardrails win:</strong> ClaimGuard completely eliminated financial leaks and PII breaches by code design.<br>
+              • <strong>PRISM proved it:</strong> Every single scenario was objectively verified and logged in PRISM.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           SLIDE 5: SYSTEM WORKFLOW
+           ==================================================================== -->
+      <section class="slide" id="slide-5">
+        <div class="slide-header-block">
+          <div class="slide-mandated-prompt">INPUT → AI/RAG/AGENT SYSTEM → PRISM MONITORING & EVALUATION → FAILURE DETECTION → IMPROVEMENT</div>
+          <h1 class="slide-headline">How an emergency call flows through the system.</h1>
+          <div class="slide-context-note">
+            Every 200-millisecond turn of speech follows this closed loop to guarantee safety before words become actions.
+          </div>
+        </div>
+
+        <div class="s5-layout">
+          <!-- 5 Columns -->
+          <div class="workflow-5stages-grid">
+            
+            <!-- STAGE 1 -->
+            <div class="wf-node">
+              <span class="wf-header-tag">STAGE 1</span>
+              <div class="wf-icon-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;">
+                  <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                  <line x1="12" y1="19" x2="12" y2="22"></line>
+                </svg>
+              </div>
+              <div class="wf-title">Input</div>
+              <div class="wf-role">Caller Audio Stream</div>
+              <ul class="wf-spec-list">
+                <li>Caller speaks over phone</li>
+                <li>Whisper converts speech to text</li>
+                <li>Luhn filter masks credit cards</li>
+              </ul>
+              <div class="wf-snippet-box">
+                <div class="s-title"><span>STREAMING AUDIO EDGE</span><span>200MS</span></div>
+                <div class="s-row">
+                  <span class="s-label">RAW AUDIO INPUT:</span>
+                  <span class="s-val" style="color: var(--spectrum-rose);">"Card 4532 8901 2345 6789"</span>
+                </div>
+                <div class="s-row">
+                  <span class="s-label">STREAMING LUHN CHECK:</span>
+                  <span class="s-val" style="color: var(--jade-primary);">CHECKSUM PASS (VISA)</span>
+                </div>
+                <div class="s-row">
+                  <span class="s-label">SANITIZED TRANSCRIPT:</span>
+                  <span class="s-val">"[PAN_MASKED_LUHN_PASS]"</span>
+                </div>
+                <div class="s-title" style="border: none; border-top: 1px dashed var(--rule-hairline); padding-top: 2px;">
+                  <span>PLAINTEXT PII LEAKS</span><span style="color: var(--jade-primary);">0% (ZERO)</span>
+                </div>
+              </div>
+              <div class="wf-io-tag">
+                <div><strong>In:</strong> Raw phone audio</div>
+                <div><strong>Out:</strong> Clean masked text</div>
+              </div>
+            </div>
+
+            <!-- STAGE 2 -->
+            <div class="wf-node">
+              <span class="wf-header-tag">STAGE 2</span>
+              <div class="wf-icon-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;">
+                  <circle cx="12" cy="12" r="4"></circle>
+                  <path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-4 8"></path>
+                </svg>
+              </div>
+              <div class="wf-title">AI Cognition</div>
+              <div class="wf-role">~15B Model Proposer</div>
+              <ul class="wf-spec-list">
+                <li>Queries insurance policy</li>
+                <li>Generates conversational reply</li>
+                <li>PROPOSES tool actions only</li>
+              </ul>
+              <div class="wf-snippet-box">
+                <div class="s-title"><span>MODEL INFERENCE</span><span>~15B PARAMS</span></div>
+                <div class="s-row">
+                  <span class="s-label">INTENT CLASSIFICATION:</span>
+                  <span class="s-val">EMERGENCY_ROADSIDE_TOW</span>
+                </div>
+                <div class="s-row">
+                  <span class="s-label">POLICY RETRIEVAL:</span>
+                  <span class="s-val">Comprehensive (₹5,000 Cap)</span>
+                </div>
+                <div class="s-row">
+                  <span class="s-label">PROPOSED TOOL CALL:</span>
+                  <span class="s-val" style="color: var(--spectrum-amber); font-weight: 700;">dispatch_tow(km=18)</span>
+                </div>
+                <div class="s-title" style="border: none; border-top: 1px dashed var(--rule-hairline); padding-top: 2px;">
+                  <span>EXECUTION STATE</span><span style="color: var(--spectrum-amber);">PROPOSED ONLY</span>
+                </div>
+              </div>
+              <div class="wf-io-tag">
+                <div><strong>In:</strong> Caller conversation</div>
+                <div><strong>Out:</strong> Proposed action</div>
+              </div>
+            </div>
+
+            <!-- STAGE 3 -->
+            <div class="wf-node core-prism">
+              <span class="wf-header-tag" style="color: var(--spectrum-violet);">STAGE 3 · THE CORE</span>
+              <div class="wf-icon-box" style="background: #EDE9FE; color: var(--spectrum-violet);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;">
+                  <polygon points="12 2 2 22 22 22"></polygon>
+                </svg>
+              </div>
+              <div class="wf-title" style="color: var(--spectrum-violet);">PRISM Monitoring</div>
+              <div class="wf-role">Block Convey Telemetry</div>
+              <ul class="wf-spec-list" style="background: #FFFFFF;">
+                <li>Records every multi-turn span</li>
+                <li>Captures audio latency & intent</li>
+                <li>Zero lag added to phone call</li>
+              </ul>
+              <div class="wf-snippet-box" style="background: #FFFFFF;">
+                <div class="s-title" style="color: var(--spectrum-violet);"><span>PRISM TELEMETRY SPINE</span><span>TRACE #4812</span></div>
+                <div class="s-row">
+                  <span class="s-label">TURN-BY-TURN LATENCY:</span>
+                  <span class="s-val" style="color: var(--spectrum-violet);">STT 62ms · LLM 118ms</span>
+                </div>
+                <div class="s-row">
+                  <span class="s-label">SEMANTIC DRIFT SCORE:</span>
+                  <span class="s-val" style="color: var(--jade-primary);">0.02 (STABLE)</span>
+                </div>
+                <div class="s-row">
+                  <span class="s-label">OBSERVABILITY TAP:</span>
+                  <span class="s-val">Async Line Tap · 0ms Lag</span>
+                </div>
+                <div class="s-title" style="border: none; border-top: 1px dashed var(--rule-hairline); padding-top: 2px;">
+                  <span>MULTI-TURN VISIBILITY</span><span style="color: var(--spectrum-violet);">100%</span>
+                </div>
+              </div>
+              <div class="wf-io-tag" style="background: #EDE9FE; border-color: #DDD6FE;">
+                <div><strong>In:</strong> Turn-by-turn data</div>
+                <div><strong>Out:</strong> Telemetry trace</div>
+              </div>
+            </div>
+
+            <!-- STAGE 4 -->
+            <div class="wf-node">
+              <span class="wf-header-tag">STAGE 4</span>
+              <div class="wf-icon-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                </svg>
+              </div>
+              <div class="wf-title">Failure Detection</div>
+              <div class="wf-role">ClaimGuard Barrier</div>
+              <ul class="wf-spec-list">
+                <li>5s commit delay prevents errors</li>
+                <li>Cancels dispatches on interruption</li>
+                <li>Vetoes illegal discount promises</li>
+              </ul>
+              <div class="wf-snippet-box">
+                <div class="s-title"><span>CLAIMGUARD BARRIER</span><span>DETERMINISTIC</span></div>
+                <div class="s-row">
+                  <span class="s-label">LATCH STATUS:</span>
+                  <span class="s-val">PENDING COMMIT (3.8s left)</span>
+                </div>
+                <div class="s-row">
+                  <span class="s-label">INTERRUPT SIGNAL:</span>
+                  <span class="s-val" style="color: var(--spectrum-rose);">"Stop! Brother here with fuel!"</span>
+                </div>
+                <div class="s-row">
+                  <span class="s-label">SAFETY DECISION:</span>
+                  <span class="s-val" style="color: var(--spectrum-rose); font-weight: 700;">DISPATCH VETOED & ABORTED</span>
+                </div>
+                <div class="s-title" style="border: none; border-top: 1px dashed var(--rule-hairline); padding-top: 2px;">
+                  <span>FINANCIAL LOSS PREVENTED</span><span style="color: var(--jade-primary);">₹5,000 SAVED</span>
+                </div>
+              </div>
+              <div class="wf-io-tag">
+                <div><strong>In:</strong> Proposed action</div>
+                <div><strong>Out:</strong> Verified or Vetoed</div>
+              </div>
+            </div>
+
+            <!-- STAGE 5 -->
+            <div class="wf-node">
+              <span class="wf-header-tag">STAGE 5</span>
+              <div class="wf-icon-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;">
+                  <polyline points="23 4 23 10 17 10"></polyline>
+                  <polyline points="1 20 1 14 7 14"></polyline>
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                </svg>
+              </div>
+              <div class="wf-title">Improvement</div>
+              <div class="wf-role">Closed-Loop Learning</div>
+              <ul class="wf-spec-list">
+                <li>Clusters failure patterns</li>
+                <li>Recommends policy updates</li>
+                <li>Automated test re-evaluation</li>
+              </ul>
+              <div class="wf-snippet-box">
+                <div class="s-title"><span>CLOSED-LOOP CI</span><span>SELF-HEALING</span></div>
+                <div class="s-row">
+                  <span class="s-label">PRISM FAILURE CLUSTER:</span>
+                  <span class="s-val">Mid-Call Revocation Inattention</span>
+                </div>
+                <div class="s-row">
+                  <span class="s-label">SYNTHETIC REGRESSION:</span>
+                  <span class="s-val">Generated Scenario #49</span>
+                </div>
+                <div class="s-row">
+                  <span class="s-label">AUDIT BENCHMARK:</span>
+                  <span class="s-val" style="color: var(--jade-primary); font-weight: 700;">48/48 PASSING (100% SAFE)</span>
+                </div>
+                <div class="s-title" style="border: none; border-top: 1px dashed var(--rule-hairline); padding-top: 2px;">
+                  <span>REGRESSIONS INTRODUCED</span><span style="color: var(--jade-primary);">0 (ZERO)</span>
+                </div>
+              </div>
+              <div class="wf-io-tag">
+                <div><strong>In:</strong> PRISM insights</div>
+                <div><strong>Out:</strong> Hardened system</div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Continuous Loop Bar -->
+          <div class="s5-loop-footer">
+            <span><strong>CONTINUOUS CLOSED FEEDBACK LOOP:</strong> Production calls feed directly into PRISM failure clustering.</span>
+            <span style="color: var(--jade-primary); font-weight: 600;">
+              Every failure detected by PRISM is turned into an automated test scenario so the AI never makes the same mistake twice.
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           SLIDE 6: IMPACT & FUTURE SCOPE
+           ==================================================================== -->
+      <section class="slide" id="slide-6">
+        <div class="slide-header-block">
+          <div class="slide-mandated-prompt">Key benefits, real-world impact, scalability, and future enhancements.</div>
+          <h1 class="slide-headline">Every regulated call center needs this architecture.</h1>
+          <div class="slide-context-note">
+            Deterministic guardrails eliminate catastrophic failures today. <strong>PRISM provides the observability to scale across industries tomorrow.</strong>
+          </div>
+        </div>
+
+        <div class="s6-layout">
+          <!-- Left: Cross-Industry Scalability -->
+          <div class="radar-container">
+            <div class="radar-header">
+              <span>APPLIED ACROSS 4 REGULATED CALL-CENTER SECTORS</span>
+              <span style="background: var(--jade-tint); color: var(--jade-primary); border: 1px solid var(--jade-border); font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: 700;">CROSS-INDUSTRY</span>
+            </div>
+
+            <!-- 3 High Impact Result Metrics -->
+            <div class="impact-metrics-row">
+              <div class="impact-metric-pill">
+                <span class="m-val">100%</span>
+                <span class="m-lbl">Interruption Abort Rate</span>
+              </div>
+              <div class="impact-metric-pill">
+                <span class="m-val">₹0</span>
+                <span class="m-lbl">Unauthorized Payouts</span>
+              </div>
+              <div class="impact-metric-pill">
+                <span class="m-val">0 ms</span>
+                <span class="m-lbl">Added Audio Lag</span>
+              </div>
+            </div>
+
+            <!-- 4 Regulated Sector Panels Grid -->
+            <div class="sector-cards-grid">
+              <div class="sector-item-card active-core">
+                <div class="s-head">
+                  <span>1. MOTOR INSURANCE</span>
+                  <span style="font-size: 9.5px; background: var(--jade-primary); color: #FFF; padding: 1px 5px; border-radius: 3px;">LIVE CORE</span>
+                </div>
+                <div class="s-desc">Highway NH-48 roadside calls. Stops accidental ₹5,000 tow truck orders when callers cancel.</div>
+                <div class="s-benefit">✓ 100% Abort Success Rate</div>
+              </div>
+
+              <div class="sector-item-card">
+                <div class="s-head">
+                  <span>2. BANKING & CARDS</span>
+                  <span style="font-size: 9.5px; color: var(--ink-muted);">RBI COMPLIANT</span>
+                </div>
+                <div class="s-desc">Credit card support & loan hotlines. Prevents hallucinated limit waivers, overdraft concessions, and PII leaks.</div>
+                <div class="s-benefit">✓ Zero Unauthorized Concessions</div>
+              </div>
+
+              <div class="sector-item-card">
+                <div class="s-head">
+                  <span>3. TELECOM BILLING</span>
+                  <span style="font-size: 9.5px; color: var(--ink-muted);">TRAI VOICE</span>
+                </div>
+                <div class="s-desc">High-volume tariff & dispute lines. Locks refund ceilings and contractual plan upgrades into SQL rules.</div>
+                <div class="s-benefit">✓ Guaranteed Zero Tariff Drift</div>
+              </div>
+
+              <div class="sector-item-card">
+                <div class="s-head">
+                  <span>4. HEALTHCARE TRIAGE</span>
+                  <span style="font-size: 9.5px; color: var(--ink-muted);">DPDP ACT</span>
+                </div>
+                <div class="s-desc">Emergency clinical booking. Shields patient health identifiers, diagnosis codes, and prescription records.</div>
+                <div class="s-benefit">✓ Zero Plaintext PHI Stored</div>
+              </div>
+            </div>
+
+            <!-- Invariant Box for Judges -->
+            <div class="radar-invariant-box">
+              <strong>THE GOLDEN RULE ACROSS ALL HIGH-RISK CALL CENTERS:</strong><br>
+              Use fast ~15B models for natural conversation. Use <strong>deterministic code</strong> for financial and legal safety. Use <strong>PRISM</strong> to observe, diagnose, and prove reliability.
+            </div>
+          </div>
+
+          <!-- Right: Concrete Roadmap & Closing Plaque -->
+          <div class="s6-roadmap-container">
+            <div class="roadmap-timeline">
+              <div class="roadmap-header">
+                3-PHASE PRODUCTION ROADMAP
+              </div>
+
+              <div class="roadmap-phase">
+                <span class="phase-badge today">TODAY · COMPLETED</span>
+                <div class="phase-info">
+                  <h5>Edge Engine + PRISM Telemetry Spine</h5>
+                  <p>Local Whisper STT (8kHz SIP/WebRTC), ~15B LLM Proposer, SQLite database triggers, full PRISM multi-turn tracing.</p>
+                  <span class="phase-metric-tag">✓ 100% Cancellation Success · Zero Plaintext PII · 48/48 Scenarios Passing</span>
+                </div>
+              </div>
+
+              <div class="roadmap-phase">
+                <span class="phase-badge next">NEXT · Q2 2026</span>
+                <div class="phase-info">
+                  <h5>Telephony & SIP Gateway Integration</h5>
+                  <p>Direct Exotel, Twilio, and FreeSWITCH SIP trunking into edge audio socket with jitter-free streaming buffers.</p>
+                  <span class="phase-metric-tag" style="color: var(--spectrum-amber);">Target: Under 200ms Latency on Live VoLTE Phone Lines</span>
+                </div>
+              </div>
+
+              <div class="roadmap-phase">
+                <span class="phase-badge scale">SCALE · H2 2026</span>
+                <div class="phase-info">
+                  <h5>Indian Regional Speech + Active Guardrails</h5>
+                  <p>IndicWhisper STT for Hindi, Tamil, Telugu, and Kannada with PRISM Guardrails upgraded to active inline token veto mode.</p>
+                  <span class="phase-metric-tag" style="color: var(--spectrum-violet);">Multilingual Coverage Across India · RBI & DPDP Turnkey Package</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Closing Architectural Thesis Plaque -->
+            <div class="s6-plaque-quote">
+              Can be interrupted. Can't be bullied. Won't leak.<br>
+              <strong>Built to be diagnosed — proven by PRISM.</strong>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Persistent Bottom Controls Bar -->
+    <footer class="stage-footer">
+      <div class="footer-left-controls">
+        <button class="btn-nav" id="btn-prev" onclick="window.deck.prev()">‹ Prev</button>
+        <button class="btn-nav" id="btn-next" onclick="window.deck.next()">Next ›</button>
+        <button class="btn-autoplay" id="btn-auto" onclick="window.deck.toggleAutoPlay()">Auto-Play (15s)</button>
+      </div>
+
+      <div class="footer-dots" id="footer-dots-container">
+        <div class="dot-step active" onclick="window.deck.goTo(0)">1</div>
+        <div class="dot-step" onclick="window.deck.goTo(1)">2</div>
+        <div class="dot-step" onclick="window.deck.goTo(2)">3</div>
+        <div class="dot-step" onclick="window.deck.goTo(3)">4</div>
+        <div class="dot-step" onclick="window.deck.goTo(4)">5</div>
+        <div class="dot-step" onclick="window.deck.goTo(5)">6</div>
+      </div>
+
+      <div class="footer-right-status">
+        <span>PRISM BY BLOCK CONVEY · EVALUATION SUITE</span>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- Deck Interactive Controller -->
+  <script>
+    class DeckController {
+      constructor() {
+        this.slides = document.querySelectorAll('.slide');
+        this.dots = document.querySelectorAll('.dot-step');
+        this.counterBadge = document.getElementById('slide-counter-badge');
+        this.subtopicLabel = document.getElementById('slide-subtopic');
+        this.autoPlayBtn = document.getElementById('btn-auto');
+        
+        this.currentIndex = 0;
+        this.autoPlayInterval = null;
+        this.totalSlides = this.slides.length;
+
+        this.subtopics = [
+          "Problem Statement",
+          "Existing Challenges",
+          "Proposed Solution",
+          "PRISM Usage",
+          "System Workflow",
+          "Impact & Future Scope"
+        ];
+
+        this.init();
+      }
+
+      init() {
+        // Keyboard navigation
+        window.addEventListener('keydown', (e) => {
+          if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+            this.next();
+          } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+            this.prev();
+          } else if (e.key >= '1' && e.key <= '6') {
+            this.goTo(parseInt(e.key) - 1);
+          }
+        });
+
+        // Initialize Waveform Animation on Slide 1
+        this.initWaveform();
+        this.updateUI();
+      }
+
+      goTo(index) {
+        if (index < 0 || index >= this.totalSlides) return;
+        this.slides[this.currentIndex].classList.remove('active');
+        this.dots[this.currentIndex].classList.remove('active');
+
+        this.currentIndex = index;
+        this.slides[this.currentIndex].classList.add('active');
+        this.dots[this.currentIndex].classList.add('active');
+
+        this.updateUI();
+      }
+
+      next() {
+        if (this.currentIndex < this.totalSlides - 1) {
+          this.goTo(this.currentIndex + 1);
+        } else {
+          this.goTo(0);
+        }
+      }
+
+      prev() {
+        if (this.currentIndex > 0) {
+          this.goTo(this.currentIndex - 1);
+        } else {
+          this.goTo(this.totalSlides - 1);
+        }
+      }
+
+      updateUI() {
+        this.counterBadge.textContent = `0${this.currentIndex + 1} / 0${this.totalSlides}`;
+        this.subtopicLabel.textContent = this.subtopics[this.currentIndex];
+
+        // Trigger KaTeX render if needed
+        if (window.renderMathInElement) {
+          window.renderMathInElement(this.slides[this.currentIndex]);
+        }
+      }
+
+      toggleAutoPlay() {
+        if (this.autoPlayInterval) {
+          clearInterval(this.autoPlayInterval);
+          this.autoPlayInterval = null;
+          this.autoPlayBtn.classList.remove('active');
+          this.autoPlayBtn.textContent = "Auto-Play (15s)";
+        } else {
+          this.autoPlayBtn.classList.add('active');
+          this.autoPlayBtn.textContent = "Auto-Playing... (15s)";
+          this.autoPlayInterval = setInterval(() => {
+            this.next();
+          }, 15000);
+        }
+      }
+
+      initWaveform() {
+        const canvas = document.getElementById('waveform-canvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        let step = 0;
+
+        const resize = () => {
+          canvas.width = canvas.parentElement.clientWidth * window.devicePixelRatio;
+          canvas.height = canvas.parentElement.clientHeight * window.devicePixelRatio;
+        };
+        resize();
+        window.addEventListener('resize', resize);
+
+        const render = () => {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          const w = canvas.width;
+          const h = canvas.height;
+
+          // Baseline
+          ctx.strokeStyle = '#DDD7CE';
+          ctx.lineWidth = 1 * window.devicePixelRatio;
+          ctx.beginPath();
+          ctx.moveTo(0, h / 2);
+          ctx.lineTo(w, h / 2);
+          ctx.stroke();
+
+          // Audio Sine Wave
+          ctx.strokeStyle = '#1E1915';
+          ctx.lineWidth = 2 * window.devicePixelRatio;
+          ctx.beginPath();
+
+          for (let x = 0; x < w; x += 3) {
+            const progress = x / w;
+            let amp = Math.sin(progress * Math.PI) * 16 * window.devicePixelRatio;
+            if (Math.abs(progress - 0.18) < 0.04) amp *= 2.2;
+            if (Math.abs(progress - 0.52) < 0.04) amp *= 2.4;
+            if (Math.abs(progress - 0.84) < 0.04) amp *= 2.0;
+
+            const y = (h / 2) + Math.sin((x * 0.035) + step) * amp;
+            if (x === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          }
+          ctx.stroke();
+
+          // 3 Incident Pinpoints
+          const pins = [
+            { x: 0.18, color: '#D97706', label: 'T2: Cancellation' },
+            { x: 0.52, color: '#DC2626', label: 'T4: Illegal Discount' },
+            { x: 0.84, color: '#543DB3', label: 'T5: Spoken Card' }
+          ];
+
+          pins.forEach(pin => {
+            const px = w * pin.x;
+            ctx.strokeStyle = pin.color;
+            ctx.setLineDash([3, 3]);
+            ctx.beginPath();
+            ctx.moveTo(px, 14);
+            ctx.lineTo(px, h - 6);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            ctx.beginPath();
+            ctx.fillStyle = pin.color;
+            ctx.arc(px, h / 2, 4.5 * window.devicePixelRatio, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.font = `600 ${11 * window.devicePixelRatio}px IBM Plex Mono`;
+            ctx.fillStyle = pin.color;
+            ctx.fillText(pin.label, px - (40 * window.devicePixelRatio), 12 * window.devicePixelRatio);
+          });
+
+          step += 0.035;
+          requestAnimationFrame(render);
+        };
+        render();
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      window.deck = new DeckController();
+    });
+  </script>
+</body>
+</html>
