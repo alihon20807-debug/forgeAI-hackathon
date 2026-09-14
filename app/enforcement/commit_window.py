@@ -109,19 +109,23 @@ LOOKALIKE_AFFIRM_PATTERNS = [
 REVOCATION_PATTERNS = [
     r"don'?t\s+send",
     r"do\s+not\s+send",
-    r"cancel\s+(the\s+)?(tow|dispatch|truck|ambulance|claim)",
+    r"cancel\s+(the\s+)?(tow|dispatch|truck|crane|ambulance|claim|mechanic|assistance)",
     r"cancel\s+karo",
     r"mat\s+bhejo",
+    r"abort\s+(the\s+)?(dispatch|tow|action)",
+    r"stop\s+(the\s+)?(dispatch|tow|truck|crane|mechanic)",
     r"cousin\s+(just\s+)?showed\s+up",
     r"cousin\s+aa\s+gaya",
-    r"friend\s+(just\s+)?showed\s+up",
+    r"friend\s+(just\s+)?(showed\s+up|arrived)",
     r"friend\s+aa\s+gaya",
+    r"police\s+patrol",
     r"car\s+started",
     r"gaadi\s+start\s+ho\s+gayi",
     r"theek\s+ho\s+gay[ia]",
     r"nah?i\s+chahi?ye",
     r"rehne\s+d[oe]",
-    r"no\s+need\s+for\s+(a\s+)?(tow|mechanic)",
+    r"no\s+need",
+    r"mechanic\s+fixed",
 ]
 
 
