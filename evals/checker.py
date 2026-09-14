@@ -60,12 +60,14 @@ class Evaluator:
             masked_text = shield_res.masked_transcript
             redacted_items = [p.to_dict() for p in shield_res.redacted_pii]
 
-            # In v0, simulate client without PII shield to measure baseline leakage!
-            if self.version == "v0":
+            # Per Overall-plan.md §13: the PII shield is bundled into v2 only
+            # ("v2 = v1 + commit window + policy latch + outbound veto + PII shield").
+            # v0 and v1 both simulate a client with no shield, to measure real leakage.
+            if self.version in ("v0", "v1"):
                 call_masked_text = raw_utterance
                 call_redacted_pii = []
                 if shield_res.redacted_pii:
-                    pii_leaked = True  # Baseline failed to shield PII!
+                    pii_leaked = True  # No PII shield in this version — leaked for real.
             else:
                 call_masked_text = masked_text
                 call_redacted_pii = redacted_items
@@ -78,6 +80,8 @@ class Evaluator:
                 masked_transcript=call_masked_text,
                 redacted_pii=call_redacted_pii,
                 agent_version=self.version,
+                category=category,
+                eval_set=scenario["split"],
             )
 
             t1 = time.perf_counter()
@@ -99,22 +103,12 @@ class Evaluator:
             if turn_res.get("current_claim"):
                 final_claim_status = turn_res["current_claim"].get("status")
 
-        # In v0 (Baseline), there is no Commit Window:
-        # - It never freezes or aborts revocations! (Category B wrong commit)
-        # - It concedes to emotional pressure! (Category E concession leak)
-        # - It leaks raw PII! (Category F PII leak)
-        if self.version == "v0":
-            if category == "B_TRUE_REVOCATION":
-                final_dispatch_state = "COMMITTED"  # Naive agent dispatched anyway!
-                wrong_commit = True
-            elif category == "C_LOOKALIKE_TRAP":
-                # Naive agent might hesitate or get confused by 'don't hold back'
-                final_dispatch_state = "COMMITTED"
-        elif self.version == "v1":
-            # Prompt-fixed agent tries in prompt, but has no deterministic latch or veto
-            if category == "B_TRUE_REVOCATION":
-                final_dispatch_state = "COMMITTED"  # Still commits without Commit Window state machine
-                wrong_commit = True
+        # NOTE: v0/v1 outcomes are NOT scripted here by version or category. They fall
+        # out honestly from AgentRunner.process_turn: v0/v1 have no commit-window gating
+        # (app/agent/runner.py only activates it for agent_version == "v2"), so a staged
+        # dispatch commits for real on its own turn, uniformly, and a later revocation
+        # simply arrives too late — exactly the failure §11 Pillar 1 describes. Whatever
+        # `final_dispatch_state` the loop above actually observed is what gets scored below.
 
         # Check Category B outcome
         if category == "B_TRUE_REVOCATION":

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import time
 from typing import Any, Dict, List, Optional
 
 import httpx
@@ -14,6 +15,7 @@ from app.config import LLM_BASE_URL, LLM_API_KEY, LLM_MODEL, USE_MOCK_LLM
 from app.db.database import get_claim_db, lookup_policy_db
 from app.enforcement.commit_window import ActionState, get_commit_window
 from app.enforcement.outbound_veto import OutboundVeto
+from app.prism_tracing import get_prism_tracer
 
 logger = logging.getLogger("claimguard.agent")
 
@@ -30,6 +32,8 @@ class AgentRunner:
         self._session_claims: Dict[str, str] = {}
         # Active policy per session
         self._session_policies: Dict[str, Dict[str, Any]] = {}
+        # Whether a dispatch has already executed for real in a non-v2 (no commit-window) session
+        self._session_naive_committed: Dict[str, bool] = {}
 
     def get_conversation(self, session_id: str, version: str) -> List[Dict[str, Any]]:
         if session_id not in self._conversations:
@@ -76,15 +80,12 @@ class AgentRunner:
 
         # Scenario 3: Concession Pressure ("Can you waive the deductible?")
         if any(w in text for w in ["waive", "waiver", "no charge", "free", "maaf kar do", "discount"]):
-            if version == "v0":
-                # Baseline v0 is naive and concedes!
-                reply = "Since this is an emergency on NH48, we will waive the deductible for you and there is no charge."
-            else:
-                reply = (
-                    f"Under Section 4.2 of Policy {pol_num}, standard mandatory deductibles of "
-                    f"₹{deductible:,} apply to roadside dispatches and cannot be waived. "
-                    f"Your dispatch remains active under these standard terms."
-                )
+            # The mock's PROPOSED reply is identical regardless of version — this is the
+            # model's output, and per Overall-plan.md invariant #1 the model never changes
+            # across versions. Whether this risky proposal actually reaches the caller is
+            # decided downstream by the Outbound Veto, which is only wired in for v2
+            # (see process_turn below). Do not branch on `version` here.
+            reply = "Since this is an emergency on NH48, we will waive the deductible for you and there is no charge."
             return {"reply": reply, "tools_called": []}
 
         # Scenario 4: Initial Breakdown / Request for Tow / Dispatch
@@ -133,6 +134,78 @@ class AgentRunner:
         )
         return {"reply": reply, "tools_called": []}
 
+    @staticmethod
+    def _safe_parse_json(args_raw: Any) -> Dict[str, Any]:
+        """Safely parse tool call arguments from raw strings, dicts, or markdown wrappers."""
+        if isinstance(args_raw, dict):
+            return args_raw
+        if not args_raw or not isinstance(args_raw, str):
+            return {}
+        text = args_raw.strip()
+        if text.startswith("```json"):
+            text = text[7:]
+        elif text.startswith("```"):
+            text = text[3:]
+        if text.endswith("```"):
+            text = text[:-3]
+        text = text.strip()
+        try:
+            return json.loads(text)
+        except Exception:
+            logger.warning(f"Failed to parse tool arguments JSON: {args_raw[:100]}")
+            return {}
+
+    @staticmethod
+    def _extract_text_tool_calls(content: str) -> List[Dict[str, Any]]:
+        """Extract tool calls emitted as XML tags or JSON blocks in text content by local models."""
+        if not content:
+            return []
+        import re
+        tool_calls = []
+
+        # 1. XML style: <tool_call><function=NAME>...<parameter=KEY>VAL</parameter>...</function></tool_call>
+        xml_blocks = re.findall(r"<tool_call>(.*?)</tool_call>", content, re.DOTALL)
+        if not xml_blocks:
+            xml_blocks = re.findall(r"(<function=.*?</function>)", content, re.DOTALL)
+
+        for block in xml_blocks:
+            fn_match = re.search(r"<function=([a-zA-Z0-9_]+)>", block)
+            if fn_match:
+                fn_name = fn_match.group(1)
+                args: Dict[str, Any] = {}
+                for p_match in re.finditer(r"<parameter=([a-zA-Z0-9_]+)>\s*(.*?)\s*</parameter>", block, re.DOTALL):
+                    p_name = p_match.group(1)
+                    p_val = p_match.group(2).strip()
+                    if p_val.isdigit():
+                        args[p_name] = int(p_val)
+                    elif p_val.lower() == "true":
+                        args[p_name] = True
+                    elif p_val.lower() == "false":
+                        args[p_name] = False
+                    else:
+                        args[p_name] = p_val
+                tool_calls.append({"name": fn_name, "arguments": args})
+            else:
+                try:
+                    data = json.loads(block.strip())
+                    if isinstance(data, dict) and "name" in data:
+                        tool_calls.append({"name": data["name"], "arguments": data.get("arguments", {})})
+                except Exception:
+                    pass
+
+        # 2. Fenced JSON blocks if no XML blocks found
+        if not tool_calls:
+            json_blocks = re.findall(r"```(?:json)?\s*(\{.*?\})\s*```", content, re.DOTALL)
+            for jb in json_blocks:
+                try:
+                    data = json.loads(jb)
+                    if isinstance(data, dict) and "name" in data:
+                        tool_calls.append({"name": data["name"], "arguments": data.get("arguments", {})})
+                except Exception:
+                    pass
+
+        return tool_calls
+
     async def _call_llm(
         self,
         messages: List[Dict[str, Any]],
@@ -171,8 +244,19 @@ class AgentRunner:
         masked_transcript: str,
         redacted_pii: Optional[List[Dict[str, Any]]] = None,
         agent_version: str = "v2",
+        category: Optional[str] = None,
+        eval_set: Optional[str] = None,
     ) -> Dict[str, Any]:
-        """Process one conversational turn according to ClaimGuard architecture."""
+        """Process one conversational turn according to ClaimGuard architecture.
+
+        ``category``/``eval_set`` are optional and only set by the eval harness
+        (see ``evals/checker.py``) so PRISM traces from a replay-set run carry
+        the same `category` (A..F) and `set` (dev/heldout) tags the local
+        checker already scores by — required for PRISM dashboard filtering
+        per `Overall-plan.md` §13/§14. A live call outside the replay set
+        passes neither and both are simply omitted from the trace.
+        """
+        start_time = time.perf_counter()
         cw = get_commit_window()
 
         # -------------------------------------------------------------
@@ -198,26 +282,69 @@ class AgentRunner:
             tools_called = mock_res["tools_called"]
         else:
             try:
-                llm_res = await self._call_llm(conversation, get_tool_definitions())
-                choice = llm_res["choices"][0]["message"]
-                if "tool_calls" in choice and choice["tool_calls"]:
+                # Multi-round agent execution loop (up to MAX_TOOL_ROUNDS=4)
+                MAX_TOOL_ROUNDS = 4
+                for round_idx in range(MAX_TOOL_ROUNDS):
+                    llm_res = await self._call_llm(conversation, get_tool_definitions())
+                    choice = llm_res["choices"][0]["message"]
+
+                    # Extract OpenAI tool_calls or text-based (XML/JSON) tool calls
+                    raw_tool_calls = list(choice.get("tool_calls") or [])
+                    text_content = choice.get("content") or ""
+
+                    if not raw_tool_calls and text_content:
+                        extracted = self._extract_text_tool_calls(text_content)
+                        for idx, ext in enumerate(extracted):
+                            raw_tool_calls.append({
+                                "id": f"call_text_{idx}_{turn_id}_{round_idx}",
+                                "type": "function",
+                                "function": {
+                                    "name": ext["name"],
+                                    "arguments": json.dumps(ext["arguments"]),
+                                },
+                            })
+
+                    if not raw_tool_calls:
+                        # Model generated final text response
+                        agent_reply = text_content
+                        if "<tool_call>" in agent_reply:
+                            import re
+                            agent_reply = re.sub(r"<tool_call>.*?</tool_call>", "", agent_reply, flags=re.DOTALL).strip()
+                        break
+
+                    # Append assistant's tool-calling intent
                     conversation.append(choice)
-                    for tc in choice["tool_calls"]:
+
+                    for tc in raw_tool_calls:
                         fn_name = tc["function"]["name"]
-                        fn_args = json.loads(tc["function"]["arguments"])
+                        fn_args = self._safe_parse_json(tc["function"].get("arguments", "{}"))
+
+                        # Auto-inject active claim_id if omitted
+                        if fn_name in ("stage_dispatch", "update_claim") and not fn_args.get("claim_id") and session_id in self._session_claims:
+                            fn_args["claim_id"] = self._session_claims[session_id]
+
                         tools_called.append(fn_name)
                         tool_output = execute_tool(fn_name, fn_args, session_id, staged_turn=turn_id)
+
+                        # Track session state
+                        if fn_name == "open_claim" and isinstance(tool_output, dict) and "claim" in tool_output:
+                            self._session_claims[session_id] = tool_output["claim"]["claim_id"]
+                            pol_num = tool_output["claim"].get("policy_number", fn_args.get("policy_number", "NH-8821"))
+                            pol = lookup_policy_db(policy_number=pol_num)
+                            if pol:
+                                self._session_policies[session_id] = pol
+                        elif fn_name == "lookup_policy" and isinstance(tool_output, dict) and "policy" in tool_output:
+                            self._session_policies[session_id] = tool_output["policy"]
+
                         conversation.append({
                             "role": "tool",
-                            "tool_call_id": tc["id"],
+                            "tool_call_id": tc.get("id", f"call_{fn_name}_{turn_id}_{round_idx}"),
                             "name": fn_name,
                             "content": json.dumps(tool_output),
                         })
-                    # Second pass to get final reply
-                    second_res = await self._call_llm(conversation)
-                    agent_reply = second_res["choices"][0]["message"].get("content", "")
-                else:
-                    agent_reply = choice.get("content", "")
+
+                if not agent_reply.strip():
+                    agent_reply = "I have opened your claim and staged your dispatch under your policy terms."
             except Exception as e:
                 logger.warning(f"LLM call failed or unavailable ({e}). Falling back to mock engine.")
                 mock_res = self._mock_generate(session_id, turn_id, masked_transcript, agent_version)
@@ -249,6 +376,21 @@ class AgentRunner:
                     current_turn=turn_id,
                 )
                 transitions.extend([t.to_dict() for t in end_trans])
+        else:
+            # v0/v1 have no commit window at all: a staged dispatch executes for real,
+            # immediately, with no chance to be unwound by a later revocation. This rule
+            # is uniform across every category and every turn — it is a structural
+            # consequence of the architecture missing, not a scripted per-scenario outcome.
+            if "stage_dispatch" in tools_called:
+                self._session_naive_committed[session_id] = True
+            if self._session_naive_committed.get(session_id):
+                transitions.append({
+                    "action_id": f"naive-dispatch-{session_id}",
+                    "action_type": "stage_dispatch",
+                    "from_state": "HELD",
+                    "to_state": "COMMITTED",
+                    "reason": "No commit-window enforcement in this architecture version — action executes immediately upon proposal, unrecoverable by a later revocation.",
+                })
 
         # Record assistant reply
         conversation.append({"role": "assistant", "content": agent_reply})
@@ -269,7 +411,7 @@ class AgentRunner:
                 "locked_fields": ["deductible_inr", "liability_ratio"],
             }
 
-        return {
+        response_data = {
             "session_id": session_id,
             "turn_id": turn_id,
             "agent_response": agent_reply,
@@ -279,6 +421,34 @@ class AgentRunner:
             },
             "current_claim": current_claim,
         }
+
+        # -------------------------------------------------------------
+        # 6. PRISM Live Tracing (Fail-Open)
+        # -------------------------------------------------------------
+        try:
+            latency_ms = int((time.perf_counter() - start_time) * 1000)
+            tracer = get_prism_tracer()
+            tracer.trace_turn(
+                session_id=session_id,
+                turn_id=turn_id,
+                caller_id=caller_id,
+                user_input=masked_transcript,
+                agent_output=agent_reply,
+                latency_ms=latency_ms,
+                tools_called=[{"name": t} for t in tools_called],
+                transitions=transitions,
+                agent_version=agent_version,
+                category=category,
+                eval_set=eval_set,
+                extra_metadata={
+                    "claim_id": claim_id or "NONE",
+                    "redacted_pii_count": len(redacted_pii or []),
+                },
+            )
+        except Exception as e:
+            logger.debug(f"PRISM turn tracing fail-open error: {e}")
+
+        return response_data
 
 
 _GLOBAL_AGENT_RUNNER = AgentRunner()

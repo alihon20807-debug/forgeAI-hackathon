@@ -6,7 +6,8 @@ ForgeAI · graVITas'26 · VIT Vellore
 
 ## 0. Read me first
 
-- **This is the sole canonical plan.** An earlier draft was folded into this document and deleted — there is no second plan file. Everyone (teammates, and any AI agent working on this repo) works from this file.
+- **The objective: win first place at ForgeAI (graVITas'26, VIT Vellore) among hundreds of competing teams.** Every section below serves that objective, not the rubric table in isolation. **Presentation is the top strategic lever** — judges see a very large number of entries in a short window, so what actually earns a shortlist is how viscerally demo-able and legible the pitch is, not just how correct the engineering is underneath it. "Demo & Pitch" is nominally only 15% of the rubric, but a flat, correctly-engineered demo loses to a technically comparable one that's genuinely watchable — so demo/pitch quality is treated as a first-class design constraint throughout this document, not confined to §15.
+- **This is the sole canonical plan.** An earlier draft was folded into this document and deleted — there is no second plan file. Everyone (teammates, and any AI agent working on this repo) works from this file. The pitch-deck build spec at `presentation/Slides-Plan.md` is a derived execution document (exact slide content, visuals, build instructions for whoever builds the HTML deck) sourced entirely from this plan — it is not a second plan, and it should never contain a claim this document doesn't already make.
 - **PRISM is the central highlight, not a feature bolted on at the end.** ClaimGuard exists to give PRISM something real to diagnose and prove an improvement on. 40% of the judging rubric (PRISM Evaluation & Diagnosis + Measured AI Improvement) is directly PRISM-dependent — see §14 and §13, which is why they're the longest sections in this document, deliberately.
 - **This is a pitch and idea document, deliberately code-light.** Right now we are not building — we are designing the thing worth building and the story that sells it. Technical depth below exists only where it feeds the pitch: architecture shape, PRISM integration, evaluation method. No raw code.
 - **Nothing here gets turned into a deck, a build, or a submission without a separate explicit go-ahead.** This document is the thing to approve first.
@@ -111,8 +112,10 @@ By building a small-model voice claims agent for an insurance call center, instr
                          │        L2 · COGNITION                     │
                          │  small local LLM (llama.cpp, ~3–8B)       │
                          │  RAG over policy corpus (tool call)       │
-                         │  tool calls: lookup_policy, open_claim,   │
-                         │  stage_dispatch, update_claim, escalate   │
+                         │  tool calls: lookup_policy,               │
+                         │  search_policy_docs, open_claim,          │
+                         │  stage_dispatch, update_claim,            │
+                         │  escalate_to_human                        │
                          └───────────────────┬───────────────────────┘
                                               │ proposed actions (HELD)
                          ┌───────────────────▼───────────────────────┐
@@ -163,7 +166,7 @@ We are choosing the model to be small **on purpose**, and saying so on stage. Th
 
 - Real call-center deployments run cheap models because cost-per-call and latency force that choice. A strong frontier model in the demo would hide exactly the failure modes PRISM exists to catch — it would be a worse, less honest demo.
 - **Fairness rule, made precise:** "passes the clean controls" means the model correctly calls the right tool with the right arguments on every Category-A clean-control conversation (§12), with no held/frozen state ever triggered. If it can't clear that bar, it's a strawman, not a cheap model — we move up exactly one size and say so, before any v0 number is reported.
-- **Stretch, not core:** run the v0 baseline once on a larger model (a free-tier hosted model via PRISM's proxy) to answer "does a bigger model fix it?" and report whatever the honest answer is.
+- **The fairness rule was triggered, and this decision is now locked (2026-09-14):** the original small model (9B class, `Holo-3.1-9B`) failed the clean-control bar outright — on a plain, unambiguous breakdown report it never called `stage_dispatch` at all, just asked conversational follow-up questions. That's a strawman, so per the rule above, the primary model steps up to a **35B-class model** — candidates: `Holo-3.5-35B`, `Qwen-3.8-27B`, `Gemma-4-26B`, `Ornith-1.5-35B` (pick whichever one actually clears Category A cleanly; try the next if it doesn't). **Say the jump plainly on stage** — 9B→35B is a bigger step than "one size," not a small one, and the honest framing is "a 9B model couldn't be trusted to call its own tools reliably, so we moved up until we found one that could, and the architecture's job is to prove itself against whatever failure modes remain even at that size" — not "we picked a small model" dressed up as still true. This does soften the "the kind PRISM's customers actually run in production" framing in §1/§5 somewhat (a 35B model is a meaningfully heavier production cost than 9B) — acknowledge that trade honestly rather than let it go unsaid; the Innovation argument still holds (architecture matters regardless of model size), it's just carried by a less extreme model-size contrast than originally planned.
 - This is also the argument that makes the architecture (L3) matter: we are explicitly not claiming "our model is better." We are claiming "our model can be wrong and the system still can't be."
 
 ---
@@ -264,7 +267,7 @@ Split deliberately into what we can promise regardless of how the PRISM session 
 | Layer | PRISM touchpoint | Depends on |
 |---|---|---|
 | L1 Perception | Voice turns posted to `/api/voice/turns` | Confirming non-ElevenLabs sources are accepted (§20 Q3) |
-| L2 Cognition | RAG corpus uploaded via Knowledge Base (`kb_upload`) so groundedness is checked against our real source documents | Confirming availability on our tier (§20 Q5, was Q2) |
+| L2 Cognition | RAG corpus uploaded via Knowledge Base (`kb_upload`) so groundedness is checked against our real source documents | Confirming availability on our tier (§20 Q5) |
 | Whole call | `submit_trajectory` for goal adherence / tool compliance / efficiency / safety | Confirming Trajectory Evaluation is enabled on our tier (§20 Q4) |
 
 **What's honestly out of reach on our plan, stated up front rather than discovered on stage:** Guardrails, Evaluators Hub, and Annotations are locked on our dashboard tier. We do not pretend otherwise. The framing this earns us is actually stronger than pretending we have them: **ClaimGuard *is* the guardrail layer we built ourselves; PRISM is the independent auditor that checks our work** — a real separation of duties, which is the more sophisticated story to tell a room of people who build guardrail products for a living.
@@ -274,6 +277,8 @@ Split deliberately into what we can promise regardless of how the PRISM session 
 ---
 
 ## 15. Demo & Pitch narrative (Demo & Pitch 15%)
+
+Given presentation is the top strategic lever (§0), every beat below is written to be *watched*, not read — pacing, visual clarity on the live console/dashboard, and a legible payoff matter as much as functional correctness underneath them.
 
 Roughly 75 seconds of live mic, one call, no cuts, with a recorded fallback ready:
 
@@ -310,7 +315,7 @@ Each beat is deliberately mapped to a rubric line: beat 1–2 is Solution & Tech
 
 - **P1 — Agent & Guard:** the model, tools, RAG corpus and retrieval; the commit window, policy latch, and outbound veto.
 - **P2 — Voice & Console:** the STT pipeline and its native-language handling; the live supervisor console; recorded fallback clips and a backup demo video.
-- **P3 — Evidence & Pitch:** the Replay Set and its labels; the local checker; the PRISM project (tracing, tagging, the credit-managed run plan); screenshots, charts, and the pitch materials themselves.
+- **P3 — Evidence & Pitch:** the Replay Set and its labels; the local checker; the PRISM project (tracing, tagging, the credit-managed run plan); screenshots, charts, and the pitch materials themselves (the 6-slide deck built per `presentation/Slides-Plan.md`).
 
 ---
 
@@ -320,7 +325,7 @@ Each beat is deliberately mapped to a rubric line: beat 1–2 is Solution & Tech
 |---|---|
 | Laptop/GPU issue at the venue | A free-tier hosted model via PRISM's proxy for the live demo; a backup demo video regardless |
 | Native-language ASR misreads the freeze lexicon | Lexicon covers both scripts; romanized initial prompt; typed-input mode as a last resort |
-| Small model can't hold tool calls reliably at all | Step up exactly one model size — the fairness rule in §10 still applies |
+| Small model can't hold tool calls reliably at all | **Triggered and resolved (§10):** stepped up to a 35B-class model (candidates listed in §10) after the 9B model failed Category A cleanly. If the 35B candidate also fails the clean-control bar, try the next candidate before reporting any number. |
 | Venue Wi-Fi (PRISM needs internet) | Phone hotspot as backup; every screenshot captured well before the deadline, not live-dependent |
 | 98 PRISM credits run out mid-run | 3-call test batch first; the full Replay Set always runs locally regardless; JSON export plus Import History as a hard fallback |
 | Noisy auditorium during the live demo | Push-to-talk, pre-recorded clips, and a typed-text input mode all work as substitutes |
@@ -330,10 +335,12 @@ Each beat is deliberately mapped to a rubric line: beat 1–2 is Solution & Tech
 
 ## 20. Open questions for the PRISM session (answer these before locking the build plan)
 
+**Confirmed 2026-09-14: the project is on PRISM's Free tier** ($0/mo, credits as tracked in §14). Per the team's own verified research (`research/prism/20-block-convey-ecosystem-and-pitch-intel.md`, `research/prism/03-fastapi-agent-integration-recipe.md`), Free tier's *published* limits are no Guardrails, no Evaluators Hub, no Trajectory Evaluation — Builder-tier-and-up features. This answers Q4 below as "no, not on our tier" with reasonable confidence (published docs, not yet a direct support confirmation). Q2 is still genuinely open — a hackathon-specific unlock is a different question than the standard tier limit, and hasn't been asked.
+
 1. What does one trace, one voice turn, and one trajectory submission cost in credits — and does auto-scoring run on every trace regardless?
-2. Can a hackathon team get Evaluators Hub or Guardrails unlocked, even in monitor-only mode?
+2. Can a hackathon team get Evaluators Hub or Guardrails unlocked, even in monitor-only mode? (Still open — see note above; the standard Free-tier answer is no, but a hackathon-specific exception hasn't been asked about.)
 3. Does `/api/voice/turns` accept transcripts from a non-ElevenLabs source, and do they show up correctly in Sessions?
-4. Is Trajectory Evaluation (`submit_trajectory`) actually available on our plan tier?
+4. Is Trajectory Evaluation (`submit_trajectory`) actually available on our plan tier? **Provisionally answered: no** — Free tier's published feature list doesn't include it (see note above); treat §14's "Conditional" tier row for this as unlikely to land unless directly confirmed otherwise.
 5. Does Import History consume credits, and are imported traces scored the same way live-ingested ones are?
 6. What exactly does the dashboard's "Compliance Score" measure, in PRISM's own words? (Documentation says CSAT — worth confirming directly.)
 7. Do the automatic scores behave sensibly on code-mixed, native-language audio, or is there a known blind spot there?
@@ -359,3 +366,5 @@ Each beat is deliberately mapped to a rubric line: beat 1–2 is Solution & Tech
 - **Pass 1** added the fixed Minimum Viable Demo boundary (§2, invariant 9) so scope can't drift once the build starts, and reconciled §4/§5's apparent tension between "no real telephony" and "we're building what PRISM's customers run" explicitly rather than leaving it implicit.
 - **Pass 2** sharpened the Innovation argument in §10 (named the underlying principle, defined "passes the clean controls" precisely instead of leaving it vague), and derisked §14 by splitting it into a guaranteed tier that doesn't depend on the PRISM session going well, and a conditional tier that clearly does.
 - **Pass 3** added per-category dataset counts to §12 plus an explicit small-sample honesty caveat, and added §21, a direct table of the objections judges are most likely to raise — each answered from material already in this document, nothing new invented to answer them.
+- **Pass 4** made the top-line objective explicit in §0 (win first place; presentation treated as a first-class constraint, not just the 15%-weighted rubric line), cross-referenced `presentation/Slides-Plan.md` as a derived execution document so it's never mistaken for a second plan, fixed a tool-name mismatch between §7's diagram and §9's tool list (both now read `lookup_policy, search_policy_docs, open_claim, stage_dispatch, update_claim, escalate_to_human`), and cleaned up a stray renumbering artifact in §14.
+- **Pass 5** locked a decision that had been made in a side-planning session (`nemotron_ultra_findings.md`) but never written back here, per this file's own §0 documentation policy: the model-size fairness rule (§10) was actually triggered — the original 9B model failed Category A cleanly — and the project stepped up to a 35B-class model (candidates listed in §10), with the honest trade-off (a bigger jump than "one size," softens the small-model-cost framing) stated explicitly rather than glossed over. Also confirmed the project is on PRISM's Free tier (§20), which provisionally answers open questions 2 and 4 from the team's own verified research rather than leaving them open indefinitely, and updated §19's corresponding risk row from "mitigation planned" to "triggered and resolved."

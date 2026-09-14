@@ -5,6 +5,18 @@
 
 ---
 
+## 0. Start here — current status (updated 2026-09-14, evening)
+
+The role split and API contracts below are still accurate and worth reading once, but **the day-to-day task list has moved to `REMAINING_STEPS_PLAN.md`** — that file, not this one, tracks what's actually done vs. still open, phase by phase, and is kept current. Check it first every session.
+
+**Where things stand right now:**
+- All four subsystems (L0–L4) are built and passing tests (49/49).
+- The eval harness (`evals/checker.py`) had a real integrity bug — it was scripting v0/v1/v2 outcomes instead of measuring them — **found and fixed this session**. The numbers in `evals/results/*.json` and in the pitch deck are now honestly reproducible from the architecture, not hand-written. See the pitfalls section below before touching that code again.
+- Live PRISM tracing (`app/prism_tracing.py`) is wired end-to-end and merged. It also had a real bug — every trace was tagged with the same `agent_id` regardless of v0/v1/v2, which would have made the PRISM dashboard unable to tell the versions apart — **found and fixed this session**, along with `category`/`set` tagging that was missing entirely.
+- **Next up, in priority order** (see `REMAINING_STEPS_PLAN.md` for the full detail on each): (1) Pratham — run the live PRISM ingestion for real (3-call smoke test first, credit discipline), this is 40% of the rubric and the top remaining priority; (2) Ali — a real local LLM is live but doesn't yet reliably call `stage_dispatch` on a plain breakdown report (diagnosed, not yet fixed — see Phase 2 there); (3) Ojas — real voice clips + fix the Windows paths still sitting in `assets/audio/manifest.json`; (4) whole team — demo rehearsal + backup video.
+
+---
+
 ## 1. Executive Context & Invariants
 
 ClaimGuard is an insurance First-Notice-of-Loss (FNOL) voice agent running on a deliberately small, cheap local model (the kind deployed in high-volume production call centers). PRISM is used as the end-to-end diagnostic and evaluation instrument that reveals where cheap models fail, guides prompt fixes (v1), and proves the architectural safety layer (v2 ClaimGuard) on a locked 60-call held-out benchmark.
@@ -86,11 +98,11 @@ ClaimGuard is an insurance First-Notice-of-Loss (FNOL) voice agent running on a 
 **Subsystems:** L5 Observability Spine, Dataset, Local Checker, Dashboard Evidence
 
 #### Primary Responsibilities:
-1. **PRISM Integration & Tracing (`app/observability/`):**
-   - Use `prismtrace-sdk` / direct manual span ingestion (`POST /api/spans/ingest`) based on recipes in `research/prism/03-fastapi-agent-integration-recipe.md`.
-   - Single shared `httpx.Client` lifecycle. Auth header: `X-PRISMtrace-Key`.
-   - Tag all spans with `agent_id` (`roadside-baseline` for v0, `roadside-prompt-fix` for v1, `roadside-claimguard` for v2), `category` (A–F), and `set` (`dev` | `heldout`).
-   - Log Commit Window transitions as span metadata (`transition: HELD->FROZEN->ABORTED`).
+1. **PRISM Integration & Tracing — done, live at `app/prism_tracing.py`** (superseded the original `app/observability/prism_tracer.py` plan):
+   - Uses `prismtrace-sdk` with a raw-`httpx` fallback if the SDK isn't importable. Single shared client for the process lifetime, closed on shutdown. Auth header: `X-PRISMtrace-Key` (not `Authorization: Bearer`).
+   - Tags every span with `agent_id` (`roadside-baseline` for v0, `roadside-prompt-fix` for v1, `roadside-claimguard` for v2 — via `agent_id_for_version()`), `category` (A–F), and `set` (`dev`/`heldout`). **This mapping was missing/broken until this session's fix — if you touch `app/prism_tracing.py` or `app/agent/runner.py`'s trace call, re-verify these three fields still land correctly before spending PRISM credits on a run.**
+   - Commit Window transitions are logged as trace metadata (`transitions: [{action_type, from_state, to_state}, ...]`).
+   - Wired from `app/agent/runner.py` (`AgentRunner.process_turn`, step 6) and `evals/checker.py` (passes `category`/`eval_set` per scenario).
 2. **Replay Set Construction (`evals/replay_set.json`):**
    - 60 scripted, pre-labelled test calls across 6 categories (40 Dev / 20 Held-out):
      - Cat A: Clean control (8 dev / 4 heldout)
@@ -214,9 +226,9 @@ ClaimGuard is an insurance First-Notice-of-Loss (FNOL) voice agent running on a 
 
 ---
 
-## 5. Ready-to-Use Kickoff Prompts for Each Teammate
+## 5. Original Kickoff Prompts (historical — the initial build is done)
 
-*Copy and paste the appropriate block below into your AI coding assistant (Antigravity, Claude Code, Cursor, etc.):*
+*These are the prompts that started each teammate's original build and are kept for context on intent/scope. All of the "core deliverables" listed below now exist. For what to actually do next, use `REMAINING_STEPS_PLAN.md` instead — it reflects current, not day-1, status.*
 
 ### 📋 Kickoff Prompt for ALI (Backend, Enforcement & Server)
 ```text
@@ -292,3 +304,21 @@ YOUR CORE DELIVERABLES:
 
 Start by implementing app/security/pii_shield.py with unit tests for Luhn and Verhoeff checks.
 ```
+
+---
+
+## 6. Common mistakes & pitfalls — read before touching evals, the deck, or telemetry
+
+Everything below actually happened in this repo this session. Listed so nobody repeats them — not to blame anyone, the underlying work in every case was otherwise solid.
+
+**1. Don't make a number look right — make it measured.** `evals/checker.py` and `app/agent/runner.py`'s mock agent were hardcoding pass/fail outcomes by version string (`if self.version == "v0": wrong_commit = True`) instead of letting them fall out of the actual architecture. It produced a clean-looking v0→v2 story, but it was circular — it reproduced whatever was written into the harness, not reality. The same pattern showed up independently in the pitch deck, which had a v1 "83.3%" accuracy figure, an invented quote with fake statistics, an invented "₹250 CR DPDP Penalty" figure, and a couple of self-contradictory latency numbers — none traceable to any real run. **The rule:** every number that appears in the deck or in any claim must trace to a specific file in `evals/results/*.json` (or a real PRISM screenshot). If you can't point to where a number came from, don't write it down — leave the claim qualitative instead, or mark it "TBD, needs a real run." This is `Overall-plan.md` §2 invariant #3, and it is the single easiest way to lose credibility with judges who will absolutely spot-check a number.
+
+**2. When you build a mock/simulation, make sure it can't cheat.** The deterministic mock agent (`AgentRunner._mock_generate`) used to change its *proposed reply* based on which version was being tested — meaning the model's own behavior "knew" it was v0 vs v2, which defeats the entire point of an architecture ablation (`Overall-plan.md` invariant #1: same model, same settings, across every version). Now the mock's proposal is identical regardless of version, and only the version-gated enforcement layer (commit window, outbound veto — both literally `if agent_version == "v2":` in `runner.py`) is allowed to differ. If you add a new mock/simulated component anywhere, ask: "does this component know which condition it's being tested under, and is that fair?"
+
+**3. Don't overwrite good hand-edits with an old generator script.** `build_pitch.py` regenerated both deck HTML files from a hardcoded string full of stale, fabricated numbers every time it was run, and rewrote itself to keep doing so. It's now deprecated and disabled (see its docstring) — **do not resurrect it.** If the deck needs to change, edit `presentation/claimguard-pitch.html` / `-offline.html` directly, and re-check every number against `evals/results/` before publishing. More generally: a script that regenerates a hand-corrected file from an old template is a landmine — if you write one, make sure it reads its content from the current source of truth (`evals/results/`, `Overall-plan.md`) rather than embedding a snapshot.
+
+**4. When you wire telemetry, check what the dashboard actually receives, not just "does a trace get sent."** The live PRISM tracing (`app/prism_tracing.py`) fired a trace on every turn, but every trace carried the *same* `agent_id` regardless of whether it was v0, v1, or v2 — so PRISM's fleet/session view would have been unable to tell the architectures apart at all, silently breaking the entire comparison this project exists to prove. `category`/`set` (dev vs. heldout) were also never threaded through, breaking dashboard filtering. Both are now fixed (`agent_id_for_version()` in `app/prism_tracing.py`, `category`/`eval_set` params threaded through `process_turn` and `evals/checker.py`). **The rule:** after wiring any telemetry/tracing call, look at (or reconstruct) the actual payload it sends and check every field the dashboard needs to filter/group by is really there — don't assume it's covered because the call compiles and doesn't throw.
+
+**5. Edit dependency lists by adding, not replacing.** A prior edit to `pyproject.toml` swapped `python-multipart` out for `prismtrace-sdk` instead of adding both — silently dropping a dependency that `app/server.py`'s and `app/dev_server.py`'s audio-upload endpoints (`UploadFile`/`Form`) actually need at runtime. It only kept working locally because the old install was still sitting in a stale `.venv`. **The rule:** after any `pyproject.toml` change, a fresh `uv sync` (or at minimum a diff review of the full dependency list, not just the lines you meant to touch) catches this before it reaches demo day.
+
+**6. Keep `presentation/readme.md` and this file honest about what's current vs. superseded.** `claimguard-deck.html`/`-offline.html` are an old, superseded draft — `claimguard-pitch.html`/`-offline.html` (+ `.pdf`) are current. If you build a new draft of anything, say so in the relevant readme immediately, not after someone wastes time reading the wrong file.
