@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClaimGuard × PRISM — Live Supervisor Console (L6)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="console-shell">
+    <!-- Top Header Navigation -->
+    <header class="console-header">
+      <div class="header-brand">
+        <div class="brand-badge">
+          <span class="prism-spectrum-pill"></span>
+          <span class="brand-title">ClaimGuard</span>
+          <span class="brand-divider">×</span>
+          <span class="brand-partner">PRISM</span>
+        </div>
+        <span class="header-subtitle">L6 Live Supervisor & Perception Console · NH48 FNOL Corridor</span>
+      </div>
+
+      <div class="header-status-strip">
+        <div class="status-indicator">
+          <span class="status-dot green"></span>
+          <span class="status-label">L0 Mic Edge: <strong id="edge-status">PTT Ready</strong></span>
+        </div>
+        <div class="status-indicator">
+          <span class="status-dot green"></span>
+          <span class="status-label">L1 PII Shield: <strong id="shield-status">Mathematical (Luhn+Verhoeff)</strong></span>
+        </div>
+        <div class="status-indicator">
+          <span class="status-dot purple"></span>
+          <span class="status-label">PRISM Telemetry: <strong>Active (98c locked)</strong></span>
+        </div>
+        <div class="mode-toggle-wrap">
+          <label class="toggle-label" for="mock-mode-toggle">Standalone Mock</label>
+          <input type="checkbox" id="mock-mode-toggle" checked>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Workspace Grid -->
+    <main class="console-grid">
+      <!-- Left Column: Audio Perception & Transcript Flow -->
+      <section class="panel panel-perception">
+        <div class="panel-header">
+          <div class="panel-title-group">
+            <span class="layer-tag">L0 / L1</span>
+            <h2>Perception & PII Scrubber</h2>
+          </div>
+          <span class="bias-indicator">Prompt Bias: Hindi-first Indic Code-mixed</span>
+        </div>
+
+        <!-- Audio Waveform & PTT Controller -->
+        <div class="audio-control-card">
+          <div class="waveform-container">
+            <canvas id="waveform-canvas" width="600" height="80"></canvas>
+            <div class="waveform-overlay" id="waveform-overlay">Press Spacebar or Hold PTT to Speak</div>
+          </div>
+
+          <div class="ptt-controls">
+            <button id="ptt-button" class="ptt-btn">
+              <span class="mic-icon">🎙️</span>
+              <span class="ptt-text">PUSH TO TALK (SPACEBAR)</span>
+            </button>
+            <div class="scenario-selector-wrap">
+              <label for="scenario-select">Test Replay Scenario:</label>
+              <select id="scenario-select" class="scenario-dropdown">
+                <option value="scenario_b_revocation">Cat B: True Revocation + Card ("Mera card 4532...")</option>
+                <option value="scenario_c_trap">Cat C: Look-alike Trap ("Don't hold back, send now")</option>
+                <option value="scenario_e_pressure">Cat E: Pressure ("Waive my ₹1500 deductible")</option>
+                <option value="scenario_f_pii">Cat F: Aadhaar + Phone ("3675 9834 6012")</option>
+                <option value="scenario_a_clean">Cat A: Clean Control (Dispatch Flatbed)</option>
+                <option value="scenario_d_correction">Cat D: Correction (Swap Mechanic for Crane)</option>
+              </select>
+              <button id="simulate-turn-btn" class="btn-secondary">Simulate Turn</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Transcript & Redaction Inspector -->
+        <div class="transcript-card">
+          <div class="card-header">
+            <h3>Live Streaming Transcript</h3>
+            <div class="view-toggle">
+              <button id="btn-show-masked" class="view-pill active">Masked (LLM/Telemetry View)</button>
+              <button id="btn-show-diff" class="view-pill">PII Inspection Diff</button>
+            </div>
+          </div>
+
+          <div class="transcript-display" id="transcript-display">
+            <div class="transcript-placeholder">Awaiting voice stream or simulated turn...</div>
+          </div>
+
+          <!-- Redaction Event Log -->
+          <div class="redaction-audit-strip" id="redaction-audit-strip">
+            <span class="audit-badge idle">No sensitive identifiers in active buffer</span>
+          </div>
+        </div>
+
+        <!-- Agent Response Box -->
+        <div class="agent-reply-card">
+          <div class="card-header">
+            <h3>Agent Outbound Response (L2 Cognition)</h3>
+            <span class="veto-status-pill passed" id="veto-status-pill">Outbound Veto: Clean</span>
+          </div>
+          <div class="agent-response-text" id="agent-response-text">
+            Agent standby. Ready to intake emergency call.
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Column: L3 Commit Window & L4 System of Record -->
+      <section class="panel panel-enforcement">
+        <div class="panel-header">
+          <div class="panel-title-group">
+            <span class="layer-tag hero-tag">L3 / L4</span>
+            <h2>Deterministic Enforcement & System of Record</h2>
+          </div>
+          <span class="invariant-badge">The LLM proposes; deterministic code disposes</span>
+        </div>
+
+        <!-- The Hero Visualizer: Commit Window Kanban -->
+        <div class="commit-window-board">
+          <div class="board-header">
+            <h3>Commit Window State Machine</h3>
+            <span class="board-caption">Safety grace window: Consequential actions staged before execution</span>
+          </div>
+
+          <div class="state-columns-grid">
+            <!-- Stage 1: HELD (Amber) -->
+            <div class="state-col col-held">
+              <div class="col-header">
+                <span class="state-dot amber"></span>
+                <h4>HELD</h4>
+                <span class="col-badge" id="count-held">0</span>
+              </div>
+              <p class="col-desc">Staged by LLM, holding grace window</p>
+              <div class="col-card-list" id="list-held"></div>
+            </div>
+
+            <!-- Stage 2: FROZEN (Purple) -->
+            <div class="state-col col-frozen">
+              <div class="col-header">
+                <span class="state-dot purple"></span>
+                <h4>FROZEN</h4>
+                <span class="col-badge" id="count-frozen">0</span>
+              </div>
+              <p class="col-desc">Revocation cue detected, side-effects halted</p>
+              <div class="col-card-list" id="list-frozen"></div>
+            </div>
+
+            <!-- Stage 3: COMMITTED (Jade Green) -->
+            <div class="state-col col-committed">
+              <div class="col-header">
+                <span class="state-dot jade"></span>
+                <h4>COMMITTED</h4>
+                <span class="col-badge" id="count-committed">0</span>
+              </div>
+              <p class="col-desc">Validated & persisted to System of Record</p>
+              <div class="col-card-list" id="list-committed"></div>
+            </div>
+
+            <!-- Stage 4: ABORTED (Rose / Crimson) -->
+            <div class="state-col col-aborted">
+              <div class="col-header">
+                <span class="state-dot crimson"></span>
+                <h4>ABORTED</h4>
+                <span class="col-badge" id="count-aborted">0</span>
+              </div>
+              <p class="col-desc">Cancelled by caller revocation / policy veto</p>
+              <div class="col-card-list" id="list-aborted"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- L4 System of Record & Policy Latch Display -->
+        <div class="system-record-grid">
+          <div class="record-card">
+            <div class="card-header">
+              <h3>System of Record (SQLite DB)</h3>
+              <span class="badge-sql">SQL Trigger Latch: ACTIVE</span>
+            </div>
+            <div class="record-details">
+              <div class="record-row">
+                <span class="rec-label">Active Claim:</span>
+                <span class="rec-val" id="rec-claim-id">CLM-40192</span>
+              </div>
+              <div class="record-row">
+                <span class="rec-label">Policy Reference:</span>
+                <span class="rec-val">NH-8821 (Corridor Comprehensive)</span>
+              </div>
+              <div class="record-row">
+                <span class="rec-label">Mandatory Deductible:</span>
+                <span class="rec-val locked">₹1,500 <span class="lock-icon">🔒 LATCHED</span></span>
+              </div>
+              <div class="record-row">
+                <span class="rec-label">Tow Truck Dispatch:</span>
+                <span class="rec-val" id="rec-dispatch-status">STANDBY</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- PRISM Span Telemetry Stream -->
+          <div class="telemetry-card">
+            <div class="card-header">
+              <h3>PRISM Tracing Stream (POST /api/spans/ingest)</h3>
+              <span class="span-count-badge" id="span-count-badge">0 Spans</span>
+            </div>
+            <div class="telemetry-stream" id="telemetry-stream">
+              <div class="stream-placeholder">Awaiting state machine transitions...</div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer Meta Strip -->
+    <footer class="console-footer">
+      <div class="footer-left">
+        <span>ForgeAI Hackathon · graVITas'26 · VIT Vellore</span>
+        <span class="dot-sep">·</span>
+        <span>ClaimGuard: Pratham (Voice/Security/Console) · Ali (Backend/Enforcement) · Ojas (PRISM/Evals)</span>
+      </div>
+      <div class="footer-right">
+        <span>Architectural Guarantee: Pre-LLM Mathematical Redaction + Zero-Breach SQL Latches</span>
+      </div>
+    </footer>
+  </div>
+
+  <script src="mock_data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
