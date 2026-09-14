@@ -131,9 +131,10 @@ class AgentRunner:
             )
 
             reply = (
-                f"I have opened claim {claim_id} under policy {pol_num}. "
-                f"A flatbed tow truck has been staged for dispatch to your location on NH48 (ETA 25 minutes). "
-                f"The standard policy deductible is ₹{deductible:,}."
+                f"Policy {pol_num} verified active. Claim {claim_id} registered with mandatory disclosures logged. "
+                f"A flatbed tow truck has been staged for dispatch to your location on NH48 near Manesar (ETA 25 minutes). "
+                f"Under corridor policy, towing up to 45 km is cashless, and standard policy deductible is ₹{deductible:,}. "
+                f"Please confirm your agreement to these terms to finalize dispatch."
             )
             return {
                 "reply": reply,
