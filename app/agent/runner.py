@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import logging
-import time
 from typing import Any, Dict, List, Optional
 
 import httpx
@@ -15,7 +14,6 @@ from app.config import LLM_BASE_URL, LLM_API_KEY, LLM_MODEL, USE_MOCK_LLM
 from app.db.database import get_claim_db, lookup_policy_db
 from app.enforcement.commit_window import ActionState, get_commit_window
 from app.enforcement.outbound_veto import OutboundVeto
-from app.prism_tracing import get_prism_tracer
 
 logger = logging.getLogger("claimguard.agent")
 
@@ -244,19 +242,18 @@ class AgentRunner:
         masked_transcript: str,
         redacted_pii: Optional[List[Dict[str, Any]]] = None,
         agent_version: str = "v2",
-        category: Optional[str] = None,
-        eval_set: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Process one conversational turn according to ClaimGuard architecture.
 
-        ``category``/``eval_set`` are optional and only set by the eval harness
-        (see ``evals/checker.py``) so PRISM traces from a replay-set run carry
-        the same `category` (A..F) and `set` (dev/heldout) tags the local
-        checker already scores by — required for PRISM dashboard filtering
-        per `Overall-plan.md` §13/§14. A live call outside the replay set
-        passes neither and both are simply omitted from the trace.
+        PRISM tracing is the caller's responsibility, not this method's — build
+        a ``TurnTracer`` (see ``app/observability/prism_tracer.py``) around the
+        call, record enforcement transitions from the returned
+        ``state_machine.transitions``, and call ``tracer.finish(...)`` after.
+        ``app/server.py``'s ``/api/call/turn`` and ``evals/checker.py`` both do
+        this — see either for the pattern. This method used to trace itself
+        internally as well, which double-fired a trace on every server-handled
+        turn (server.py's own tracer, plus this one) — don't reintroduce that.
         """
-        start_time = time.perf_counter()
         cw = get_commit_window()
 
         # -------------------------------------------------------------
