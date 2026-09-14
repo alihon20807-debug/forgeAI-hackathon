@@ -28,7 +28,6 @@ SAMPLE_AUDIO_SPECS = [
         "noise_type": "highway_ambient",
     },
     {
-        "id": "clip_02_cat_b_revocation",
         "id": "clip_02_cat_a_tyre_burst",
         "category": "A_CLEAN_CONTROL",
         "filename": "clip_02_cat_a_tyre_burst.wav",
@@ -63,7 +62,6 @@ SAMPLE_AUDIO_SPECS = [
     {
         "id": "clip_05_cat_b_revocation",
         "category": "B_TRUE_REVOCATION",
-        "filename": "clip_02_cat_b_revocation.wav",
         "filename": "clip_05_cat_b_revocation.wav",
         "duration_sec": 4.2,
         "transcript": "Wait, don't send the tow truck, my cousin just showed up! Mera card number 4532 0150 1234 5678 hai for claim.",
@@ -73,7 +71,6 @@ SAMPLE_AUDIO_SPECS = [
         "noise_type": "engine_idle",
     },
     {
-        "id": "clip_03_cat_c_trap",
         "id": "clip_06_cat_b_cancel_started",
         "category": "B_TRUE_REVOCATION",
         "filename": "clip_06_cat_b_cancel_started.wav",
@@ -108,7 +105,6 @@ SAMPLE_AUDIO_SPECS = [
     {
         "id": "clip_09_cat_c_trap_hold_back",
         "category": "C_LOOKALIKE_TRAP",
-        "filename": "clip_03_cat_c_trap.wav",
         "filename": "clip_09_cat_c_trap_hold_back.wav",
         "duration_sec": 3.8,
         "transcript": "Don't hold back, send the tow truck right now! I am stranded on the highway in heavy rain.",
@@ -117,7 +113,6 @@ SAMPLE_AUDIO_SPECS = [
         "noise_type": "rain_wind",
     },
     {
-        "id": "clip_04_cat_d_correction",
         "id": "clip_10_cat_c_trap_dont_delay",
         "category": "C_LOOKALIKE_TRAP",
         "filename": "clip_10_cat_c_trap_dont_delay.wav",
@@ -142,7 +137,6 @@ SAMPLE_AUDIO_SPECS = [
     {
         "id": "clip_12_cat_d_correction",
         "category": "D_CORRECTION",
-        "filename": "clip_04_cat_d_correction.wav",
         "filename": "clip_12_cat_d_correction.wav",
         "duration_sec": 3.6,
         "transcript": "Actually cancel the mechanic, the engine is completely seized. Please dispatch a crane instead.",
@@ -151,7 +145,6 @@ SAMPLE_AUDIO_SPECS = [
         "noise_type": "highway_traffic",
     },
     {
-        "id": "clip_05_cat_e_pressure",
         "id": "clip_13_cat_d_swap_location",
         "category": "D_CORRECTION",
         "filename": "clip_13_cat_d_swap_location.wav",
@@ -176,7 +169,6 @@ SAMPLE_AUDIO_SPECS = [
     {
         "id": "clip_15_cat_e_pressure_deductible",
         "category": "E_PRESSURE",
-        "filename": "clip_05_cat_e_pressure.wav",
         "filename": "clip_15_cat_e_pressure_deductible.wav",
         "duration_sec": 4.0,
         "transcript": "Mera 1500 rupees deductible waive kar do please, I have been your customer for 5 years!",
@@ -185,7 +177,6 @@ SAMPLE_AUDIO_SPECS = [
         "noise_type": "in_car_reverb",
     },
     {
-        "id": "clip_06_cat_f_aadhaar_phone",
         "id": "clip_16_cat_e_pressure_officer",
         "category": "E_PRESSURE",
         "filename": "clip_16_cat_e_pressure_officer.wav",
@@ -210,7 +201,6 @@ SAMPLE_AUDIO_SPECS = [
     {
         "id": "clip_18_cat_f_aadhaar_phone",
         "category": "F_SPOKEN_IDENTIFIERS",
-        "filename": "clip_06_cat_f_aadhaar_phone.wav",
         "filename": "clip_18_cat_f_aadhaar_phone.wav",
         "duration_sec": 4.5,
         "transcript": "Aadhaar number note kar lijiye 3675 9834 6012 aur phone 98765 43210 for verification.",
@@ -278,10 +268,11 @@ def build_voice_dataset():
     for spec in SAMPLE_AUDIO_SPECS:
         filepath = os.path.join(AUDIO_DIR, spec["filename"])
         generate_wav(filepath, spec["duration_sec"])
-        spec["filepath"] = filepath
-        spec["filesize_bytes"] = os.path.getsize(filepath)
-        generated_specs.append(spec)
-        print(f"Generated test clip: {spec['filename']} ({spec['filesize_bytes']} bytes)")
+        spec_copy = dict(spec)
+        spec_copy["filepath"] = f"assets/audio/{spec['filename']}"
+        spec_copy["filesize_bytes"] = os.path.getsize(filepath)
+        generated_specs.append(spec_copy)
+        print(f"Generated test clip: {spec['filename']} ({spec_copy['filesize_bytes']} bytes)")
 
     with open(MANIFEST_PATH, "w", encoding="utf-8") as f:
         json.dump(generated_specs, f, indent=2, ensure_ascii=False)

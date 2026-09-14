@@ -38,6 +38,25 @@ class TestVoiceTranscriber(unittest.TestCase):
         self.assertIn("Tow truck", HINDI_FNOL_PROMPT_BIAS)
         self.assertIn("नमस्ते", HINDI_FNOL_PROMPT_BIAS)
 
+    def test_audio_manifest_integrity(self):
+        import json
+        from pathlib import Path
+        repo_root = Path(__file__).resolve().parent.parent
+        manifest_file = repo_root / "assets" / "audio" / "manifest.json"
+        self.assertTrue(manifest_file.exists(), "manifest.json does not exist")
+
+        with open(manifest_file, "r", encoding="utf-8") as f:
+            specs = json.load(f)
+
+        self.assertGreaterEqual(len(specs), 20, "Should have at least 20 audio specs")
+        for s in specs:
+            filepath = s.get("filepath", "")
+            self.assertFalse(filepath.startswith("C:"), f"Absolute Windows path leaked: {filepath}")
+            self.assertTrue(filepath.startswith("assets/audio/"), f"Expected relative path: {filepath}")
+            actual_file = repo_root / filepath
+            self.assertTrue(actual_file.exists(), f"Referenced audio file missing: {filepath}")
+            self.assertGreater(actual_file.stat().st_size, 1000, f"File too small: {filepath}")
+
 
 if __name__ == "__main__":
     unittest.main()

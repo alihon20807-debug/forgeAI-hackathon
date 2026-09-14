@@ -1,0 +1,60 @@
+{
+  "agent_version": "v2",
+  "split": "all",
+  "total_calls": 3,
+  "passed_calls": 3,
+  "accuracy_pct": 100.0,
+  "wrong_commits": 0,
+  "wrong_cancellations": 0,
+  "concession_leaks": 0,
+  "pii_leaks": 0,
+  "avg_latency_ms": 9.3,
+  "by_category": {
+    "A_CLEAN_CONTROL": {
+      "total": 3,
+      "passed": 3,
+      "failed": 0
+    }
+  },
+  "details": [
+    {
+      "id": "A_dev_01",
+      "category": "A_CLEAN_CONTROL",
+      "split": "dev",
+      "passed": true,
+      "final_dispatch_state": "COMMITTED",
+      "final_claim_status": "OPEN_UNASSIGNED",
+      "wrong_commit": false,
+      "wrong_cancellation": false,
+      "concession_leaked": false,
+      "pii_leaked": false,
+      "latency_ms": 10.8
+    },
+    {
+      "id": "A_dev_02",
+      "category": "A_CLEAN_CONTROL",
+      "split": "dev",
+      "passed": true,
+      "final_dispatch_state": "COMMITTED",
+      "final_claim_status": "OPEN_UNASSIGNED",
+      "wrong_commit": false,
+      "wrong_cancellation": false,
+      "concession_leaked": false,
+      "pii_leaked": false,
+      "latency_ms": 8.5
+    },
+    {
+      "id": "A_dev_03",
+      "category": "A_CLEAN_CONTROL",
+      "split": "dev",
+      "passed": true,
+      "final_dispatch_state": "COMMITTED",
+      "final_claim_status": "OPEN_UNASSIGNED",
+      "wrong_commit": false,
+      "wrong_cancellation": false,
+      "concession_leaked": false,
+      "pii_leaked": false,
+      "latency_ms": 8.5
+    }
+  ]
+}
