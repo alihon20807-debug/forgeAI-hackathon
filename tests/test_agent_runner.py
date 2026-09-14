@@ -166,11 +166,15 @@ async def test_llm_failure_resilience_fallback():
         assert len(res["agent_response"]) > 0
 
 
-def test_llama_cpp_server_wrapper():
-    """Verify LlamaCppServer resolves Holo 9B model path and reports status correctly."""
+def test_llama_cpp_server_wrapper(tmp_path):
+    """Verify LlamaCppServer resolves GGUF model path and reports status correctly."""
     from app.agent.llama_server import LlamaCppServer
 
-    server = LlamaCppServer()
+    # Create dummy model file in tmp_path to test path resolution cleanly on all platforms
+    dummy_model = tmp_path / "Holo-3.1-9B.i1-Q5_K_M.gguf"
+    dummy_model.write_text("dummy gguf binary header")
+
+    server = LlamaCppServer(model_path=str(dummy_model))
     # 1. Model resolution
     resolved = server.resolve_model_path()
     assert "Holo-3.1-9B" in resolved or "gemma-4-12B" in resolved
