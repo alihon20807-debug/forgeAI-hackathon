@@ -210,9 +210,9 @@ async def test_card_security_advisory_and_dispatch_grounding():
         session_id=session_id,
         turn_id=2,
         caller_id="caller_grounding",
-        raw_transcript="Can I pay using card 4532 0150 1234 5678?",
+        raw_transcript="Can I pay using card 4111 1111 1111 1111?",
         masked_transcript="Can I pay using card [CARD REDACTED]?",
-        redacted_pii=[{"type": "CARD_NUMBER", "matched": "4532 0150 1234 5678", "valid_luhn": True}],
+        redacted_pii=[{"type": "CARD_NUMBER", "matched": "4111 1111 1111 1111", "valid_luhn": True}],
         agent_version="v2",
     )
     assert "do not share card or identity numbers over voice" in res2["agent_response"]

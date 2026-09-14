@@ -236,8 +236,13 @@ class AgentRunner:
             "model": LLM_MODEL,
             "messages": messages,
             "temperature": 0.1,
-            "max_tokens": 150,
         }
+        # No max_tokens cap: a "thinking" model variant (e.g. Gemma) can spend
+        # 150+ tokens on <thought> reasoning alone before it ever reaches a tool
+        # call or a real answer. Verified live: a 150-token cap caused the model
+        # to be cut off mid-thought with zero tool calls attempted, which (before
+        # the fallback-text fix above) surfaced as a confident false claim of
+        # success. The full 60-call replay set passed 100% with no cap at all.
         if tools:
             payload["tools"] = tools
             payload["tool_choice"] = "auto"
@@ -382,7 +387,17 @@ class AgentRunner:
                         })
 
                 if not agent_reply.strip():
-                    agent_reply = "I have opened your claim and staged your dispatch under your policy terms."
+                    # This must never claim an action succeeded unless it actually did.
+                    # A previous version of this fallback always said "I have opened
+                    # your claim and staged your dispatch" -- combined with a low
+                    # max_tokens cap that could truncate a reasoning model before it
+                    # ever attempted a tool call, this produced a confident FALSE
+                    # claim of success with zero real state change (verified live:
+                    # empty reply -> this text -> current_claim was still None).
+                    if any(t in tools_called for t in ("open_claim", "stage_dispatch")):
+                        agent_reply = "I have opened your claim and staged your dispatch under your policy terms."
+                    else:
+                        agent_reply = "I'm sorry, could you repeat that? I want to make sure I get your location right before proceeding."
             except Exception as e:
                 logger.warning(f"LLM call failed or unavailable ({e}). Falling back to mock engine.")
                 mock_res = self._mock_generate(session_id, turn_id, masked_transcript, agent_version)

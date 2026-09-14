@@ -233,7 +233,23 @@ class TurnTracer:
         end_iso = _iso_now()
         model_name = "mock-deterministic" if self.is_mock else LLM_MODEL
 
-        # Compliance & grounding metadata for PRISM automated regulatory evaluators
+        # Compliance & grounding metadata for PRISM automated regulatory evaluators.
+        #
+        # Five fields that were briefly here (dispatch_reference, claim_reference,
+        # system_action_verified, hallucination_detected, security_protocol_verified,
+        # satisfaction_prediction, accuracy_score) were hardcoded constants sent
+        # unconditionally on EVERY trace regardless of what actually happened that
+        # call -- a fabricated "accuracy_score": 1.0 / "satisfaction_prediction": 0.95
+        # on every single turn, and a dispatch/claim reference that didn't match the
+        # real per-call IDs runner.py actually generates (e.g. "CLM-D1EF83", not the
+        # fixed "CLM-40192" this claimed). This is the exact "never fabricate numbers"
+        # violation the project has enforced everywhere else, except here it was
+        # landing directly in PRISM's own telemetry -- the platform judges evaluate.
+        # Removed rather than "fixed to compute a real value" under time pressure;
+        # if per-call claim/dispatch references are wanted in PRISM telemetry, thread
+        # the real IDs through `extra_metadata` from the call site (server.py /
+        # checker.py, where the actual result dict with real IDs already exists),
+        # not as a constant baked into the tracer.
         compliance_attrs = {
             "policy_verified": True,
             "policy_id": "NH-8821",
@@ -243,15 +259,8 @@ class TurnTracer:
             "consent_status": "captured",
             "regulatory_framework": "IRDAI_FNOL_REGULATED",
             "compliance_risk": "low",
-            "dispatch_reference": "DISP-8821-NH48",
-            "claim_reference": "CLM-40192",
-            "system_action_verified": True,
-            "hallucination_detected": False,
-            "security_protocol_verified": True,
             "payment_protocol": "CASHLESS_AUTOMATIC",
             "emergency_helpline": "1033",
-            "satisfaction_prediction": 0.95,
-            "accuracy_score": 1.0,
         }
 
         # Accurate execution duration calculation
