@@ -4,6 +4,8 @@ import json
 from pathlib import Path
 import pytest
 
+from evals.checker import Evaluator
+from app.db.database import init_db
 from app.observability.prism_tracer import (
     PRISMTracer,
     TurnTracer,
@@ -59,3 +61,26 @@ def test_turn_tracer_spans_and_local_buffering(tmp_path):
         assert last_trace["session_id"] == "test-sess-prism"
         assert last_trace["metadata"]["agent_id"] == "roadside-claimguard"
         assert len(last_trace["spans"]) == 3  # root + tool + enforcement
+
+
+@pytest.mark.asyncio
+async def test_evaluator_traces_masked_replay_text(monkeypatch, tmp_path):
+    import app.observability.prism_tracer as prism_tracer
+
+    trace_file = tmp_path / "traces.jsonl"
+    monkeypatch.setattr(prism_tracer, "TRACES_FILE", trace_file)
+    init_db()
+
+    raw_card = "My card number is 4532 0150 1234 5678."
+    await Evaluator(agent_version="v2", split_filter="dev", limit=1).evaluate_scenario(
+        {
+            "id": "security-regression",
+            "category": "F_SPOKEN_IDENTIFIERS",
+            "split": "dev",
+            "turns": [raw_card],
+        }
+    )
+
+    payload = json.loads(trace_file.read_text(encoding="utf-8").splitlines()[-1])
+    assert raw_card not in trace_file.read_text(encoding="utf-8")
+    assert payload["spans"][0]["input_text"] == "My card number is [CARD REDACTED]."
