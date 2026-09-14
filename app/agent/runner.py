@@ -244,8 +244,18 @@ class AgentRunner:
         masked_transcript: str,
         redacted_pii: Optional[List[Dict[str, Any]]] = None,
         agent_version: str = "v2",
+        category: Optional[str] = None,
+        eval_set: Optional[str] = None,
     ) -> Dict[str, Any]:
-        """Process one conversational turn according to ClaimGuard architecture."""
+        """Process one conversational turn according to ClaimGuard architecture.
+
+        ``category``/``eval_set`` are optional and only set by the eval harness
+        (see ``evals/checker.py``) so PRISM traces from a replay-set run carry
+        the same `category` (A..F) and `set` (dev/heldout) tags the local
+        checker already scores by — required for PRISM dashboard filtering
+        per `Overall-plan.md` §13/§14. A live call outside the replay set
+        passes neither and both are simply omitted from the trace.
+        """
         start_time = time.perf_counter()
         cw = get_commit_window()
 
@@ -428,6 +438,8 @@ class AgentRunner:
                 tools_called=[{"name": t} for t in tools_called],
                 transitions=transitions,
                 agent_version=agent_version,
+                category=category,
+                eval_set=eval_set,
                 extra_metadata={
                     "claim_id": claim_id or "NONE",
                     "redacted_pii_count": len(redacted_pii or []),

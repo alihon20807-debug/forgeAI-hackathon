@@ -235,12 +235,20 @@ class _PrismTracer:
         agent_version: str = "v2",
         model: Optional[str] = None,
         extra_metadata: Optional[Dict[str, Any]] = None,
+        category: Optional[str] = None,
+        eval_set: Optional[str] = None,
     ) -> None:
         """Emit one flat trace for a completed turn. Never raises (fail-open).
 
         ``user_input`` / ``agent_output`` must already be masked / veto-filtered
         -- the runner passes ``masked_transcript`` and the post-outbound-veto
         reply, never raw caller text.
+
+        ``category`` (A_CLEAN_CONTROL..F_SPOKEN_IDENTIFIERS) and ``eval_set``
+        (``dev``/``heldout``) are optional -- pass them when tracing a replay-set
+        run (see ``evals/checker.py``) so PRISM's dashboard can filter by them,
+        per `Overall-plan.md` §13/§14. A live call outside the replay set has
+        neither and both are simply omitted from metadata.
         """
         # runner.py passes tools_called as ``[{"name": t}, ...]``; the trace
         # metadata only needs the names.
@@ -257,6 +265,10 @@ class _PrismTracer:
             "turn_id": turn_id,
             "caller_id": caller_id,
         }
+        if category:
+            meta["category"] = category
+        if eval_set:
+            meta["set"] = eval_set
         if transitions:
             # State hops only -- terse, bounded payload.
             meta["transitions"] = [

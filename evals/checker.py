@@ -80,6 +80,8 @@ class Evaluator:
                 masked_transcript=call_masked_text,
                 redacted_pii=call_redacted_pii,
                 agent_version=self.version,
+                category=category,
+                eval_set=scenario["split"],
             )
 
             t1 = time.perf_counter()
