@@ -378,16 +378,25 @@ class AgentRunner:
             # immediately, with no chance to be unwound by a later revocation. This rule
             # is uniform across every category and every turn — it is a structural
             # consequence of the architecture missing, not a scripted per-scenario outcome.
+            #
+            # This must go through the real CommitWindow store (cw.commit_held_actions),
+            # not a synthetic dict appended only to this turn's response: the earlier
+            # version faked a "COMMITTED" transition in the HTTP/PRISM-trace response
+            # while the actual persisted action stayed HELD forever, so anything reading
+            # the store directly (GET /api/sessions/{id}/state, the live supervisor
+            # console) showed a v0 dispatch as still-pending/interruptible -- the exact
+            # opposite of the "already executed, cannot be stopped" story being told
+            # about it. Real transitions also carry the action's real action_id instead
+            # of a fake "naive-dispatch-{session_id}" one.
             if "stage_dispatch" in tools_called:
                 self._session_naive_committed[session_id] = True
             if self._session_naive_committed.get(session_id):
-                transitions.append({
-                    "action_id": f"naive-dispatch-{session_id}",
-                    "action_type": "stage_dispatch",
-                    "from_state": "HELD",
-                    "to_state": "COMMITTED",
-                    "reason": "No commit-window enforcement in this architecture version — action executes immediately upon proposal, unrecoverable by a later revocation.",
-                })
+                real_trans = cw.commit_held_actions(
+                    session_id,
+                    reason="No commit-window enforcement in this architecture version — action executes immediately upon proposal, unrecoverable by a later revocation.",
+                    min_turn_age=0,
+                )
+                transitions.extend([t.to_dict() for t in real_trans])
 
         # Record assistant reply
         conversation.append({"role": "assistant", "content": agent_reply})

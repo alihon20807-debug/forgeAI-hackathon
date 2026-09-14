@@ -31,7 +31,12 @@ LLAMA_SERVER_BIN = Path(os.getenv("LLAMA_SERVER_BIN", "/home/aliz/.local/bin/lla
 DEFAULT_MODEL_PATH = Path(os.getenv("MODEL_PATH", "/home/aliz/Documents/Codes/AI_Stuff/models/Holo/Holo-3.1-9B.i1-Q5_K_M.gguf"))
 FALLBACK_MODEL_PATH = Path("/home/aliz/Documents/Codes/doc2md/models/gemma-4-12B-it-Q4_0.gguf")
 LLM_BASE_URL = os.getenv("LLM_BASE_URL", "http://127.0.0.1:8080/v1")
-LLM_API_KEY = os.getenv("LLM_API_KEY", "no-key-required")
+# An empty LLM_API_KEY (the correct .env value for a local, no-auth
+# llama-server) must NOT become an empty Authorization header -- httpx
+# rejects "Bearer " (trailing space, no token) outright as an illegal
+# header value, which silently killed every real-model call and made
+# every turn fall back to the mock. `or` treats "" the same as unset.
+LLM_API_KEY = os.getenv("LLM_API_KEY") or "no-key-required"
 LLM_MODEL = os.getenv("LLM_MODEL", "Holo-3.1-9B")
 USE_MOCK_LLM = os.getenv("USE_MOCK_LLM", "false").lower() in ("true", "1", "yes")
 
