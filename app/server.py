@@ -12,7 +12,7 @@ import logging
 from contextlib import asynccontextmanager
 from typing import Any, Dict, List, Optional
 
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
@@ -42,6 +42,9 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+from pathlib import Path
+from fastapi.staticfiles import StaticFiles
+
 # CORS middleware for supervisor console
 app.add_middleware(
     CORSMiddleware,
@@ -50,6 +53,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
+if FRONTEND_DIR.exists():
+    app.mount("/console", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="console")
 
 
 # -----------------------------------------------------------------------------
@@ -164,22 +171,88 @@ def init_session(req: SessionInitRequest):
 
 @app.post("/api/call/turn", response_model=TurnResponse)
 async def process_turn(req: TurnRequest):
-    """Process a single conversational turn."""
+    """Process a single conversational turn with defense-in-depth PII shielding and PRISM tracing."""
+    from app.observability.prism_tracer import TurnTracer
+    from app.security.pii_shield import redact_pii
+
+    masked_transcript = req.masked_transcript
+    redacted_pii = [p.model_dump() for p in (req.redacted_pii or [])]
+
+    # Pre-LLM PII defense-in-depth: If client didn't pre-mask, scrub mathematically
+    if not masked_transcript or masked_transcript == req.raw_transcript:
+        shield_res = redact_pii(req.raw_transcript)
+        masked_transcript = shield_res.masked_transcript
+        if shield_res.redacted_pii:
+            for item in shield_res.redacted_pii:
+                redacted_pii.append(item.to_dict())
+
+    # Initialize PRISM turn tracer
+    tracer = TurnTracer(
+        session_id=req.session_id,
+        user_utterance=masked_transcript,
+        agent_version=req.agent_version or "v2",
+    )
+
     runner = get_agent_runner()
     result = await runner.process_turn(
         session_id=req.session_id,
         turn_id=req.turn_id,
         caller_id=req.caller_id,
         raw_transcript=req.raw_transcript,
-        masked_transcript=req.masked_transcript,
-        redacted_pii=[p.model_dump() for p in (req.redacted_pii or [])],
+        masked_transcript=masked_transcript,
+        redacted_pii=redacted_pii,
         agent_version=req.agent_version or "v2",
+    )
+
+    # Record Commit Window transitions as PRISM spans
+    for t in result["state_machine"]["transitions"]:
+        tracer.record_enforcement_transition(
+            action_id=t["action_id"],
+            action_type=t["action_type"],
+            from_state=t["from_state"],
+            to_state=t["to_state"],
+            reason=t["reason"],
+        )
+
+    # Flush spans in background
+    tracer.finish(
+        agent_reply=result["agent_response"],
+        extra_metadata={
+            "turn_id": req.turn_id,
+            "caller_id": req.caller_id,
+            "pii_redacted_count": len(redacted_pii),
+        },
     )
 
     # Broadcast turn and state machine transitions to connected supervisor consoles
     await manager.broadcast(req.session_id, result)
 
     return result
+
+
+@app.post("/api/voice/transcribe")
+async def transcribe_voice(
+    file: UploadFile = File(...),
+    session_id: Optional[str] = Form(None),
+    turn_id: Optional[int] = Form(1),
+    caller_id: Optional[str] = Form("caller_edge"),
+):
+    """Local ASR endpoint with Whisper and pre-LLM mathematical PII redaction."""
+    from app.voice.transcriber import get_default_transcriber
+    transcriber = get_default_transcriber()
+    audio_bytes = await file.read()
+    result = transcriber.transcribe_audio_bytes(audio_bytes, file.filename or "audio.wav")
+    return {
+        "status": "success",
+        "session_id": session_id or "session_edge",
+        "turn_id": turn_id,
+        "caller_id": caller_id,
+        "raw_transcript": result.raw_transcript,
+        "masked_transcript": result.masked_transcript,
+        "redacted_pii": [p.to_dict() for p in result.redacted_pii],
+        "latency_ms": result.latency_ms,
+        "language": result.language,
+    }
 
 
 @app.get("/api/claims/{claim_id}")
