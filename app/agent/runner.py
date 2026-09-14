@@ -59,6 +59,21 @@ class AgentRunner:
             self._conversations[session_id] = [{"role": "system", "content": sys_prompt}]
         return self._conversations[session_id]
 
+    @staticmethod
+    def _extract_location(transcript: str) -> str:
+        """Best-effort extraction of the caller's stated location. Never invents a
+        place name -- falls back to a neutral phrase that doesn't assert anything
+        not actually said, rather than a specific wrong location.
+        """
+        match = re.search(
+            r"near\s+([A-Za-z][A-Za-z0-9'\s]{2,45}?)(?=\s+on\s+NH\d+|[.,]|$)",
+            transcript,
+            re.IGNORECASE,
+        )
+        if match:
+            return f"near {match.group(1).strip()}"
+        return "the location you described"
+
     def _mock_generate(
         self,
         session_id: str,
@@ -105,12 +120,21 @@ class AgentRunner:
 
         # Scenario 4: Initial Breakdown / Request for Tow / Dispatch
         if not claim_id:
+            # Ground the location in what the caller actually said -- never assert a
+            # fixed place name. A hardcoded "NH48 Km 62 near Manesar" here previously
+            # caused a real, PRISM-flagged hallucination: a caller reporting a
+            # breakdown "near Bilaspur chowk" was told their tow was staged to
+            # Manesar, a different place entirely. See docs/CASE_STUDY_AADHAAR_VERHOEFF.md
+            # sibling issue -- same root cause pattern (asserting an unconditioned
+            # constant as if it were a verified fact).
+            location = self._extract_location(transcript)
+
             # First intimate claim
             claim_res = execute_tool(
                 name="open_claim",
                 arguments={
                     "policy_number": pol_num,
-                    "incident_location": "NH48 Km 62 near Manesar",
+                    "incident_location": location,
                     "incident_description": transcript,
                 },
                 session_id=session_id,
@@ -126,18 +150,28 @@ class AgentRunner:
                 arguments={
                     "claim_id": claim_id,
                     "service_type": "towing",
-                    "pickup_location": "NH48 Km 62 near Manesar",
+                    "pickup_location": location,
                 },
                 session_id=session_id,
                 staged_turn=turn_id,
             )
 
             disp_ref = f"DISP-{pol_num.replace(' ', '')}-NH48"
+            # roadside_limit_inr is a real, per-policy DB field -- cite that instead
+            # of the fabricated "45 km cashless corridor" / "NHAI helpline 1033"
+            # boilerplate that used to be here (and contradicted app/rag/corpus.py's
+            # own "50 km" figure): neither number existed in any structured source.
+            roadside_limit = policy.get("roadside_limit_inr") if policy else None
+            limit_clause = (
+                f"Your policy's roadside assistance coverage limit is ₹{roadside_limit:,}. "
+                if roadside_limit is not None
+                else ""
+            )
             reply = (
                 f"Policy {pol_num} verified active. Claim {claim_id} registered with mandatory disclosures logged. "
-                f"A flatbed tow truck has been staged under Partner Dispatch Reference {disp_ref} to your location on NH48 near Manesar (ETA 20-25 minutes). "
-                f"Under corridor policy, towing up to 45 km is cashless, and standard policy deductible is ₹{deductible:,}. "
-                f"For immediate assistance, NHAI emergency helpline is 1033. "
+                f"A flatbed tow truck has been staged under Partner Dispatch Reference {disp_ref} to your reported location ({location}) (ETA 20-25 minutes). "
+                f"{limit_clause}"
+                f"Standard policy deductible is ₹{deductible:,}. "
                 f"Please confirm your agreement to these terms to finalize dispatch."
             )
             return {
@@ -150,7 +184,7 @@ class AgentRunner:
         reply = (
             f"Your claim {claim_id} is active under policy {pol_num}. "
             f"Authorized assistance is staged under reference {disp_ref} (ETA 20-25 minutes). "
-            f"NHAI emergency assistance is available at 1033. How else can I assist you?"
+            f"How else can I assist you?"
         )
         return {"reply": reply, "tools_called": []}
 

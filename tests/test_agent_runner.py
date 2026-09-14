@@ -202,8 +202,16 @@ async def test_card_security_advisory_and_dispatch_grounding():
         agent_version="v2",
     )
     assert "DISP-NH-8821-NH48" in res1["agent_response"]
-    assert "1033" in res1["agent_response"]
     assert "ETA 20-25 minutes" in res1["agent_response"]
+    # Grounded in what the caller actually said ("near Manesar"), not a hardcoded
+    # placeholder -- a caller reporting a different location must get that location
+    # back, not a fixed "Manesar" regardless of input (see
+    # docs/CASE_STUDY_AADHAAR_VERHOEFF.md's sibling fabrication-pattern issue).
+    assert "near Manesar" in res1["agent_response"]
+    # "1033" (NHAI helpline) and "45 km cashless corridor" used to be asserted here
+    # unconditionally -- neither exists in the policies DB schema or matches the RAG
+    # corpus's own figure (50 km), so asserting them was fabrication, not grounding.
+    # Removed along with the fix; do not reintroduce either as a hardcoded literal.
 
     # Turn 2: Caller provides card number -> security advisory prepended
     res2 = await runner.process_turn(

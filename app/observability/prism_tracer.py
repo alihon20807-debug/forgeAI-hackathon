@@ -235,33 +235,25 @@ class TurnTracer:
 
         # Compliance & grounding metadata for PRISM automated regulatory evaluators.
         #
-        # Five fields that were briefly here (dispatch_reference, claim_reference,
-        # system_action_verified, hallucination_detected, security_protocol_verified,
-        # satisfaction_prediction, accuracy_score) were hardcoded constants sent
-        # unconditionally on EVERY trace regardless of what actually happened that
-        # call -- a fabricated "accuracy_score": 1.0 / "satisfaction_prediction": 0.95
-        # on every single turn, and a dispatch/claim reference that didn't match the
-        # real per-call IDs runner.py actually generates (e.g. "CLM-D1EF83", not the
-        # fixed "CLM-40192" this claimed). This is the exact "never fabricate numbers"
-        # violation the project has enforced everywhere else, except here it was
-        # landing directly in PRISM's own telemetry -- the platform judges evaluate.
-        # Removed rather than "fixed to compute a real value" under time pressure;
-        # if per-call claim/dispatch references are wanted in PRISM telemetry, thread
-        # the real IDs through `extra_metadata` from the call site (server.py /
-        # checker.py, where the actual result dict with real IDs already exists),
-        # not as a constant baked into the tracer.
-        compliance_attrs = {
-            "policy_verified": True,
-            "policy_id": "NH-8821",
-            "mandatory_disclosures_logged": True,
-            "deductible_disclosed_inr": 1500,
-            "towing_allowance_km": 45,
-            "consent_status": "captured",
-            "regulatory_framework": "IRDAI_FNOL_REGULATED",
-            "compliance_risk": "low",
-            "payment_protocol": "CASHLESS_AUTOMATIC",
-            "emergency_helpline": "1033",
-        }
+        # A "compliance_attrs" dict used to live here, sent unconditionally on EVERY
+        # trace regardless of what actually happened that call: "policy_id": "NH-8821"
+        # even when the real policy was NH-4019 or NH-5502, "deductible_disclosed_inr":
+        # 1500 even when the real deductible was 2500, "consent_status": "captured" and
+        # "compliance_risk": "low" claimed unconditionally with no real verification
+        # behind either, "towing_allowance_km": 45 and "emergency_helpline": "1033"
+        # with zero backing in the database or the RAG corpus (which itself says 50 km,
+        # not 45 -- the two invented numbers didn't even agree with each other). This
+        # is the same "never fabricate numbers" violation already fixed once in this
+        # file for a different field set (accuracy_score, satisfaction_prediction,
+        # etc.) -- this second block was missed by that pass and was still live,
+        # landing directly in PRISM's own telemetry on every single trace.
+        #
+        # Removed entirely rather than "fixed to compute a real value" under time
+        # pressure. If per-call compliance data is wanted in PRISM telemetry later,
+        # thread the REAL values through `extra_metadata` from the call site
+        # (server.py / checker.py, where the actual claim/policy dict already
+        # exists), never as a constant baked into the tracer.
+        compliance_attrs: Dict[str, Any] = {}
 
         # Accurate execution duration calculation
         try:
