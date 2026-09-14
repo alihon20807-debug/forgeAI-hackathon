@@ -115,6 +115,7 @@ class PRISMTracer:
                 logger.warning(f"[PRISM] Ingest request failed: {exc}")
 
         thread = threading.Thread(target=_send, daemon=True)
+        self._send_threads = [t for t in self._send_threads if t.is_alive()]
         self._send_threads.append(thread)
         thread.start()
 
@@ -122,7 +123,11 @@ class PRISMTracer:
         """Wait briefly for background sends before a short-lived process exits."""
         deadline = time.monotonic() + timeout
         for thread in self._send_threads:
-            thread.join(max(0.0, deadline - time.monotonic()))
+            remaining = max(0.0, deadline - time.monotonic())
+            if remaining <= 0.0:
+                break
+            thread.join(remaining)
+        self._send_threads = [t for t in self._send_threads if t.is_alive()]
 
 
 class TurnTracer:
