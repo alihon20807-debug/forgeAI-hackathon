@@ -28,9 +28,11 @@ import httpx
 
 from app.config import (
     DATA_DIR,
+    LLM_MODEL,
     PRISMTRACE_API_KEY,
     PRISMTRACE_HOST,
     PRISMTRACE_PROJECT_ID,
+    USE_MOCK_LLM,
 )
 
 logger = logging.getLogger("claimguard.prism")
@@ -196,7 +198,11 @@ class TurnTracer:
             "span_id": f"sp-enf-{uuid.uuid4().hex[:6]}",
             "parent_span_id": self.root_span_id,
             "name": "enforcement_commit_window",
-            "span_type": "guardrail",
+            # "guardrail" is not in PRISM's closed span_type vocabulary
+            # (chain | llm | tool | agent | retrieval) -- an unrecognized
+            # value is what was getting these spans flagged with no score.
+            # "tool" is the closest fit: a deterministic enforcement action.
+            "span_type": "tool",
             "start_time": now,
             "end_time": now,
             "status": "ok",
@@ -217,6 +223,7 @@ class TurnTracer:
         extra_metadata: Optional[Dict[str, Any]] = None,
     ) -> None:
         end_iso = _iso_now()
+        model_name = "mock-deterministic" if USE_MOCK_LLM else LLM_MODEL
         root = {
             "span_id": self.root_span_id,
             "parent_span_id": None,
@@ -232,15 +239,40 @@ class TurnTracer:
                 "agent_version": self.agent_version,
                 "category": self.category,
                 "set": self.eval_set,
+                "model": model_name,
+            },
+        }
+        # A dedicated "llm"-type child span carrying `model` at the top
+        # level -- PRISM's automated Quality/Response-Quality scorer keys
+        # off an llm span with a model field. Without this, every trace
+        # showed "Unknown" model and came back unscored ("Flagged: Yes",
+        # blank score) -- confirmed against docs/research/prism/02-api-
+        # and-payloads.md's own worked example (root "chain" span + child
+        # "llm" span carrying `model`).
+        llm_span = {
+            "span_id": f"sp-llm-{uuid.uuid4().hex[:6]}",
+            "parent_span_id": self.root_span_id,
+            "name": f"llm:{model_name}",
+            "span_type": "llm",
+            "start_time": self.start_iso,
+            "end_time": end_iso,
+            "status": "ok",
+            "input_text": self.user_utterance[:10000],
+            "output_text": agent_reply[:10000],
+            "model": model_name,
+            "attributes": {
+                "agent_id": self.agent_id,
+                "agent_version": self.agent_version,
             },
         }
 
-        all_spans = [root] + self.spans
+        all_spans = [root, llm_span] + self.spans
         meta = {
             "agent_id": self.agent_id,
             "agent_version": self.agent_version,
             "category": self.category,
             "set": self.eval_set,
+            "model": model_name,
             **(extra_metadata or {}),
         }
 

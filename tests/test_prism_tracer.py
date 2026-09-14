@@ -60,7 +60,12 @@ def test_turn_tracer_spans_and_local_buffering(tmp_path):
         last_trace = json.loads(lines[-1])
         assert last_trace["session_id"] == "test-sess-prism"
         assert last_trace["metadata"]["agent_id"] == "roadside-claimguard"
-        assert len(last_trace["spans"]) == 3  # root + tool + enforcement
+        assert last_trace["metadata"]["model"]
+        assert len(last_trace["spans"]) == 4  # root(chain) + llm + tool + enforcement
+        llm_spans = [s for s in last_trace["spans"] if s["span_type"] == "llm"]
+        assert len(llm_spans) == 1
+        assert llm_spans[0]["model"]  # PRISM's scorer needs this to score the trace
+        assert all(s["span_type"] in ("chain", "llm", "tool", "agent", "retrieval") for s in last_trace["spans"])
 
 
 @pytest.mark.asyncio
