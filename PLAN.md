@@ -1,3 +1,5 @@
+> **Superseded.** The canonical plan is now `Overall-plan.md` at the repo root. This file is kept only as earlier technical background.
+
 # ClaimGuard — Final Plan (ForgeAI 2026)
 
 > **One line:** a Hinglish roadside-claims voice agent built on a deliberately cheap model.
