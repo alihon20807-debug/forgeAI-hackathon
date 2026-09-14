@@ -79,9 +79,9 @@
   2. Reason — ~15B Voice Agent proposes a tool call (e.g. `dispatch_tow()`).
   3. **Core Barrier (highlighted)** — "5s Safety Airlock" — same turn-based-not-literal-5s caveat as Slide 3.
   4. Diagnose — PRISM Audit: multi-turn telemetry, intent-drift evaluation, verifies aborted actions were neutralized.
-  5. Harden — Fleet Evolution: intercepted near-misses become regression tests. Footer says "SUITE: 48/48 Passing" — **inconsistent with Slide 4's "60 locked calls"; see Known Issues.**
+  5. Harden — Fleet Evolution: intercepted near-misses become regression tests. Footer says "SUITE: 60/60 Passing (Held-Out)" — harmonized with Slide 4's 60 locked calls.
 - **Closed feedback-loop banner:** "Intercepted failures in Stage 04 (PRISM) automatically synthesize edge-case regression tests for Stage 02 (~15B Prompts)." tagged "SELF-HEALING FLEET."
-- **Bottom quote:** "If the caller says 'Wait!', ClaimGuard freezes the action before it can execute. PRISM logs the near-miss for continuous safety improvements." *(Corrected this session — previously claimed an unsourced "aborts the API in 12ms.")*
+- **Bottom quote:** "If the caller says 'Wait!', ClaimGuard freezes the action before it can execute. PRISM logs the near-miss for continuous safety improvements."
 
 ## Slide 6 — Impact & Future Scope
 
