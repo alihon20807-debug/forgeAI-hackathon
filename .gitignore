@@ -47,6 +47,7 @@ recordings/
 
 # Tooling
 .claude/settings.local.json
+*.ignore
 
 # Auto-sync log and large model/weight files
 .autosync.log
@@ -55,3 +56,4 @@ recordings/
 *.bin
 *.onnx
 models/
+
