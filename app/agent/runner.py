@@ -236,13 +236,15 @@ class AgentRunner:
             "model": LLM_MODEL,
             "messages": messages,
             "temperature": 0.1,
+            "max_tokens": 1000,
         }
-        # No max_tokens cap: a "thinking" model variant (e.g. Gemma) can spend
-        # 150+ tokens on <thought> reasoning alone before it ever reaches a tool
-        # call or a real answer. Verified live: a 150-token cap caused the model
-        # to be cut off mid-thought with zero tool calls attempted, which (before
-        # the fallback-text fix above) surfaced as a confident false claim of
-        # success. The full 60-call replay set passed 100% with no cap at all.
+        # 1000, not the 150 that broke everything earlier: a "thinking" model
+        # variant (e.g. Gemma) can spend 150-300+ tokens on <thought> reasoning
+        # alone before it ever reaches a tool call or a real answer. 150 cut it
+        # off mid-thought with zero tool calls attempted, which (before the
+        # fallback-text fix in this same method) surfaced as a confident false
+        # claim of success. 1000 is re-verified live across every category
+        # below before being trusted -- see the fix commit for the full test.
         if tools:
             payload["tools"] = tools
             payload["tool_choice"] = "auto"
