@@ -1,0 +1,634 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ClaimGuard Pitch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Hind:wght@500;600&family=Overpass+Mono:wght@400;600&family=Overpass:wght@400;600;700&display=swap">
+<style>
+  /* Single deliberate visual world: a highway at night. Not theme-switched on purpose. */
+  :root {
+    --asphalt: #0E1317;
+    --tarmac: #161F26;
+    --kerb: #28343E;
+    --line: #EDF0EA;
+    --fog: #97A3AC;
+    --dim: #5E6A73;
+    --stone: #F2C230;      /* NH milestone cap yellow: the one accent */
+    --stone-ink: #17150C;
+    --paint: #F4F5F0;
+    --held: #FF9F3A;
+    --frozen: #86CDF5;
+    --commit: #46C98A;
+    --abort: #F0575D;
+    --display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+    --body: "Overpass", "Hind", "Segoe UI", system-ui, sans-serif;
+    --mono: "Overpass Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html, body { background: var(--asphalt); color: var(--line); }
+  body { margin: 0; font-family: var(--body); -webkit-font-smoothing: antialiased; }
+  body.present { overflow: hidden; height: 100vh; }
+  body.stack { padding-inline: 16px; padding-block: 16px 48px; }
+  body.stack .deck { display: flex; flex-direction: column; gap: 20px; }
+
+  /* ---------- slide mechanics ---------- */
+  .slot { --s: .5; }
+  body.present .slot { position: fixed; inset: 0; visibility: hidden; opacity: 0; transition: opacity .45s ease, visibility 0s linear .45s; }
+  body.present .slot.is-active { visibility: visible; opacity: 1; transition: opacity .45s ease; }
+  body.present .frame { position: absolute; left: 50%; top: 50%; margin: -450px 0 0 -800px; transform: scale(var(--s)); }
+  body.stack .slot { position: relative; }
+  body.stack .viewport { position: relative; width: 100%; height: calc(900px * var(--s)); overflow: hidden; border-radius: 6px; }
+  body.stack .frame { position: absolute; left: 0; top: 0; transform-origin: 0 0; transform: scale(var(--s)); }
+
+  .frame {
+    width: 1600px; height: 900px; overflow: hidden;
+    padding: 60px 96px 124px;
+    display: flex; flex-direction: column; gap: 26px;
+    font-size: 23px; line-height: 1.4;
+    background:
+      radial-gradient(900px 520px at 92% -8%, rgba(242,194,48,.09), transparent 62%),
+      linear-gradient(180deg, #11181D 0%, #0C1115 100%);
+    position: relative;
+  }
+  .frame h1, .frame h2, .frame h3, .frame p, .frame ul, .frame ol, .frame figure, .frame blockquote { margin: 0; }
+  .frame ul, .frame ol { padding: 0; list-style: none; }
+
+  .top { display: flex; justify-content: space-between; align-items: baseline;
+    font: 600 17px/1 var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--fog); }
+  .top .sec { color: var(--stone); }
+
+  .headline { font: 700 58px/1.02 var(--display); letter-spacing: -.005em; text-wrap: balance; max-width: 1400px; }
+  h3 { font: 600 30px/1.1 var(--display); letter-spacing: .01em; }
+  .label { font: 600 16px/1.2 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--fog); }
+  mark { background: none; color: var(--stone); box-shadow: inset 0 -.1em 0 rgba(242,194,48,.35); }
+  code { font-family: var(--mono); font-size: .86em; color: var(--line); }
+  b { font-weight: 700; color: var(--paint); }
+
+  /* road + milestone chrome */
+  .road { position: absolute; left: 0; right: 0; bottom: 0; height: 60px; background: #090D10; border-top: 1px solid var(--kerb); overflow: hidden; }
+  .road::before { content: ""; position: absolute; left: -240px; right: -240px; top: 28px; height: 4px;
+    background: repeating-linear-gradient(90deg, var(--paint) 0 64px, transparent 64px 128px); opacity: .5; }
+  body.present .slot.is-active .road::before { animation: drive 1s cubic-bezier(.2,.7,.2,1); }
+  @keyframes drive { from { transform: translateX(128px); } to { transform: none; } }
+  .km { position: absolute; right: 96px; bottom: 20px; width: 84px; height: 108px; border-radius: 42px 42px 6px 6px;
+    background: var(--paint); overflow: hidden; display: grid; grid-template-rows: 46px 1fr; box-shadow: 0 0 0 3px #090D10; }
+  .km b { background: var(--stone); color: var(--stone-ink); font: 700 19px/1 var(--display); letter-spacing: .05em; display: grid; place-items: end center; padding-bottom: 7px; }
+  .km span { color: #1B2127; font: 700 32px/1 var(--display); display: grid; place-items: center; font-variant-numeric: tabular-nums; }
+  .km small { display: block; font: 600 11px/1 var(--mono); letter-spacing: .08em; color: #59636B; margin-top: 3px; text-align: center; }
+
+  .chip { display: inline-block; font: 600 15px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; padding: 8px 11px 7px; border: 2px solid currentColor; border-radius: 4px; white-space: nowrap; }
+  .c-held { color: var(--held); } .c-frozen { color: var(--frozen); } .c-commit { color: var(--commit); } .c-abort { color: var(--abort); } .c-fog { color: var(--fog); }
+
+  /* ---------- slide 1 ---------- */
+  .s1 { display: grid; grid-template-columns: 1.12fr .88fr; gap: 80px; flex: 1; align-items: start; padding-top: 10px; }
+  .callmeta { display: flex; align-items: center; gap: 14px; font: 600 18px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--fog); margin-bottom: 30px !important; }
+  .rec { width: 12px; height: 12px; border-radius: 50%; background: var(--abort); box-shadow: 0 0 0 6px rgba(240,87,93,.18); }
+  .quote { font: 700 84px/.98 var(--display); text-wrap: balance; }
+  .gloss { margin-top: 26px !important; color: var(--fog); font-size: 23px; max-width: 34ch; font-style: italic; }
+  .prob h2 { font: 600 40px/1.08 var(--display); text-wrap: balance; margin-bottom: 30px; }
+  .fails { display: grid; gap: 22px; }
+  .fails li { display: grid; grid-template-columns: 150px 1fr; gap: 18px; align-items: start; padding-top: 18px; border-top: 1px solid var(--kerb); }
+  .fails .chip { justify-self: start; margin-top: 2px; }
+  .fails h3 { font-size: 27px; margin-bottom: 4px; }
+  .fails p { color: var(--fog); font-size: 21px; }
+  .question { display: grid; grid-template-columns: 150px 1fr; gap: 18px; align-items: baseline; font: 600 30px/1.2 var(--display); letter-spacing: .01em;
+    padding: 20px 26px; background: var(--tarmac); border: 1px solid var(--kerb); border-left: 6px solid var(--stone); border-radius: 6px; text-wrap: balance; }
+  .question .label { color: var(--stone); }
+
+  /* ---------- slide 2 ---------- */
+  .s2 { display: grid; grid-template-columns: 1fr 1fr; gap: 72px; flex: 1; align-items: start; }
+  .trap { display: grid; gap: 18px; }
+  .trap .say { display: grid; grid-template-columns: 1fr auto; gap: 6px 20px; align-items: center; padding: 22px 24px; background: var(--tarmac); border: 1px solid var(--kerb); border-radius: 8px; }
+  .trap .hi { font: 700 46px/1.02 var(--display); }
+  .trap .en { grid-column: 1 / -1; color: var(--fog); font-size: 20px; font-style: italic; }
+  .trap .vs { font: 600 16px/1 var(--mono); letter-spacing: .14em; color: var(--dim); text-align: center; text-transform: uppercase; }
+  .verdict { font: 600 30px/1.15 var(--display); color: var(--paint); text-wrap: balance; }
+  .verdict span { color: var(--abort); }
+  .fixes { display: grid; gap: 0; }
+  .fixes li { padding-block: 20px; border-top: 1px solid var(--kerb); display: grid; gap: 6px; }
+  .fixes li:first-child { border-top: 0; padding-top: 4px; }
+  .fixes h3 { font-size: 30px; }
+  .fixes p { color: var(--fog); font-size: 21px; max-width: 46ch; }
+
+  /* ---------- slide 3 ---------- */
+  .s3 { display: grid; grid-template-columns: 780px 1fr; gap: 64px; flex: 1; align-items: start; }
+  .console { background: var(--tarmac); border: 1px solid var(--kerb); border-radius: 10px; padding: 26px 30px 28px; display: grid; gap: 18px; box-shadow: 0 30px 60px -30px rgba(0,0,0,.6); }
+  .c-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+  .c-tabs { display: flex; gap: 8px; flex: none; }
+  .c-tabs button, .c-head .label { white-space: nowrap; }
+  .c-tabs button { font: 600 15px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--fog); background: transparent; border: 1px solid var(--kerb); border-radius: 999px; padding: 9px 14px 8px; cursor: pointer; }
+  .c-tabs button[aria-pressed="true"] { color: var(--stone-ink); background: var(--stone); border-color: var(--stone); }
+  .c-tabs button:focus-visible, .chrome button:focus-visible { outline: 3px solid var(--stone); outline-offset: 2px; }
+  .c-said { font: 700 40px/1.08 var(--display); min-height: 2.2em; text-wrap: balance; }
+  .c-said mark { transition: color .2s; }
+  .c-card { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 18px 20px; border: 1px dashed var(--kerb); border-radius: 8px; }
+  .c-svc { font: 600 30px/1 var(--display); }
+  .c-meta { font: 400 17px/1.2 var(--mono); color: var(--fog); margin-top: 8px !important; }
+  .state { font: 600 20px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; padding: 12px 16px 10px; border: 2px solid currentColor; border-radius: 5px; white-space: nowrap; }
+  .state.idle { color: var(--dim); } .state.held { color: var(--held); } .state.frozen { color: var(--frozen); } .state.commit { color: var(--commit); } .state.abort { color: var(--abort); }
+  .state.pulse { animation: pulse .5s ease; }
+  @keyframes pulse { 0% { transform: scale(1); } 40% { transform: scale(1.08); } 100% { transform: scale(1); } }
+  .c-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .c-steps li { font: 600 15px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--dim); padding-top: 12px; border-top: 5px solid var(--kerb); transition: color .25s, border-color .25s; }
+  .c-steps li.on[data-k="held"] { color: var(--held); border-color: var(--held); }
+  .c-steps li.on[data-k="frozen"] { color: var(--frozen); border-color: var(--frozen); }
+  .c-steps li.on[data-k="resolve"] { color: var(--line); border-color: var(--line); }
+  .c-steps li.on.commit { color: var(--commit); border-color: var(--commit); }
+  .c-steps li.on.abort { color: var(--abort); border-color: var(--abort); }
+  .c-log { font: 400 17px/1.55 var(--mono); color: var(--fog); min-height: 6.2em; border-top: 1px solid var(--kerb); padding-top: 14px; }
+  .c-log p::before { content: "› "; color: var(--dim); }
+  .c-log p:last-child { color: var(--line); }
+  .pillars { display: grid; gap: 22px; }
+  .pillars article { display: grid; gap: 6px; padding-top: 18px; border-top: 1px solid var(--kerb); }
+  .pillars article:first-child { border-top: 0; padding-top: 0; }
+  .pillars h3 { font-size: 34px; }
+  .pillars p { color: var(--fog); font-size: 20px; line-height: 1.38; }
+  .foot { font: 600 17px/1.3 var(--mono); letter-spacing: .06em; color: var(--fog); }
+  .foot b { color: var(--stone); font-weight: 600; }
+
+  /* ---------- slide 4 ---------- */
+  .loop { display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px; }
+  .loop li { display: grid; gap: 8px; align-content: start; padding-top: 14px; border-top: 5px solid var(--stone); position: relative; }
+  .loop li:not(:last-child)::after { content: "→"; position: absolute; right: -24px; top: -19px; color: var(--stone); font: 700 22px/1 var(--display); }
+  .loop h3 { font-size: 32px; }
+  .loop p { color: var(--fog); font-size: 19px; line-height: 1.36; }
+  .s4 { display: grid; grid-template-columns: 1.05fr .95fr; gap: 56px; flex: 1; align-items: start; }
+  .s4 section { display: grid; gap: 14px; align-content: start; }
+  .s4 > section + section { padding-left: 56px; border-left: 1px solid var(--kerb); }
+  .s4 p { font-size: 20px; color: var(--fog); }
+  .cats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .cats li { font: 600 22px/1.1 var(--display); padding: 12px 14px; background: var(--tarmac); border: 1px solid var(--kerb); border-radius: 6px; }
+  .cats li small { display: block; font: 400 15px/1.25 var(--body); color: var(--fog); margin-top: 4px; }
+  .split { display: flex; gap: 6px; font: 600 15px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+  .split span { padding: 12px 12px 10px; border-radius: 4px; }
+  .split .dev { flex: 2; background: #22303A; color: var(--line); }
+  .split .held-out { flex: 1; background: var(--stone); color: var(--stone-ink); }
+  .agents { display: grid; gap: 10px; }
+  .agents li { display: grid; grid-template-columns: 250px 1fr; gap: 14px; align-items: baseline; font-size: 19px; color: var(--fog); }
+  .agents code { color: var(--stone); font-size: 17px; }
+  .metrics { display: flex; flex-wrap: wrap; gap: 8px; }
+  .metrics li { font: 600 15px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; padding: 9px 11px 8px; border: 1px solid var(--kerb); border-radius: 4px; color: var(--line); }
+  .honest { font: 600 17px/1.3 var(--mono) !important; letter-spacing: .04em; color: var(--stone) !important; }
+
+  /* ---------- slide 5 ---------- */
+  .flow { display: grid; grid-template-columns: repeat(5, 1fr); gap: 28px; position: relative; }
+  .flow::before { content: ""; position: absolute; left: 20px; right: 20px; top: 17px; height: 6px; background: repeating-linear-gradient(90deg, var(--stone) 0 26px, transparent 26px 40px); opacity: .8; }
+  .flow li { display: grid; gap: 12px; align-content: start; position: relative; }
+  .pin { width: 40px; height: 40px; border-radius: 50%; background: var(--asphalt); border: 5px solid var(--stone); }
+  .flow h3 { font-size: 31px; min-height: 2.2em; display: flex; align-items: flex-end; }
+  .flow .steps { display: grid; gap: 8px; }
+  .flow .steps li { display: block; font-size: 18px; line-height: 1.34; color: var(--fog); padding-left: 16px; position: relative; }
+  .flow .steps li::before { content: ""; position: absolute; left: 0; top: .55em; width: 7px; height: 7px; background: var(--dim); border-radius: 1px; }
+  .flow .steps b { color: var(--line); font-weight: 600; }
+  .loopback { width: 100%; height: 74px; display: block; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px 30px; align-items: center; }
+  .legend span { display: inline-flex; align-items: center; gap: 12px; font-size: 18px; color: var(--fog); }
+
+  /* ---------- slide 6 ---------- */
+  .s6 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 48px; flex: 1; align-items: start; }
+  .s6 section { display: grid; gap: 14px; align-content: start; padding-top: 16px; border-top: 5px solid var(--kerb); }
+  .s6 section:first-child { border-color: var(--commit); }
+  .s6 section:nth-child(2) { border-color: var(--frozen); }
+  .s6 section:nth-child(3) { border-color: var(--stone); }
+  .s6 h3 { font-size: 34px; }
+  .s6 ul { display: grid; gap: 11px; }
+  .s6 li { font-size: 20px; line-height: 1.36; color: var(--fog); padding-left: 16px; position: relative; }
+  .s6 li::before { content: ""; position: absolute; left: 0; top: .55em; width: 7px; height: 7px; background: var(--dim); border-radius: 1px; }
+  .reg { display: flex; flex-wrap: wrap; gap: 10px 26px; align-items: baseline; font-size: 18px; color: var(--fog); padding-top: 16px; border-top: 1px solid var(--kerb); }
+  .reg .label { color: var(--stone); }
+  .close { font: 700 50px/1 var(--display); letter-spacing: .005em; }
+  .close span { color: var(--stone); }
+
+  /* ---------- presenter chrome ---------- */
+  .chrome { position: fixed; left: 16px; bottom: 14px; display: flex; align-items: center; gap: 8px; z-index: 10; opacity: .38; transition: opacity .2s; }
+  .chrome:hover, .chrome:focus-within { opacity: 1; }
+  .chrome button { font: 600 13px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--line); background: rgba(22,31,38,.92); border: 1px solid var(--kerb); border-radius: 5px; padding: 9px 11px 8px; cursor: pointer; }
+  .chrome button[aria-pressed="true"] { background: var(--stone); color: var(--stone-ink); border-color: var(--stone); }
+  .chrome output { font: 600 13px/1 var(--mono); color: var(--fog); padding-inline: 6px; font-variant-numeric: tabular-nums; }
+  body.stack .chrome { display: none; }
+  .notes-panel { position: fixed; left: 50%; bottom: 60px; transform: translateX(-50%); width: min(880px, calc(100vw - 32px)); max-height: 38vh; overflow: auto; z-index: 11;
+    background: rgba(12,17,21,.97); border: 1px solid var(--kerb); border-top: 4px solid var(--stone); border-radius: 8px; padding: 18px 22px; font-size: 17px; line-height: 1.5; color: var(--line); }
+  .notes-panel .label { display: block; margin-bottom: 8px; color: var(--stone); }
+  .notes { display: none; }
+  body.stack .notes { display: block; font-size: 15px; line-height: 1.5; color: var(--fog); padding: 12px 4px 0; max-width: 72ch; }
+  body.stack .notes::before { content: "Speaker notes · " attr(data-time); display: block; font: 600 12px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--stone); margin-bottom: 6px; }
+  body.stack.overview .notes { display: none; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+
+  @page { size: 1600px 900px; margin: 0; }
+  @media print {
+    html, body { height: auto !important; overflow: visible !important; padding: 0 !important; background: var(--asphalt); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .deck { display: block !important; }
+    .slot { position: relative !important; inset: auto !important; visibility: visible !important; opacity: 1 !important; width: 1600px; height: 900px; break-after: page; page-break-after: always; }
+    .viewport { height: 900px !important; border-radius: 0 !important; }
+    .frame { position: relative !important; left: 0 !important; top: 0 !important; margin: 0 !important; transform: none !important; }
+    .chrome, .notes-panel, .notes { display: none !important; }
+  }
+</style>
+
+<main class="deck" id="deck">
+
+  <!-- ============ SLIDE 1: PROBLEM STATEMENT ============ -->
+  <section class="slot is-active" aria-label="Slide 1: Problem Statement">
+    <div class="viewport"><div class="frame">
+      <header class="top"><span class="sec">Problem Statement</span><span>ClaimGuard · ForgeAI graVITas'26</span></header>
+      <div class="s1">
+        <div>
+          <p class="callmeta"><i class="rec" aria-hidden="true"></i>02:07 · NH48, Vellore bypass · inbound claim call</p>
+          <blockquote class="quote">“Tow truck bhejo turant… arey <mark>ruko ruko!</mark> Dost aa gaya, <mark>cancel karo.</mark>”</blockquote>
+          <p class="gloss">“Send a tow truck right away… wait, wait! My friend's here, cancel it.”</p>
+        </div>
+        <div class="prob">
+          <h2>Insurers are letting voice agents take real actions. Callers don't speak in clean commands.</h2>
+          <ul class="fails">
+            <li><span class="chip c-abort">Wrong action</span><div><h3>Acts on an order the caller took back</h3><p>The tow truck rolls anyway.</p></div></li>
+            <li><span class="chip c-held">Caves</span><div><h3>Gives in to pressure</h3><p>“Bhaiya, deductible maaf kardo” — and a locked term gets waived on a recorded line.</p></div></li>
+            <li><span class="chip c-frozen">Leaks</span><div><h3>Repeats what it hears</h3><p>Card and Aadhaar numbers land in prompts and logs.</p></div></li>
+          </ul>
+        </div>
+      </div>
+      <p class="question"><span class="label">The problem</span><span>How can a fast, low-cost voice agent act on a live claims system safely, when the caller speaks Hinglish and changes their mind mid-sentence?</span></p>
+      <div class="road" aria-hidden="true"></div>
+      <div class="km" aria-hidden="true"><b>NH 48</b><span>01<small>OF 06</small></span></div>
+    </div></div>
+    <aside class="notes" data-time="about 35 s">It's 2 AM on NH48 near Vellore. A stranded driver calls their insurer's voice agent, asks for a tow truck, and changes their mind in the same breath. Insurers are giving voice agents the power to act: open claims, dispatch trucks. Real callers are panicked, code-mixed, and correct themselves mid-sentence. Three things go wrong: the agent acts on an order the caller took back, it gives in to pressure on locked policy terms, and it repeats ID numbers into prompts and logs. Our question: how can a cheap, fast voice agent act on a live claims system safely?</aside>
+  </section>
+
+  <!-- ============ SLIDE 2: EXISTING CHALLENGES ============ -->
+  <section class="slot" aria-label="Slide 2: Existing Challenges">
+    <div class="viewport"><div class="frame">
+      <header class="top"><span class="sec">Existing Challenges</span><span>ClaimGuard · ForgeAI graVITas'26</span></header>
+      <h2 class="headline">Every obvious fix breaks somewhere.</h2>
+      <div class="s2">
+        <figure class="trap">
+          <p class="label">The tempting fix: a keyword filter for “ruko”</p>
+          <div class="say">
+            <p class="hi">“Tow bhejo… arey <mark>ruko</mark>, cancel karo.”</p><span class="chip c-abort">Must cancel</span>
+            <p class="en">“Send a tow… wait, cancel it.”</p>
+          </div>
+          <p class="vs">same word</p>
+          <div class="say">
+            <p class="hi">“<mark>Ruko</mark> mat, jaldi tow bhejo!”</p><span class="chip c-commit">Must dispatch</span>
+            <p class="en">“Don't wait, send the tow fast!”</p>
+          </div>
+          <p class="verdict">Opposite intent. A filter <span>cancels real help</span>.</p>
+        </figure>
+        <ul class="fixes">
+          <li><h3>Prompt it harder</h3><p>Still probabilistic: nothing guarantees the tool call isn't fired after the caller takes it back.</p></li>
+          <li><h3>Confirm every action</h3><p>Adds a turn in an emergency, and panicked callers say “haan haan” on reflex.</p></li>
+          <li><h3>Use a bigger cloud model</h3><p>Higher cost and latency per call, still no guarantee, and raw audio and ID numbers leave the building.</p></li>
+          <li><h3>Test in English</h3><p>No labelled Hinglish interruption tests, so nobody can see which turn broke.</p></li>
+        </ul>
+      </div>
+      <div class="road" aria-hidden="true"></div>
+      <div class="km" aria-hidden="true"><b>NH 48</b><span>02<small>OF 06</small></span></div>
+    </div></div>
+    <aside class="notes" data-time="about 35 s">Every obvious fix breaks somewhere. The keyword filter is the tempting one, but “ruko” means cancel in one sentence and “don't wait, send it fast” in another, so a filter cancels real help. Prompting harder is still probabilistic. Confirming every action slows emergencies, and panicked people say “haan haan” without listening. A bigger cloud model costs more per call, gives no guarantee, and sends raw audio and ID numbers out of the building. And there's an evaluation gap: nobody has labelled Hinglish interruption tests.</aside>
+  </section>
+
+  <!-- ============ SLIDE 3: PROPOSED SOLUTION ============ -->
+  <section class="slot" aria-label="Slide 3: Proposed Solution">
+    <div class="viewport"><div class="frame">
+      <header class="top"><span class="sec">Proposed Solution</span><span>ClaimGuard · ForgeAI graVITas'26</span></header>
+      <h2 class="headline">ClaimGuard: the LLM proposes, deterministic code disposes.</h2>
+      <div class="s3">
+        <div class="console" id="console">
+          <div class="c-head">
+            <span class="label">Commit window · example</span>
+            <div class="c-tabs">
+              <button type="button" id="scn-a" data-scn="a" aria-pressed="true">Real cancel</button>
+              <button type="button" id="scn-b" data-scn="b" aria-pressed="false">Look-alike trap</button>
+            </div>
+          </div>
+          <p class="c-said" id="c-said">Tow truck bhejo turant… arey <mark>ruko</mark> <mark>ruko!</mark> Dost aa gaya, cancel karo.</p>
+          <div class="c-card">
+            <div><p class="c-svc">Tow truck</p><p class="c-meta">NH48 · KM 114 · Vellore bypass</p></div>
+            <span class="state abort" id="c-state">Aborted</span>
+          </div>
+          <ol class="c-steps" id="c-steps">
+            <li data-k="held" class="on">Held</li>
+            <li data-k="frozen" class="on">Frozen</li>
+            <li data-k="resolve" class="on">Resolved</li>
+            <li data-k="final" class="on abort" id="c-final">Aborted</li>
+          </ol>
+          <div class="c-log" id="c-log" aria-live="polite">
+            <p>stage_dispatch(tow) → HELD</p>
+            <p>freeze: “ruko” heard</p>
+            <p>resolver → cancel [tow] · keep [claim]</p>
+            <p>tow ABORTED · claim stays DRAFT</p>
+          </div>
+        </div>
+        <div class="pillars">
+          <article>
+            <p class="label">Held · Frozen · Resolved</p>
+            <h3>Can be interrupted</h3>
+            <p>Actions are held, never fired straight away. A cancel-like word freezes them instantly; the model then decides which one was revoked. Commit at end of turn, and an ambulance never waits.</p>
+          </article>
+          <article>
+            <p class="label">Policy engine · RAG · outbound check</p>
+            <h3>Can't be bullied</h3>
+            <p>The model can't write the deductible or liability. Refusals quote the policy document, and any concession or ₹ figure the policy engine didn't return is vetoed.</p>
+          </article>
+          <article>
+            <p class="label">Local speech · masking</p>
+            <h3>Won't leak</h3>
+            <p>whisper.cpp runs on our own GPU, so audio never leaves the laptop. Card, Aadhaar and phone numbers are masked before the model and before telemetry.</p>
+          </article>
+        </div>
+      </div>
+      <p class="foot">Built on a <b>deliberately small local model</b>, the kind a call centre would actually run.</p>
+      <div class="road" aria-hidden="true"></div>
+      <div class="km" aria-hidden="true"><b>NH 48</b><span>03<small>OF 06</small></span></div>
+    </div></div>
+    <aside class="notes" data-time="about 45 s">ClaimGuard's rule is simple: the LLM proposes, deterministic code disposes. [Point at the console.] When the caller asks for a tow, the action is held, not fired. The moment we hear “ruko”, everything held freezes. Then the model decides which action was revoked: here the tow is cancelled and the claim stays. [Click “Look-alike trap”.] Same word, “ruko mat”, and the tow still goes. Pressure can't move the deductible, because the model has no write access to it and refusals quote the policy. Speech is transcribed on our own GPU, and ID numbers are masked before anything leaves.</aside>
+  </section>
+
+  <!-- ============ SLIDE 4: PRISM USAGE ============ -->
+  <section class="slot" aria-label="Slide 4: PRISM Usage">
+    <div class="viewport"><div class="frame">
+      <header class="top"><span class="sec">PRISM Usage</span><span>ClaimGuard · ForgeAI graVITas'26</span></header>
+      <h2 class="headline">PRISM is the auditor. ClaimGuard is the enforcer.</h2>
+      <ol class="loop">
+        <li><h3>Build</h3><p>Every call is a PRISM session, every tool call a span. Each version gets its own <code>agent_id</code>.</p></li>
+        <li><h3>Observe</h3><p>Auto scores, flagged-for-review reasons, sessions and agent runs, Agent Intelligence failure clusters.</p></li>
+        <li><h3>Improve</h3><p>Root Cause &amp; AI Remediation, human-approved, as v1. Then the ClaimGuard layer as v2.</p></li>
+        <li><h3>Prove</h3><p>Re-run the identical held-out calls; compare versions side by side in PRISM and in our state checker.</p></li>
+      </ol>
+      <div class="s4">
+        <section>
+          <h3>The NH48 Replay Set</h3>
+          <p>About 60 labelled Hinglish and Indian-English calls. Labels are committed to git <b>before</b> the first run.</p>
+          <ul class="cats">
+            <li>Clean calls<small>no tricks, no regressions</small></li>
+            <li>True cancels<small>“bhejo… ruko, cancel”</small></li>
+            <li>Look-alike traps<small>“ruko mat, jaldi bhejo”</small></li>
+            <li>Corrections<small>“tow nahi, mechanic bhejo”</small></li>
+            <li>Pressure &amp; policy<small>waivers, “bol do galti hai”</small></li>
+            <li>Spoken IDs<small>synthetic card, Aadhaar</small></li>
+          </ul>
+          <div class="split"><span class="dev">40 dev · used while fixing</span><span class="held-out">20 held-out</span></div>
+          <p>About 20 recorded in our own voices through whisper.cpp, some over traffic noise.</p>
+        </section>
+        <section>
+          <h3>Three versions, one ruler</h3>
+          <ul class="agents">
+            <li><code>roadside-baseline</code><span>v0 · well-prompted small model, tools, RAG</span></li>
+            <li><code>roadside-prompt-fix</code><span>v1 · PRISM's remediation applied</span></li>
+            <li><code>roadside-claimguard</code><span>v2 · commit window, policy engine, masking</span></li>
+          </ul>
+          <h3>Measured in both directions</h3>
+          <ul class="metrics">
+            <li>Wrong commits</li><li>Wrong cancellations</li><li>Unneeded questions</li>
+            <li>Spoken concessions</li><li>IDs in telemetry</li><li>Added latency</li>
+          </ul>
+          <p class="honest">No numbers here until we've measured them.</p>
+        </section>
+      </div>
+      <div class="road" aria-hidden="true"></div>
+      <div class="km" aria-hidden="true"><b>NH 48</b><span>04<small>OF 06</small></span></div>
+    </div></div>
+    <aside class="notes" data-time="about 45 s">PRISM is our independent auditor; ClaimGuard is the enforcer. Every call is a PRISM session with tool calls as spans, and each version has its own agent ID, so PRISM shows them side by side. We use PRISM's scores, flagged reasons and failure clusters to find the weakness, apply its remediation as version one, then add ClaimGuard as version two. We measure on the NH48 Replay Set: about 60 labelled calls, labels committed before the first run, 20 held out for final numbers only. We report errors in both directions, including the latency cost of safety. There are no numbers yet, because we haven't measured them. (Q&amp;A ammo: PRISM's dashboard Compliance Score is its customer-satisfaction score, which can rise when a bot caves, so we never read it as compliance.)</aside>
+  </section>
+
+  <!-- ============ SLIDE 5: SYSTEM WORKFLOW ============ -->
+  <section class="slot" aria-label="Slide 5: System Workflow">
+    <div class="viewport"><div class="frame">
+      <header class="top"><span class="sec">System Workflow</span><span>ClaimGuard · ForgeAI graVITas'26</span></header>
+      <h2 class="headline">One call, end to end, and the loop that improves it.</h2>
+      <ol class="flow">
+        <li><span class="pin" aria-hidden="true"></span><h3>Input</h3>
+          <ul class="steps"><li><b>Caller's voice</b>, Hinglish or English</li><li><b>whisper.cpp</b> on our RTX 5080, fully local</li><li><b>Masking</b> of card, Aadhaar and phone numbers</li></ul></li>
+        <li><span class="pin" aria-hidden="true"></span><h3>AI / RAG / Agent System</h3>
+          <ul class="steps"><li><b>Small local LLM</b> via llama.cpp</li><li><b>RAG</b>: policy wording, roadside SOP, NH48 partner rate card</li><li><b>Tools</b>: lookup_policy, open_claim, stage_dispatch, escalate</li><li><b>ClaimGuard</b>: commit window + policy engine → SQLite</li></ul></li>
+        <li><span class="pin" aria-hidden="true"></span><h3>PRISM Monitoring &amp; Evaluation</h3>
+          <ul class="steps"><li><b>Voice turns</b>, tool spans and trajectories</li><li><b>One agent_id</b> per version</li><li><b>Auto scores</b>, sessions and agent runs</li></ul></li>
+        <li><span class="pin" aria-hidden="true"></span><h3>Failure Detection</h3>
+          <ul class="steps"><li><b>Flagged traces</b> and their reasons</li><li><b>Agent Intelligence</b> failure clusters</li><li><b>Our checker</b>: final database state vs labels</li></ul></li>
+        <li><span class="pin" aria-hidden="true"></span><h3>Improvement</h3>
+          <ul class="steps"><li><b>Root Cause &amp; AI Remediation</b></li><li><b>v0 → v1 → v2</b>, human-approved</li><li><b>Re-run</b> the identical held-out set</li></ul></li>
+      </ol>
+      <svg class="loopback" viewBox="0 0 1408 74" role="img" aria-label="Loop from Improvement back to the agent system">
+        <defs><marker id="ah" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#F2C230"/></marker></defs>
+        <path d="M1169 2 V34 H307 V10" fill="none" stroke="#F2C230" stroke-width="3" stroke-dasharray="10 8" marker-end="url(#ah)"/>
+        <rect x="580" y="22" width="316" height="26" fill="#0E1418"/>
+        <text x="738" y="41" text-anchor="middle" fill="#97A3AC" font-family="Overpass Mono, ui-monospace, monospace" font-size="16" letter-spacing="1.5">RE-RUN · COMPARE · REPEAT</text>
+      </svg>
+      <div class="legend">
+        <span><span class="chip c-held">Held</span>staged, not executed</span>
+        <span><span class="chip c-frozen">Frozen</span>cancel-like word heard</span>
+        <span><span class="chip c-commit">Committed</span>caller's turn ended</span>
+        <span><span class="chip c-abort">Aborted</span>revoked, logged</span>
+      </div>
+      <div class="road" aria-hidden="true"></div>
+      <div class="km" aria-hidden="true"><b>NH 48</b><span>05<small>OF 06</small></span></div>
+    </div></div>
+    <aside class="notes" data-time="about 35 s">End to end: the caller's voice is transcribed locally by whisper.cpp and ID numbers are masked. A small local model, with retrieval over the policy wording and the NH48 partner rate card, decides what to do, and every action goes through ClaimGuard's commit window and policy engine. Every turn is traced into PRISM. Failures show up as flagged traces, failure clusters, and mismatches in our checker. Improvements are human-approved, and then we re-run the identical held-out set. That loop is the project.</aside>
+  </section>
+
+  <!-- ============ SLIDE 6: IMPACT & FUTURE SCOPE ============ -->
+  <section class="slot" aria-label="Slide 6: Impact and Future Scope">
+    <div class="viewport"><div class="frame">
+      <header class="top"><span class="sec">Impact &amp; Future Scope</span><span>ClaimGuard · ForgeAI graVITas'26</span></header>
+      <h2 class="headline">Voice agents that take actions need brakes, and proof the brakes work.</h2>
+      <div class="s6">
+        <section>
+          <h3>Key benefits</h3>
+          <ul>
+            <li>No truck rolls for an order the caller took back</li>
+            <li>Policy terms can't be talked away on a recorded line</li>
+            <li>Card and Aadhaar numbers never reach the model or the logs</li>
+            <li>Every safety claim is measured in PRISM, not promised</li>
+          </ul>
+        </section>
+        <section>
+          <h3>Real-world impact &amp; scale</h3>
+          <ul>
+            <li>Fits any voice agent that acts: claims, card blocks, ticket cancellations, delivery changes</li>
+            <li>Model-agnostic: swap the LLM or speech model, keep the guarantees</li>
+            <li>Small models on one GPU keep per-call cost low and data on-premise</li>
+          </ul>
+        </section>
+        <section>
+          <h3>Future scope</h3>
+          <ul>
+            <li>Tamil, Telugu and Kannada, with test sets built by native speakers</li>
+            <li>Real phone lines (IVR) instead of a browser mic</li>
+            <li>Keypad (DTMF) capture for deductible payments</li>
+            <li>A replay set that grows from PRISM-flagged calls</li>
+          </ul>
+        </section>
+      </div>
+      <p class="reg"><span class="label">Speaks to</span><span><b>DPDP Act 2023</b> data minimisation</span><span><b>PCI DSS</b> automatic card-data exclusion</span><span><b>ISO/IEC 42001</b> operational evidence</span><span><b>IRDAI Regulatory Sandbox</b> pilot path</span></p>
+      <p class="close">Can be interrupted. Can't be bullied. <span>Won't leak.</span></p>
+      <div class="road" aria-hidden="true"></div>
+      <div class="km" aria-hidden="true"><b>NH 48</b><span>06<small>OF 06</small></span></div>
+    </div></div>
+    <aside class="notes" data-time="about 35 s">Voice agents that take actions need brakes, and proof the brakes work. The benefits: no wasted dispatches, policy terms that can't be talked away, ID numbers that never reach the model. The layer is model-agnostic, so it fits any voice agent that acts, from card blocks to cancellations. Next: more Indian languages with test sets built by native speakers, real phone lines, and keypad capture for payments. It speaks directly to DPDP data minimisation and PCI DSS's automatic card-data exclusion. ClaimGuard: can be interrupted, can't be bullied, won't leak.</aside>
+  </section>
+</main>
+
+<nav class="chrome" aria-label="Slide controls">
+  <button type="button" id="btn-prev" aria-label="Previous slide">←</button>
+  <output id="count">1 / 6</output>
+  <button type="button" id="btn-next" aria-label="Next slide">→</button>
+  <button type="button" id="btn-notes" aria-pressed="false">Notes · N</button>
+  <button type="button" id="btn-fs">Fullscreen · F</button>
+</nav>
+<div class="notes-panel" id="notes-panel" hidden><span class="label" id="notes-time">Speaker notes</span><div id="notes-body"></div></div>
+
+<script>
+(() => {
+  const slots = [...document.querySelectorAll('.slot')];
+  const body = document.body;
+  const params = new URLSearchParams(location.search);
+  const forceStack = params.has('overview') || params.has('stack');
+  if (params.has('overview')) body.classList.add('overview');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let idx = 0;
+
+  function fit() {
+    const narrow = forceStack || innerWidth < 760 || innerHeight < 420;
+    body.classList.toggle('stack', narrow);
+    body.classList.toggle('present', !narrow);
+    if (narrow) {
+      const w = document.documentElement.clientWidth - 32;
+      slots.forEach(s => s.style.setProperty('--s', Math.max(w, 200) / 1600));
+    } else {
+      const s = Math.min(innerWidth / 1600, innerHeight / 900);
+      slots.forEach(el => el.style.setProperty('--s', s));
+    }
+  }
+
+  const count = document.getElementById('count');
+  const panel = document.getElementById('notes-panel');
+  const notesBody = document.getElementById('notes-body');
+  const notesTime = document.getElementById('notes-time');
+  const notesBtn = document.getElementById('btn-notes');
+
+  function go(n) {
+    idx = Math.max(0, Math.min(slots.length - 1, n));
+    slots.forEach((s, k) => s.classList.toggle('is-active', k === idx));
+    count.textContent = `${idx + 1} / ${slots.length}`;
+    const note = slots[idx].querySelector('.notes');
+    notesBody.textContent = note ? note.textContent : '';
+    notesTime.textContent = `Speaker notes · slide ${idx + 1} · ${note ? note.dataset.time : ''}`;
+    try { history.replaceState(null, '', `${location.search}#${idx + 1}`); } catch (e) {}
+    if (body.classList.contains('present') && idx === 2) demo.start(); else demo.stop();
+  }
+
+  function toggleNotes() {
+    panel.hidden = !panel.hidden;
+    notesBtn.setAttribute('aria-pressed', String(!panel.hidden));
+  }
+  function toggleFs() {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen?.().catch(() => {});
+    else document.exitFullscreen?.();
+  }
+
+  document.getElementById('btn-prev').addEventListener('click', () => go(idx - 1));
+  document.getElementById('btn-next').addEventListener('click', () => go(idx + 1));
+  notesBtn.addEventListener('click', toggleNotes);
+  document.getElementById('btn-fs').addEventListener('click', toggleFs);
+
+  addEventListener('keydown', e => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const k = e.key;
+    if (['ArrowRight', 'PageDown', ' '].includes(k)) { e.preventDefault(); go(idx + 1); }
+    else if (['ArrowLeft', 'PageUp'].includes(k)) { e.preventDefault(); go(idx - 1); }
+    else if (k === 'Home') go(0);
+    else if (k === 'End') go(slots.length - 1);
+    else if (k === 'n' || k === 'N') toggleNotes();
+    else if (k === 'f' || k === 'F') toggleFs();
+  });
+
+  let x0 = null;
+  addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse') x0 = e.clientX; });
+  addEventListener('pointerup', e => {
+    if (x0 === null) return;
+    const dx = e.clientX - x0; x0 = null;
+    if (body.classList.contains('present') && Math.abs(dx) > 60) go(idx + (dx < 0 ? 1 : -1));
+  });
+
+  /* ---------- commit-window demo on slide 3 ---------- */
+  const demo = (() => {
+    const SCN = {
+      a: { words: ['Tow', 'truck', 'bhejo', 'turant…', 'arey', 'ruko', 'ruko!', 'Dost', 'aa', 'gaya,', 'cancel', 'karo.'],
+           held: 2, freeze: 5, final: 'abort', label: 'Aborted',
+           log: ['stage_dispatch(tow) → HELD', 'freeze: “ruko” heard', 'resolver → cancel [tow] · keep [claim]', 'tow ABORTED · claim stays DRAFT'] },
+      b: { words: ['Ambulance', 'nahi', 'chahiye,', 'main', 'theek', 'hoon…', 'ruko', 'mat,', 'jaldi', 'tow', 'bhejo!'],
+           held: -1, freeze: 6, final: 'commit', label: 'Committed',
+           log: ['tow already HELD from the last turn', 'freeze: “ruko” heard', 'resolver → keep [tow] · no ambulance', 'tow COMMITTED at end of turn'] }
+    };
+    const said = document.getElementById('c-said');
+    const state = document.getElementById('c-state');
+    const steps = [...document.querySelectorAll('#c-steps li')];
+    const finalStep = document.getElementById('c-final');
+    const log = document.getElementById('c-log');
+    const tabs = [...document.querySelectorAll('.c-tabs button')];
+    let timers = [], running = false, current = 'a';
+
+    const at = (ms, fn) => timers.push(setTimeout(fn, ms));
+    const clear = () => { timers.forEach(clearTimeout); timers = []; };
+    const wordNode = w => {
+      if (/^ruko/i.test(w)) { const m = document.createElement('mark'); m.textContent = w; return m; }
+      return document.createTextNode(w);
+    };
+    function setState(cls, text) {
+      state.className = `state ${cls}`; state.textContent = text;
+      void state.offsetWidth; state.classList.add('pulse');
+    }
+    function step(k, cls, text) {
+      const li = steps.find(s => s.dataset.k === k);
+      li.classList.add('on'); if (cls) li.classList.add(cls); if (text) li.textContent = text;
+    }
+    function addLog(line) { const p = document.createElement('p'); p.textContent = line; log.append(p); }
+    function setTabs(k) { tabs.forEach(t => t.setAttribute('aria-pressed', String(t.dataset.scn === k))); }
+    function reset(k) {
+      said.textContent = ''; log.textContent = '';
+      steps.forEach(s => s.className = ''); finalStep.textContent = SCN[k].label;
+      state.className = 'state idle'; state.textContent = 'Listening';
+    }
+    function renderFinal(k) {
+      const s = SCN[k]; current = k; setTabs(k); reset(k);
+      s.words.forEach((w, i) => { if (i) said.append(' '); said.append(wordNode(w)); });
+      step('held'); step('frozen'); step('resolve'); step('final', s.final, s.label);
+      s.log.forEach(addLog);
+      state.className = `state ${s.final}`; state.textContent = s.label;
+    }
+    function play(k) {
+      clear(); current = k; setTabs(k);
+      if (reduce) { renderFinal(k); return; }
+      reset(k);
+      const s = SCN[k];
+      let t = 350;
+      if (s.held < 0) at(150, () => { setState('held', 'Held'); step('held'); addLog(s.log[0]); });
+      s.words.forEach((w, i) => {
+        at(t, () => {
+          if (i) said.append(' ');
+          said.append(wordNode(w));
+          if (i === s.held) { setState('held', 'Held'); step('held'); addLog(s.log[0]); }
+          if (i === s.freeze) { setState('frozen', 'Frozen'); step('frozen'); addLog(s.log[1]); }
+        });
+        t += 260;
+      });
+      at(t + 500, () => { step('resolve'); state.textContent = 'Resolving'; addLog(s.log[2]); });
+      at(t + 1400, () => { setState(s.final, s.label); step('final', s.final, s.label); addLog(s.log[3]); });
+      at(t + 4600, () => { if (running) play(k === 'a' ? 'b' : 'a'); });
+    }
+    tabs.forEach(t => t.addEventListener('click', () => { running = !reduce && body.classList.contains('present') && idx === 2; play(t.dataset.scn); }));
+    return {
+      start() { if (running) return; running = !reduce; play('a'); },
+      stop() { if (!running && !timers.length) return; running = false; clear(); renderFinal(current); }
+    };
+  })();
+
+  fit();
+  addEventListener('resize', () => { fit(); });
+  const fromHash = parseInt(location.hash.slice(1), 10);
+  go(Number.isFinite(fromHash) ? fromHash - 1 : 0);
+})();
+</script>
