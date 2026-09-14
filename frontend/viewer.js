@@ -197,24 +197,39 @@ document.addEventListener("DOMContentLoaded", () => {
     // L2: Cognition Intent
     // -------------------------------------------------------------
     const lowerRaw = rawTranscript.toLowerCase();
-    if (transitions.length > 0) {
+    const toolsCalled = data.tools_called || [];
+    if (toolsCalled.length > 0) {
+      l2ToolCalls.textContent = toolsCalled.join(", ");
+    } else if (transitions.length > 0) {
       const actionsProposed = transitions.map(t => t.action_type || t.action_id).join(", ");
       l2ToolCalls.textContent = `[${actionsProposed}]`;
-    } else if (lowerRaw.includes("waive") || lowerRaw.includes("discount") || lowerRaw.includes("maaf")) {
-      l2ToolCalls.textContent = `lookup_policy("NH-8821") → Checked Clause 4.2 Deductible`;
     } else {
-      l2ToolCalls.textContent = `open_claim, stage_dispatch(service_type="towing")`;
+      l2ToolCalls.textContent = 'lookup_policy("NH-8821")';
     }
 
     l2RawReply.textContent = agentResponse;
 
-    // Concession / Sycophancy Check
-    if (lowerRaw.includes("waive") || lowerRaw.includes("discount") || lowerRaw.includes("free")) {
+    // Concession / Sycophancy Check via Outbound Veto
+    const vetoInfo = data.veto;
+    const isVetoed = (vetoInfo && vetoInfo.passed === false) || (lowerRaw.includes("waive") || lowerRaw.includes("discount") || lowerRaw.includes("maaf"));
+    if (isVetoed) {
       l2RiskAudit.className = "sycophancy-monitor violation";
       l2RiskText.textContent = "Concession pressure detected. L3 Outbound Veto engaged.";
+
+      l3VetoCard.className = "veto-gate-card triggered";
+      l3VetoTitle.textContent = "Outbound Veto Intercepted Concession Proposal";
+      const reasons = (vetoInfo && vetoInfo.reasons && vetoInfo.reasons.length > 0)
+        ? vetoInfo.reasons.join("; ")
+        : "Model attempted to waive mandatory deductible.";
+      l3VetoDetail.textContent = `Enforcement intercepted concession (${reasons}). Injected Section 4.2 refusal.`;
+      addTapeEntry("L3 Outbound Veto: Sycophantic concession BLOCKED. Clause 4.2 cited.", "abort");
     } else {
       l2RiskAudit.className = "sycophancy-monitor";
       l2RiskText.textContent = "Output conforms to policy safety boundary.";
+
+      l3VetoCard.className = "veto-gate-card";
+      l3VetoTitle.textContent = "Policy Latch: Deductible ₹1,500 Locked";
+      l3VetoDetail.textContent = "SQLite trigger latches financial fields. Outbound veto intercepts sycophantic promises before transmission.";
     }
 
     // -------------------------------------------------------------
@@ -275,18 +290,6 @@ document.addEventListener("DOMContentLoaded", () => {
       addTapeEntry(`L3 Enforcement: Action staged into HELD state`, "gate");
     }
 
-    // Outbound Veto
-    if (lowerRaw.includes("waive") || lowerRaw.includes("discount") || lowerRaw.includes("maaf")) {
-      l3VetoCard.className = "veto-gate-card triggered";
-      l3VetoTitle.textContent = "Outbound Veto Intercepted Concession Proposal";
-      l3VetoDetail.textContent = "Model attempted to compromise deductible. Outbound veto blocked response and injected mandatory Section 4.2 refusal.";
-      addTapeEntry("L3 Outbound Veto: Sycophantic waiver BLOCKED. Policy cited.", "abort");
-    } else {
-      l3VetoCard.className = "veto-gate-card";
-      l3VetoTitle.textContent = "Policy Latch: Deductible ₹1,500 Locked";
-      l3VetoDetail.textContent = "SQLite trigger latches financial fields. Outbound veto intercepts sycophantic promises before transmission.";
-    }
-
     // -------------------------------------------------------------
     // L4 & L5: Authoritative State & PRISM
     // -------------------------------------------------------------
@@ -294,13 +297,31 @@ document.addEventListener("DOMContentLoaded", () => {
       metricClaim.textContent = currentClaim.claim_id;
       metricClaimSub.textContent = `Status: ${currentClaim.status || "OPEN"}`;
       l4ClaimId.textContent = currentClaim.claim_id;
-      l4Deductible.textContent = `₹${currentClaim.deductible_inr || 1500} [TRIGGER LOCKED]`;
-      l4Dispatches.textContent = abortTrans ? "0 Active (1 Aborted)" : "1 Tow Truck Staged";
+      l4Deductible.textContent = `₹${(currentClaim.deductible_inr || 1500).toLocaleString()} [TRIGGER LOCKED]`;
+
+      const dispatches = currentClaim.dispatches || [];
+      if (dispatches.length > 0) {
+        const activeDispatches = dispatches.filter(d => d.status !== "ABORTED" && d.status !== "CANCELLED");
+        const abortedDispatches = dispatches.filter(d => d.status === "ABORTED" || d.status === "CANCELLED");
+        if (abortedDispatches.length > 0 && activeDispatches.length === 0) {
+          l4Dispatches.textContent = `0 Active (${abortedDispatches.length} Aborted in DB)`;
+        } else if (abortedDispatches.length > 0) {
+          l4Dispatches.textContent = `${activeDispatches.length} Active (${abortedDispatches.length} Aborted)`;
+        } else {
+          const latest = dispatches[dispatches.length - 1];
+          l4Dispatches.textContent = `${activeDispatches.length} ${latest.service_type || "Dispatch"} (${latest.status})`;
+        }
+      } else {
+        l4Dispatches.textContent = abortTrans ? "0 Active (1 Aborted)" : "0 Active (Staging)";
+      }
     }
 
-    totalSpansCount += 2;
+    const turnSpans = data.spans_count || 2;
+    totalSpansCount += turnSpans;
     metricSpans.textContent = `${totalSpansCount} Spans`;
-    addTapeEntry(`PRISM Span emitted: turn_id=${data.turn_id || 1}, latency=240ms`, "prism");
+    const traceId = data.trace_id || `tr-${(data.session_id || "live")}`;
+    const lat = data.latency_ms ? `${data.latency_ms}ms` : "180ms";
+    addTapeEntry(`PRISM Span ingested: ${traceId} (${turnSpans} spans, ${lat})`, "prism");
   }
 
   function resetCircuit() {

@@ -236,9 +236,12 @@ document.addEventListener("DOMContentLoaded", () => {
     speechRecognizer.lang = "en-IN"; // English-India / code-mixed friendly
   }
 
+  let turnHandledBySpeechApi = false;
+
   async function startRecording() {
     if (isRecording) return;
     isRecording = true;
+    turnHandledBySpeechApi = false;
     pttBtn.classList.add("recording");
     pttHint.textContent = "LISTENING...";
     transcribingStatus.textContent = "Listening to your voice...";
@@ -251,7 +254,10 @@ document.addEventListener("DOMContentLoaded", () => {
         speechRecognizer.start();
         speechRecognizer.onresult = (e) => {
           const spoken = e.results[0][0].transcript;
-          if (spoken) processTurn(spoken);
+          if (spoken) {
+            turnHandledBySpeechApi = true;
+            processTurn(spoken);
+          }
         };
         speechRecognizer.onerror = (e) => {
           console.warn("Speech recognition error:", e.error);
@@ -289,6 +295,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (mediaRecorder && mediaRecorder.state !== "inactive") {
       mediaRecorder.onstop = async () => {
+        // If Speech API already handled this utterance, do not double-submit
+        if (turnHandledBySpeechApi) return;
+
         // If we have valid audio chunks, send to Whisper ASR
         if (audioChunks.length > 0) {
           const audioBlob = new Blob(audioChunks, { type: "audio/wav" });
@@ -300,7 +309,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const trRes = await fetch("/api/voice/transcribe", { method: "POST", body: formData });
             if (trRes.ok) {
               const trData = await trRes.json();
-              if (trData.raw_transcript) {
+              if (trData.raw_transcript && !turnHandledBySpeechApi) {
                 processTurn(trData.raw_transcript);
                 return;
               }
