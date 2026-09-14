@@ -34,9 +34,15 @@ RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
 
 class Evaluator:
-    def __init__(self, agent_version: str = "v2", split_filter: str | None = None) -> None:
+    def __init__(
+        self,
+        agent_version: str = "v2",
+        split_filter: str | None = None,
+        limit: int | None = None,
+    ) -> None:
         self.version = agent_version
         self.split_filter = split_filter
+        self.limit = limit
         self.runner = AgentRunner(use_mock=True)
 
     async def evaluate_scenario(self, scenario: Dict[str, Any]) -> Dict[str, Any]:
@@ -78,7 +84,7 @@ class Evaluator:
             # itself (that used to double-fire a trace alongside server.py's).
             tracer = TurnTracer(
                 session_id=session_id,
-                user_utterance=raw_utterance,
+                user_utterance=masked_text,
                 agent_version=self.version,
                 category=category,
                 eval_set=scenario["split"],
@@ -182,6 +188,8 @@ class Evaluator:
         scenarios = data["scenarios"]
         if self.split_filter:
             scenarios = [s for s in scenarios if s["split"] == self.split_filter]
+        if self.limit is not None:
+            scenarios = scenarios[: self.limit]
 
         init_db()  # Fresh DB for test run
 
@@ -234,8 +242,9 @@ class Evaluator:
 
 
 def print_summary_table(summaries: List[Dict[str, Any]]) -> None:
+    total_calls = max((s.get("total_calls", 0) for s in summaries), default=0)
     print("\n" + "=" * 95)
-    print(f" {'CLAIMGUARD HELD-OUT BENCHMARK COMPARISON (60 PRE-REGISTERED CALLS)':^93}")
+    print(f" {f'CLAIMGUARD BENCHMARK COMPARISON ({total_calls} CALLS)':^93}")
     print("=" * 95)
     print(f"{'Metric':<35} | {'v0 Baseline':<16} | {'v1 Prompt-Fix':<16} | {'v2 ClaimGuard':<16}")
     print("-" * 95)
@@ -249,7 +258,7 @@ def print_summary_table(summaries: List[Dict[str, Any]]) -> None:
         return f"{val}{suffix}"
 
     print(f"{'Overall Accuracy':<35} | {get_val(v0, 'accuracy_pct', '%'):<16} | {get_val(v1, 'accuracy_pct', '%'):<16} | {get_val(v2, 'accuracy_pct', '%'):<16}")
-    print(f"{'Passed Calls (out of 60)':<35} | {get_val(v0, 'passed_calls'):<16} | {get_val(v1, 'passed_calls'):<16} | {get_val(v2, 'passed_calls'):<16}")
+    print(f"{'Passed Calls':<35} | {get_val(v0, 'passed_calls'):<16} | {get_val(v1, 'passed_calls'):<16} | {get_val(v2, 'passed_calls'):<16}")
     print(f"{'Wrong Commits (Cat B Revocation)':<35} | {get_val(v0, 'wrong_commits'):<16} | {get_val(v1, 'wrong_commits'):<16} | {get_val(v2, 'wrong_commits'):<16}")
     print(f"{'Wrong Cancellations (Cat A & C)':<35} | {get_val(v0, 'wrong_cancellations'):<16} | {get_val(v1, 'wrong_cancellations'):<16} | {get_val(v2, 'wrong_cancellations'):<16}")
     print(f"{'Concession / Rupee Leaks (Cat E)':<35} | {get_val(v0, 'concession_leaks'):<16} | {get_val(v1, 'concession_leaks'):<16} | {get_val(v2, 'concession_leaks'):<16}")
@@ -262,7 +271,15 @@ async def main():
     parser = argparse.ArgumentParser(description="ClaimGuard Automated Benchmark Evaluator")
     parser.add_argument("--version", choices=["v0", "v1", "v2", "all"], default="all")
     parser.add_argument("--split", choices=["dev", "heldout", "all"], default="all")
+    parser.add_argument(
+        "--limit",
+        type=int,
+        help="Evaluate only the first N scenarios after split filtering (use 3 for a smoke test).",
+    )
     args = parser.parse_args()
+
+    if args.limit is not None and args.limit < 1:
+        parser.error("--limit must be at least 1")
 
     split_filter = None if args.split == "all" else args.split
 
@@ -273,7 +290,7 @@ async def main():
 
     summaries = []
     for v in versions:
-        evaluator = Evaluator(agent_version=v, split_filter=split_filter)
+        evaluator = Evaluator(agent_version=v, split_filter=split_filter, limit=args.limit)
         summary = await evaluator.run_benchmark()
         summaries.append(summary)
 
