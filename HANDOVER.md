@@ -32,7 +32,7 @@ ClaimGuard is an insurance First-Notice-of-Loss (FNOL) voice agent running on a 
 
 ```
                                ┌─────────────────────────────────────────┐
-                               │       PRATHAM: L0, L1 & L6              │
+                               │           OJAS: L0, L1 & L6             │
                                │  - Whisper ASR (Hindi-first PTT)        │
                                │  - Pre-LLM PII Shield (Luhn/Verhoeff)   │
                                │  - Live Supervisor Web Console          │
@@ -49,7 +49,7 @@ ClaimGuard is an insurance First-Notice-of-Loss (FNOL) voice agent running on a 
                                └───────────────────┬─────────────────────┘
                                                    │ Spans & State Transitions
                                ┌───────────────────▼─────────────────────┐
-                               │           OJAS: L5 & EVALS              │
+                               │        PRATHAM: L5 & EVALS              │
                                │  - PRISM Tracing SDK Integration        │
                                │  - 60-call Replay Set (Pre-registered)  │
                                │  - Automated Local Checker              │
@@ -74,7 +74,7 @@ ClaimGuard is an insurance First-Notice-of-Loss (FNOL) voice agent running on a 
    - **Policy Latch:** SQLite schema in `app/db/` with SQL triggers preventing any tool or LLM write from altering deductibles or liability status.
    - **Outbound Veto:** Intercept model responses before speech/return. Regex check that any ₹ figure exists in retrieved context, and block concession phrases ("we will waive", "no charge for you") with a grounded policy clause citation.
 3. **FastAPI Server (`app/server.py`):**
-   - REST/WebSocket routes for session start, turn processing, and live state broadcast to Pratham’s console.
+   - REST/WebSocket routes for session start, turn processing, and live state broadcast to Ojas’s supervisor console.
    - Provide clean mock endpoints for Pratham and Ojas to test against locally during development.
 4. **Final Demo Server Environment:**
    - Maintain the master setup scripts (`scripts/run_local_model.sh`, `scripts/start_server.sh`) ready to run the entire stack on your laptop for the final presentation.
@@ -82,33 +82,6 @@ ClaimGuard is an insurance First-Notice-of-Loss (FNOL) voice agent running on a 
 ---
 
 ### 👤 Teammate 2: Pratham
-**Role:** Voice Pipeline, Security & Supervisor Console Lead  
-**Subsystems:** L0 Client Edge, L1 Perception, L6 Human Console, Media Assets
-
-#### Primary Responsibilities:
-1. **Perception & Speech-to-Text (`app/voice/`):**
-   - Local STT using `whisper.cpp` (or Faster-Whisper) with prompt biasing for Indian accents and Hindi code-mixed speech.
-   - Implement Push-to-Talk (PTT) as the robust primary capture mode for the noisy auditorium demo, with text fallback.
-2. **Client-Side Mathematical PII Shield (`app/security/pii_shield.py`):**
-   - Card masking: 13-19 digit detection with **Luhn checksum verification** → replace with `[CARD REDACTED]`.
-   - Aadhaar masking: 12-digit Indian national ID with **Verhoeff algorithm verification** → replace with `[AADHAAR REDACTED]`.
-   - Phone masking: 10-digit Indian mobile regex (+91 / 6-9 prefix) → replace with `[PHONE REDACTED]`.
-   - **Invariant:** Runs BEFORE transcript is sent to Ali’s backend or Ojas’s telemetry!
-3. **Live Supervisor Console (`frontend/`):**
-   - Premium, clean UI following the project design system (Warm cream `#F8F6F1`, Roasted walnut `#1E1915`, Jade green `#1B5E4B` verification badges, PRISM rainbow accents).
-   - Dynamic real-time components:
-     - Audio recording / PTT button & audio waveform.
-     - Live transcript box showing incoming text and real-time redaction banners.
-     - **Commit Window Visualizer:** Animated cards transitioning live between `HELD` (Amber) ➔ `FROZEN` (Purple/Blue) ➔ `COMMITTED` (Jade) / `ABORTED` (Crimson).
-     - Live Dispatch & Claim State table.
-   - **Dev Mode:** Include a built-in mock toggle in the frontend so you can test all animations and UI states without needing Ali's backend running.
-4. **Demo Insurance Fallbacks:**
-   - Record 20 real-voice test audio files (with ambient background noise).
-   - Produce a 75-second crisp screen recording of the golden demo flow as a zero-risk backup video.
-
----
-
-### 👤 Teammate 3: Ojas
 **Role:** PRISM Observability Lead, Evaluation Harness & Evidence Architect  
 **Subsystems:** L5 Observability Spine, Dataset, Local Checker, Dashboard Evidence
 
@@ -142,6 +115,33 @@ ClaimGuard is an insurance First-Notice-of-Loss (FNOL) voice agent running on a 
 5. **Pitch Deck Data Injection:**
    - Capture PRISM dashboard screenshots (trace view with spans, Agent Intelligence failure clusters, CSAT/response quality deltas).
    - Inject measured, verified numbers into `presentation/claimguard-pitch.html`.
+
+---
+
+### 👤 Teammate 3: Ojas
+**Role:** Voice Pipeline, Security & Supervisor Console Lead  
+**Subsystems:** L0 Client Edge, L1 Perception, L6 Human Console, Media Assets
+
+#### Primary Responsibilities:
+1. **Perception & Speech-to-Text (`app/voice/`):**
+   - Local STT using `whisper.cpp` (or Faster-Whisper) with prompt biasing for Indian accents and Hindi code-mixed speech.
+   - Implement Push-to-Talk (PTT) as the robust primary capture mode for the noisy auditorium demo, with text fallback.
+2. **Client-Side Mathematical PII Shield (`app/security/pii_shield.py`):**
+   - Card masking: 13-19 digit detection with **Luhn checksum verification** → replace with `[CARD REDACTED]`.
+   - Aadhaar masking: 12-digit Indian national ID with **Verhoeff algorithm verification** → replace with `[AADHAAR REDACTED]`.
+   - Phone masking: 10-digit Indian mobile regex (+91 / 6-9 prefix) → replace with `[PHONE REDACTED]`.
+   - **Invariant:** Runs BEFORE transcript is sent to Ali’s backend or Pratham’s telemetry!
+3. **Live Supervisor Console (`frontend/`):**
+   - Premium, clean UI following the project design system (Warm cream `#F8F6F1`, Roasted walnut `#1E1915`, Jade green `#1B5E4B` verification badges, PRISM rainbow accents).
+   - Dynamic real-time components:
+     - Audio recording / PTT button & audio waveform.
+     - Live transcript box showing incoming text and real-time redaction banners.
+     - **Commit Window Visualizer:** Animated cards transitioning live between `HELD` (Amber) ➔ `FROZEN` (Purple/Blue) ➔ `COMMITTED` (Jade) / `ABORTED` (Crimson).
+     - Live Dispatch & Claim State table.
+   - **Dev Mode:** Include a built-in mock toggle in the frontend so you can test all animations and UI states without needing Ali's backend running.
+4. **Demo Insurance Fallbacks:**
+   - Record 20 real-voice test audio files (with ambient background noise).
+   - Produce a 75-second crisp screen recording of the golden demo flow as a zero-risk backup video.
 
 ---
 
@@ -241,35 +241,9 @@ Start by implementing app/enforcement/commit_window.py and the SQLite policy lat
 
 ---
 
-### 📋 Kickoff Prompt for PRATHAM (Voice, Security & Console)
+### 📋 Kickoff Prompt for PRATHAM (PRISM Observability & Evals)
 ```text
 You are pair programming with Pratham on ClaimGuard (ForgeAI Hackathon).
-Refer to Overall-plan.md and presentation/Slides-Plan.md for UI design guidelines and system flow.
-
-YOUR ROLE: Voice Pipeline, Security & Supervisor Console Lead (L0 Client Edge + L1 Perception + L6 Human Console).
-IMPORTANT SERVER NOTE: During development, run a lightweight local mock server or client dev server on your own laptop. Do not depend on Ali's machine being online while you develop.
-
-YOUR CORE DELIVERABLES:
-1. app/voice/: Speech-to-text integration using whisper.cpp / Faster-Whisper with Hindi/code-mixed prompt bias and Push-to-Talk (PTT) keyboard/button trigger.
-2. app/security/pii_shield.py: Pre-LLM, pre-telemetry mathematical PII scrubber:
-   - Credit/Debit cards: 13-19 digits with Luhn algorithm validation -> [CARD REDACTED].
-   - Aadhaar: 12-digit numbers with Verhoeff algorithm validation -> [AADHAAR REDACTED].
-   - Mobile: 10-digit Indian numbers -> [PHONE REDACTED].
-3. frontend/: Live Supervisor Console matching the design system (warm cream #F8F6F1 canvas, roasted walnut typography #1E1915, imperial jade green #1B5E4B accents).
-   - Live waveform & PTT control.
-   - Real-time streaming transcript with dynamic redaction badges.
-   - Commit Window board showing cards transition live: HELD (Amber) -> FROZEN (Purple) -> COMMITTED (Jade) / ABORTED (Crimson).
-   - Standalone Mock Mode: Toggle to simulate incoming audio and state transitions locally without needing Ali's backend.
-4. Recorded voice dataset: 20 noisy voice clips from the team and a recorded 75s screencast of the live call demo as emergency fallback.
-
-Start by implementing app/security/pii_shield.py with unit tests for Luhn and Verhoeff checks.
-```
-
----
-
-### 📋 Kickoff Prompt for OJAS (PRISM Observability & Evals)
-```text
-You are pair programming with Ojas on ClaimGuard (ForgeAI Hackathon).
 Refer to Overall-plan.md, research/prism/03-fastapi-agent-integration-recipe.md, and 10-evaluation-playbook.md.
 
 YOUR ROLE: PRISM Observability Lead, Benchmark & Evaluation Architect (L5 Observability Spine + Replay Set + Checker).
@@ -291,4 +265,30 @@ YOUR CORE DELIVERABLES:
    - Update presentation/claimguard-pitch.html with the verified measured data.
 
 Start by creating evals/replay_set.json with the 60 pre-registered conversation scenarios.
+```
+
+---
+
+### 📋 Kickoff Prompt for OJAS (Voice, Security & Console)
+```text
+You are pair programming with Ojas on ClaimGuard (ForgeAI Hackathon).
+Refer to Overall-plan.md and presentation/Slides-Plan.md for UI design guidelines and system flow.
+
+YOUR ROLE: Voice Pipeline, Security & Supervisor Console Lead (L0 Client Edge + L1 Perception + L6 Human Console).
+IMPORTANT SERVER NOTE: During development, run a lightweight local mock server or client dev server on your own laptop. Do not depend on Ali's machine being online while you develop.
+
+YOUR CORE DELIVERABLES:
+1. app/voice/: Speech-to-text integration using whisper.cpp / Faster-Whisper with Hindi/code-mixed prompt bias and Push-to-Talk (PTT) keyboard/button trigger.
+2. app/security/pii_shield.py: Pre-LLM, pre-telemetry mathematical PII scrubber:
+   - Credit/Debit cards: 13-19 digits with Luhn algorithm validation -> [CARD REDACTED].
+   - Aadhaar: 12-digit numbers with Verhoeff algorithm validation -> [AADHAAR REDACTED].
+   - Mobile: 10-digit Indian numbers -> [PHONE REDACTED].
+3. frontend/: Live Supervisor Console matching the design system (warm cream #F8F6F1 canvas, roasted walnut typography #1E1915, imperial jade green #1B5E4B accents).
+   - Live waveform & PTT control.
+   - Real-time streaming transcript with dynamic redaction badges.
+   - Commit Window board showing cards transition live: HELD (Amber) -> FROZEN (Purple) -> COMMITTED (Jade) / ABORTED (Crimson).
+   - Standalone Mock Mode: Toggle to simulate incoming audio and state transitions locally without needing Ali's backend.
+4. Recorded voice dataset: 20 noisy voice clips from the team and a recorded 75s screencast of the live call demo as emergency fallback.
+
+Start by implementing app/security/pii_shield.py with unit tests for Luhn and Verhoeff checks.
 ```
