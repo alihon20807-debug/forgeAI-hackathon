@@ -184,6 +184,7 @@ class ConnectionManager:
 
 
 manager = ConnectionManager()
+_latest_turn_event: Optional[Dict[str, Any]] = None
 
 
 # -----------------------------------------------------------------------------
@@ -271,8 +272,10 @@ async def process_turn(req: TurnRequest):
     result["redacted_pii"] = redacted_pii
 
     # Broadcast turn and state machine transitions to connected supervisor consoles and live viewers
+    global _latest_turn_event
     broadcast_payload = dict(result)
     broadcast_payload["type"] = "TURN_PROCESSED"
+    _latest_turn_event = broadcast_payload
     await manager.broadcast(req.session_id, broadcast_payload)
 
     return result
@@ -391,6 +394,11 @@ async def live_websocket_endpoint(websocket: WebSocket):
         "status": "connected",
         "message": "Connected to ClaimGuard Real-Time Live Inspection Stream",
     }))
+    if _latest_turn_event:
+        try:
+            await websocket.send_text(json.dumps(_latest_turn_event))
+        except Exception:
+            pass
     try:
         while True:
             data = await websocket.receive_text()
@@ -402,6 +410,8 @@ async def live_websocket_endpoint(websocket: WebSocket):
 @app.post("/api/session/reset")
 def reset_demo_session(session_id: Optional[str] = "demo-session"):
     """Reset session commit window and active claim state for clean demo restarts."""
+    global _latest_turn_event
+    _latest_turn_event = None
     cw = get_commit_window()
     cw.clear_session(session_id)
     runner = get_agent_runner()

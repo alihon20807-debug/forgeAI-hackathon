@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const barWidth = w / bars - 2;
     const centerY = h / 2;
 
-    micCtx.fillStyle = isRecording ? "#EF4444" : "#10B981";
+    micCtx.fillStyle = isRecording ? "#E11D48" : "#059669";
 
     for (let i = 0; i < bars; i++) {
       let amp = 2;

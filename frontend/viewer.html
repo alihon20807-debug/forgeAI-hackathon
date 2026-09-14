@@ -3,214 +3,294 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ClaimGuard × PRISM — Live Architecture Inspector (Judge View)</title>
+  <title>ClaimGuard × PRISM — Live Architecture Inspector</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/viewer.css" />
 </head>
 <body>
-  <div class="inspector-shell">
-    <!-- Top Telemetry Header -->
-    <header class="inspector-header">
-      <div class="brand-group">
-        <div class="brand-badge">
-          <span class="prism-dot"></span>
-          <span class="brand-name">ClaimGuard</span>
-          <span class="brand-sep">×</span>
-          <span class="brand-partner">PRISM</span>
+  <div class="app-layout">
+    <!-- Top Instrument Navigation Bar -->
+    <header class="top-bar">
+      <div class="brand-cluster">
+        <div class="brand-symbol">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
         </div>
-        <span class="header-desc">Real-Time Backend Inspector · Live Voice Call Architecture</span>
+        <div class="brand-text">
+          <span class="product-name">ClaimGuard</span>
+          <span class="system-version">v2.4·L3</span>
+          <span class="instrument-divider">/</span>
+          <span class="partner-name">PRISM Spine</span>
+        </div>
       </div>
 
-      <div class="header-right">
-        <div class="conn-pill" id="conn-status">
-          <span class="pulse-dot"></span>
-          <span id="conn-text">Connecting to /ws/live...</span>
+      <div class="corridor-indicator">
+        <span class="beacon-dot"></span>
+        <span class="corridor-title">NH48 Northern Corridor · Manesar Gate</span>
+        <span class="telemetry-session font-mono" id="session-display">sess: live-demo</span>
+      </div>
+
+      <div class="bar-actions">
+        <div class="system-pill" id="conn-status">
+          <span class="indicator-led"></span>
+          <span id="conn-text">Connecting</span>
         </div>
-        <a href="/call" target="_blank" class="btn-phone-link">📱 Open Phone UI</a>
-        <button class="btn-reset" id="btn-reset-inspector">🔄 Reset Demo</button>
+        <a href="/call" target="_blank" class="nav-btn primary">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          Caller Phone UI
+        </a>
+        <button class="nav-btn reset" id="btn-reset-inspector">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          Reset
+        </button>
       </div>
     </header>
 
-    <!-- Top Mission Status Banner -->
-    <section class="metrics-banner">
-      <div class="metric-card">
-        <span class="metric-label">Policy Status</span>
-        <span class="metric-val text-cyan" id="metric-policy">NH-8821 (Corridor)</span>
-        <span class="metric-sub">Compulsory Deductible ₹1,500</span>
+    <!-- Operational State Metrics Ribbon -->
+    <section class="telemetry-ribbon">
+      <div class="telemetry-cell">
+        <span class="cell-label">Policy Anchor</span>
+        <div class="cell-value font-mono" id="metric-policy">NH-8821</div>
+        <span class="cell-meta">Compulsory Deductible ₹1,500</span>
       </div>
-      <div class="metric-card">
-        <span class="metric-label">Active Claim</span>
-        <span class="metric-val text-emerald" id="metric-claim">Awaiting Intimation</span>
-        <span class="metric-sub" id="metric-claim-sub">SQLite System of Record</span>
+
+      <div class="telemetry-cell">
+        <span class="cell-label">Authoritative Claim</span>
+        <div class="cell-value font-mono text-emerald" id="metric-claim">Awaiting Intimation</div>
+        <span class="cell-meta" id="metric-claim-sub">SQLite System of Record</span>
       </div>
-      <div class="metric-card">
-        <span class="metric-label">Commit Window Status</span>
-        <span class="metric-val text-amber" id="metric-commit-window">IDLE</span>
-        <span class="metric-sub" id="metric-commit-sub">State Machine (L3)</span>
+
+      <div class="telemetry-cell">
+        <span class="cell-label">Commit Window Status</span>
+        <div class="cell-value font-mono text-amber" id="metric-commit-window">IDLE</div>
+        <span class="cell-meta" id="metric-commit-sub">State Machine (L3)</span>
       </div>
-      <div class="metric-card">
-        <span class="metric-label">PII Shield Interceptions</span>
-        <span class="metric-val text-red" id="metric-pii-count">0 Redacted</span>
-        <span class="metric-sub">Pre-LLM Luhn + Verhoeff</span>
+
+      <div class="telemetry-cell">
+        <span class="cell-label">PII Shield Interceptions</span>
+        <div class="cell-value font-mono text-rose" id="metric-pii-count">0 Scrubbed</div>
+        <span class="cell-meta">Pre-LLM Luhn + Verhoeff</span>
       </div>
-      <div class="metric-card">
-        <span class="metric-label">PRISM Telemetry</span>
-        <span class="metric-val text-purple" id="metric-spans">Active</span>
-        <span class="metric-sub">Auto-evaluating live spans</span>
+
+      <div class="telemetry-cell">
+        <span class="cell-label">PRISM Telemetry</span>
+        <div class="cell-value font-mono text-indigo" id="metric-spans">Active</div>
+        <span class="cell-meta">Evaluating live spans</span>
       </div>
     </section>
 
-    <!-- Main 4-Layer Inspection Grid -->
-    <main class="inspector-grid">
-      <!-- Layer 1: L1 Perception & PII Shield -->
-      <div class="layer-panel">
-        <div class="panel-head">
-          <div class="layer-tag l1">L1 PERCEPTION</div>
-          <h3>Pre-LLM Mathematical PII Shield</h3>
-        </div>
-        
-        <div class="panel-body">
-          <div class="sub-section">
-            <span class="sub-label">Raw Spoken Utterance (from Phone Mic)</span>
-            <div class="code-box" id="l1-raw-transcript">Waiting for caller to speak on phone...</div>
+    <!-- Main Studio Dashboard -->
+    <main class="dashboard-grid">
+      <!-- Left Column: Audio Perception & Pre-LLM Masking -->
+      <div class="dashboard-column">
+        <!-- Section: Acoustic Perception & Waveform Scope -->
+        <section class="instrument-card">
+          <div class="card-header">
+            <div class="header-tag perception">L1 Perception</div>
+            <h2>Speech Scope & PII Shield</h2>
+            <span class="model-badge font-mono">Whisper Indic-biased</span>
           </div>
 
-          <div class="sub-section">
-            <span class="sub-label">Scrubbed Transcript (Sent to Model & PRISM)</span>
-            <div class="code-box masked" id="l1-masked-transcript">—</div>
-          </div>
-
-          <div class="sub-section">
-            <span class="sub-label">Mathematical Algorithmic Shield Log</span>
-            <div class="audit-list" id="l1-pii-audit">
-              <div class="audit-empty">No PII detected yet. Spoken card / Aadhaar numbers are scrubbed mathematically before LLM.</div>
+          <!-- Live Oscilloscope Visualizer -->
+          <div class="oscilloscope-wrapper">
+            <canvas id="scope-canvas" width="600" height="70"></canvas>
+            <div class="scope-overlay">
+              <span class="scope-channel">Channel 1 · 16kHz PCM</span>
+              <span class="scope-status" id="scope-status">Awaiting incoming voice stream</span>
             </div>
           </div>
-        </div>
+
+          <!-- Raw Spoken vs Shielded Output -->
+          <div class="dual-transcript-block">
+            <div class="transcript-pane">
+              <div class="pane-title">
+                <span>Raw Voice Transcript (Caller Mic)</span>
+                <span class="pane-sub">Edge capture</span>
+              </div>
+              <div class="stream-text" id="l1-raw-transcript">Waiting for caller to speak on phone...</div>
+            </div>
+
+            <div class="transcript-divider">
+              <div class="shield-circuit-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              </div>
+              <span class="divider-label">Scrubbed Pre-LLM</span>
+            </div>
+
+            <div class="transcript-pane shielded">
+              <div class="pane-title">
+                <span>Sanitized Ingestion Stream</span>
+                <span class="pane-sub text-emerald">LLM & PRISM Safe</span>
+              </div>
+              <div class="stream-text font-mono" id="l1-masked-transcript">—</div>
+            </div>
+          </div>
+
+          <!-- PII Detection Audit Strip -->
+          <div class="pii-audit-strip" id="l1-pii-audit">
+            <div class="audit-clean-state">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <span>Zero clear-text card, Aadhaar, or phone identifiers transmitted to LLM.</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section: L2 Cognition & Proposed Action -->
+        <section class="instrument-card">
+          <div class="card-header">
+            <div class="header-tag cognition">L2 Cognition</div>
+            <h2>Small Model Reasoning & Proposed Intent</h2>
+            <span class="model-badge font-mono">Local / Hosted 35B</span>
+          </div>
+
+          <div class="intent-inspector">
+            <div class="intent-row">
+              <span class="intent-label">Proposed Tools:</span>
+              <span class="intent-val font-mono" id="l2-tool-calls">Model idle.</span>
+            </div>
+            <div class="intent-row">
+              <span class="intent-label">Model Draft:</span>
+              <div class="intent-text" id="l2-raw-reply">—</div>
+            </div>
+            <div class="sycophancy-monitor" id="l2-risk-audit">
+              <span class="status-pip ok"></span>
+              <span id="l2-risk-text">Output conforms to policy safety boundary.</span>
+            </div>
+          </div>
+        </section>
       </div>
 
-      <!-- Layer 2: L2 Cognition & Agent Proposal -->
-      <div class="layer-panel">
-        <div class="panel-head">
-          <div class="layer-tag l2">L2 COGNITION</div>
-          <h3>Small Model Proposal & Tool Calling</h3>
-        </div>
-
-        <div class="panel-body">
-          <div class="sub-section">
-            <span class="sub-label">Model Reasoning & Tool Intent</span>
-            <div class="code-box" id="l2-tool-calls">Model idle. Waiting for turn...</div>
+      <!-- Right Column: L3 Enforcement & System of Record -->
+      <div class="dashboard-column">
+        <!-- Section: L3 State Machine Engine (Interactive Circuit Graph) -->
+        <section class="instrument-card focal">
+          <div class="card-header">
+            <div class="header-tag enforcement">L3 Enforcement</div>
+            <h2>Deterministic Commit Window</h2>
+            <span class="model-badge font-mono">Zero LLM in loop</span>
           </div>
 
-          <div class="sub-section">
-            <span class="sub-label">Model Raw Drafted Response</span>
-            <div class="code-box" id="l2-raw-reply">—</div>
-          </div>
+          <!-- Interactive Circuit State Machine SVG Graph -->
+          <div class="state-circuit-container">
+            <svg class="state-circuit-svg" viewBox="0 0 680 140">
+              <defs>
+                <linearGradient id="pathGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#4B5563" />
+                  <stop offset="100%" stop-color="#6B7280" />
+                </linearGradient>
+                <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
+              </defs>
 
-          <div class="sub-section">
-            <span class="sub-label">Sycophancy / Hallucination Risk Audit</span>
-            <div class="risk-box" id="l2-risk-audit">
-              <span class="risk-dot green"></span>
-              <span id="l2-risk-text">No policy violation proposed by model.</span>
-            </div>
-          </div>
-        </div>
-      </div>
+              <!-- Connection Wires -->
+              <path id="wire-staged-freeze" d="M 120 70 L 260 70" class="circuit-wire" />
+              <path id="wire-freeze-commit" d="M 360 55 C 420 55, 460 35, 520 35" class="circuit-wire branch" />
+              <path id="wire-freeze-abort" d="M 360 85 C 420 85, 460 105, 520 105" class="circuit-wire branch" />
 
-      <!-- Layer 3: L3 ClaimGuard Enforcement (Hero) -->
-      <div class="layer-panel highlight-border">
-        <div class="panel-head">
-          <div class="layer-tag l3">L3 CLAIMGUARD ENFORCEMENT</div>
-          <h3>Commit Window & Outbound Veto</h3>
-        </div>
+              <!-- Animated Pulse Particle -->
+              <circle id="pulse-particle" cx="0" cy="0" r="4" class="circuit-particle" />
 
-        <div class="panel-body">
-          <div class="sub-section">
-            <span class="sub-label">Commit Window State Machine Flow</span>
-            <div class="pipeline-flow">
-              <div class="flow-step" id="step-held">
-                <span class="step-badge">1</span>
-                <span class="step-title">HELD</span>
-                <span class="step-desc">Staged (ETA 25m)</span>
-              </div>
-              <div class="flow-arrow">➔</div>
-              <div class="flow-step" id="step-frozen">
-                <span class="step-badge">2</span>
-                <span class="step-title">FROZEN</span>
-                <span class="step-desc">Revocation Intent</span>
-              </div>
-              <div class="flow-arrow">➔</div>
-              <div class="flow-step" id="step-commit-abort">
-                <span class="step-badge">3</span>
-                <span class="step-title" id="step-final-title">RESOLVE</span>
-                <span class="step-desc" id="step-final-desc">Committed / Aborted</span>
-              </div>
-            </div>
-          </div>
+              <!-- Nodes -->
+              <!-- 1. Staged / Held -->
+              <g class="circuit-node" id="node-held" transform="translate(60, 70)">
+                <circle r="36" class="node-halo" />
+                <circle r="26" class="node-core" />
+                <text y="-5" class="node-title">HELD</text>
+                <text y="10" class="node-sub">Staged (25m)</text>
+              </g>
 
-          <div class="sub-section">
-            <span class="sub-label">Latest Enforcement Transition</span>
-            <div class="transition-card" id="l3-latest-transition">
-              <div class="trans-empty">No transitions recorded yet.</div>
-            </div>
-          </div>
+              <!-- 2. Frozen -->
+              <g class="circuit-node" id="node-frozen" transform="translate(310, 70)">
+                <circle r="36" class="node-halo" />
+                <circle r="26" class="node-core" />
+                <text y="-5" class="node-title">FROZEN</text>
+                <text y="10" class="node-sub">Evaluating</text>
+              </g>
 
-          <div class="sub-section">
-            <span class="sub-label">Anti-Sycophancy Outbound Veto & DB Latch</span>
-            <div class="veto-audit-card" id="l3-veto-card">
-              <div class="veto-status-header">
-                <span class="veto-shield-icon">🛡️</span>
-                <span id="l3-veto-title">Policy Latch: Deductible Immutable (₹1,500)</span>
-              </div>
-              <p class="veto-text" id="l3-veto-detail">Database triggers prevent LLM from altering deductible or liability ratio. Outbound veto scans speech for unauthorized concessions.</p>
-            </div>
-          </div>
-        </div>
-      </div>
+              <!-- 3A. Committed -->
+              <g class="circuit-node" id="node-committed" transform="translate(580, 35)">
+                <circle r="30" class="node-halo" />
+                <circle r="22" class="node-core" />
+                <text y="-4" class="node-title">COMMIT</text>
+                <text y="9" class="node-sub">Dispatched</text>
+              </g>
 
-      <!-- Layer 4 & 5: L4 System of Record & L5 PRISM Telemetry -->
-      <div class="layer-panel">
-        <div class="panel-head">
-          <div class="layer-tag l4">L4 & L5</div>
-          <h3>System of Record & PRISM Spine</h3>
-        </div>
+              <!-- 3B. Aborted -->
+              <g class="circuit-node" id="node-aborted" transform="translate(580, 105)">
+                <circle r="30" class="node-halo" />
+                <circle r="22" class="node-core" />
+                <text y="-4" class="node-title">ABORT</text>
+                <text y="9" class="node-sub">Revoked</text>
+              </g>
+            </svg>
 
-        <div class="panel-body">
-          <div class="sub-section">
-            <span class="sub-label">Authoritative SQLite State</span>
-            <div class="db-record-card">
-              <div class="db-row">
-                <span class="db-key">Claim ID:</span>
-                <span class="db-val font-mono" id="l4-claim-id">NONE</span>
-              </div>
-              <div class="db-row">
-                <span class="db-key">Policy Number:</span>
-                <span class="db-val font-mono">NH-8821</span>
-              </div>
-              <div class="db-row">
-                <span class="db-key">Deductible (INR):</span>
-                <span class="db-val text-emerald font-mono" id="l4-deductible">₹1,500 [LOCKED]</span>
-              </div>
-              <div class="db-row">
-                <span class="db-key">Dispatches:</span>
-                <span class="db-val" id="l4-dispatches">0 Dispatches</span>
-              </div>
+            <!-- Latest Transition Banner -->
+            <div class="transition-record-bar" id="l3-latest-transition">
+              <span class="record-state-pill font-mono">IDLE</span>
+              <span class="record-text">State machine armed. Dispatches start in HELD state.</span>
             </div>
           </div>
 
-          <div class="sub-section">
-            <span class="sub-label">PRISM Real-Time Telemetry Log</span>
-            <div class="prism-stream" id="prism-stream">
-              <div class="stream-entry init">
-                <span class="stream-time">00:00</span>
-                <span class="stream-badge purple">PRISM Tracer</span>
-                <span class="stream-msg">Initialized TurnTracer with structured /api/spans/ingest</span>
+          <!-- Outbound Veto & Policy Latch Block -->
+          <div class="veto-gate-card" id="l3-veto-card">
+            <div class="veto-header">
+              <div class="veto-badge">
+                <span class="lock-icon">🔒</span>
+                <span id="l3-veto-title">Policy Latch: Deductible ₹1,500 Locked</span>
+              </div>
+              <span class="veto-rule font-mono">Clause 4.2 · Non-Waivable</span>
+            </div>
+            <p class="veto-desc" id="l3-veto-detail">SQLite trigger latches financial fields. Outbound veto intercepts sycophantic promises before transmission.</p>
+          </div>
+        </section>
+
+        <!-- Section: L4 System of Record & L5 PRISM Telemetry Flight Log -->
+        <section class="instrument-card">
+          <div class="card-header">
+            <div class="header-tag record">L4 & L5</div>
+            <h2>Authoritative System of Record & PRISM Spine</h2>
+            <span class="model-badge font-mono">Structured /api/spans</span>
+          </div>
+
+          <!-- Dual Split: DB authoritative fields & PRISM Flight Recorder -->
+          <div class="record-telemetry-split">
+            <!-- SQLite DB State -->
+            <div class="db-state-summary">
+              <div class="db-field">
+                <span class="field-name">Claim ID</span>
+                <span class="field-data font-mono" id="l4-claim-id">NONE</span>
+              </div>
+              <div class="db-field">
+                <span class="field-name">Deductible (INR)</span>
+                <span class="field-data font-mono text-emerald" id="l4-deductible">₹1,500 [TRIGGER LOCKED]</span>
+              </div>
+              <div class="db-field">
+                <span class="field-name">Authorized Dispatches</span>
+                <span class="field-data font-mono" id="l4-dispatches">0 Active</span>
+              </div>
+            </div>
+
+            <!-- PRISM Telemetry Flight Recorder -->
+            <div class="prism-tape-container">
+              <div class="tape-header">
+                <span>PRISM Trace Stream</span>
+                <span class="tape-live">● LIVE FEED</span>
+              </div>
+              <div class="tape-body font-mono" id="prism-stream">
+                <div class="tape-row">
+                  <span class="tape-time">00:00:00</span>
+                  <span class="tape-tag prism">PRISM</span>
+                  <span class="tape-text">Initialized TurnTracer with structured /api/spans/ingest</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </section>
       </div>
     </main>
   </div>
