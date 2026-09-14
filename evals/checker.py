@@ -39,11 +39,12 @@ class Evaluator:
         agent_version: str = "v2",
         split_filter: str | None = None,
         limit: int | None = None,
+        use_mock: bool = True,
     ) -> None:
         self.version = agent_version
         self.split_filter = split_filter
         self.limit = limit
-        self.runner = AgentRunner(use_mock=True)
+        self.runner = AgentRunner(use_mock=use_mock)
 
     async def evaluate_scenario(self, scenario: Dict[str, Any]) -> Dict[str, Any]:
         session_id = f"eval-{self.version}-{scenario['id']}"
@@ -239,7 +240,8 @@ class Evaluator:
         # it can never silently overwrite the canonical eval_{version}_{split}.json
         # files that docs/Overall-plan.md's honesty invariants treat as measured results.
         limit_suffix = f"_smoke{self.limit}" if self.limit else ""
-        out_file = RESULTS_DIR / f"eval_{self.version}_{self.split_filter or 'all'}{limit_suffix}.json"
+        real_suffix = "_realmodel" if not self.runner.use_mock else ""
+        out_file = RESULTS_DIR / f"eval_{self.version}_{self.split_filter or 'all'}{limit_suffix}{real_suffix}.json"
         with open(out_file, "w", encoding="utf-8") as f:
             json.dump(summary, f, indent=2)
 
@@ -281,6 +283,15 @@ async def main():
         type=int,
         help="Evaluate only the first N scenarios after split filtering (use 3 for a smoke test).",
     )
+    parser.add_argument(
+        "--real",
+        action="store_true",
+        help=(
+            "Run against the real (non-mock) LLM configured via LLM_BASE_URL/LLM_MODEL "
+            "instead of the deterministic mock. Only affects v2 in any meaningful way "
+            "(v0/v1 have no commit-window gating either way). Use --limit to bound cost/time."
+        ),
+    )
     args = parser.parse_args()
 
     if args.limit is not None and args.limit < 1:
@@ -295,7 +306,7 @@ async def main():
 
     summaries = []
     for v in versions:
-        evaluator = Evaluator(agent_version=v, split_filter=split_filter, limit=args.limit)
+        evaluator = Evaluator(agent_version=v, split_filter=split_filter, limit=args.limit, use_mock=not args.real)
         summary = await evaluator.run_benchmark()
         summaries.append(summary)
 
