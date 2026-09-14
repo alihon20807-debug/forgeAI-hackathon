@@ -1,6 +1,6 @@
 # ClaimGuard (ForgeAI Hackathon)
 
-A Python/FastAPI code-mixed Hinglish/Tanglish voice agent for roadside insurance claims with an integrated safety layer. This project includes cancellable dispatches, anti-sycophancy policy locks, and PII scrubbing, evaluated before and after with Block Convey's PRISM evaluation tool. This is a work in progress.
+A Python/FastAPI code-mixed Hinglish voice agent for roadside insurance claims with an integrated safety layer. This project includes cancellable dispatches, anti-sycophancy policy locks, and PII scrubbing, evaluated before and after with Block Convey's PRISM evaluation tool. This is a work in progress.
 
 ## Repository layout
 
