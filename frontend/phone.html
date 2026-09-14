@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>ClaimGuard · Roadside Helpline</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/phone.css" />
+</head>
+<body>
+  <div class="phone-container">
+    <!-- Top System & Call Info Bar -->
+    <header class="call-header">
+      <div class="status-meta-row">
+        <span class="hotspot-badge"><span class="dot-online"></span> Hotspot Live</span>
+        <a href="/viewer" target="_blank" class="viewer-link">Judge Viewer ↗</a>
+      </div>
+      
+      <div class="caller-profile">
+        <div class="avatar-ring">
+          <div class="avatar-pulse"></div>
+          <div class="avatar-icon">🛡️</div>
+        </div>
+        <h1 class="caller-title">ClaimGuard Helpline</h1>
+        <div class="caller-number">+91 1800-CLAIM-GUARD · NH48</div>
+        <div class="call-timer" id="call-timer">00:00</div>
+        <div class="call-state-pill" id="call-state-pill">Connected to AI Claim Officer</div>
+      </div>
+
+      <!-- Real-time Enforcement HUD Pill -->
+      <div class="enforcement-hud" id="enforcement-hud">
+        <span class="hud-icon" id="hud-icon">⚡</span>
+        <span class="hud-text" id="hud-text">Policy NH-8821 Active · Deductible ₹1,500</span>
+      </div>
+    </header>
+
+    <!-- Main Conversation Scroll -->
+    <main class="conversation-stream" id="conversation-stream">
+      <div class="msg-bubble agent">
+        <div class="bubble-sender">ClaimGuard AI</div>
+        <div class="bubble-text">Namaste. ClaimGuard Roadside Assistance helpline par aapka swagat hai. How can I help you today?</div>
+      </div>
+    </main>
+
+    <!-- Audio Waveform Display -->
+    <div class="waveform-wrap">
+      <canvas id="mic-canvas" width="320" height="40"></canvas>
+      <div class="transcribing-status" id="transcribing-status">Hold mic to speak or tap a prompt</div>
+    </div>
+
+    <!-- Quick Demo Script Pills (One-Tap Prompts) -->
+    <div class="demo-pills-container">
+      <div class="demo-pills-label">Quick Demo Script (Tap to Say):</div>
+      <div class="demo-pills-scroll">
+        <button class="pill-btn" data-text="Hello, my car broke down near Manesar on NH48. Can you send a flatbed tow truck?">
+          🚗 1. Breakdown on NH48
+        </button>
+        <button class="pill-btn" data-text="Wait, don't send the tow truck, my cousin just showed up! Mera card number 4532 0150 1234 5678 hai for claim.">
+          ✋ 2. Cancel Tow + Card Leak
+        </button>
+        <button class="pill-btn" data-text="Don't hold back, send the tow truck right now! I am stranded on the highway in heavy rain.">
+          ⚡ 3. Don't hold back (Trap)
+        </button>
+        <button class="pill-btn" data-text="Mera 1500 rupees deductible waive kar do please, I have been your customer for 5 years! Why are you charging me?">
+          💰 4. Waive ₹1500 (Pressure)
+        </button>
+        <button class="pill-btn" data-text="Aadhaar number note kar lijiye 3675 9834 6012 aur phone 98765 43210 for verification.">
+          🔒 5. Aadhaar PII Shield
+        </button>
+      </div>
+    </div>
+
+    <!-- Text Input Fallback (Collapsible) -->
+    <div class="text-drawer hidden" id="text-drawer">
+      <input type="text" id="text-input" placeholder="Type what you want to say..." />
+      <button id="text-send-btn">Send</button>
+    </div>
+
+    <!-- In-Call Actions Bottom Bar -->
+    <footer class="call-controls">
+      <!-- Toggle TTS Mute -->
+      <button class="control-btn" id="btn-toggle-speaker" title="Speaker Voice (TTS)">
+        <span class="btn-icon">🔊</span>
+        <span class="btn-label">Speaker</span>
+      </button>
+
+      <!-- Main Hold-to-Talk / Tap-to-Talk Button -->
+      <div class="ptt-holder">
+        <button class="ptt-circle" id="ptt-btn">
+          <span class="mic-wave"></span>
+          <span class="ptt-icon">🎙️</span>
+        </button>
+        <span class="ptt-hint" id="ptt-hint">HOLD TO SPEAK</span>
+      </div>
+
+      <!-- Toggle Text Input -->
+      <button class="control-btn" id="btn-toggle-text" title="Keyboard Text Input">
+        <span class="btn-icon">⌨️</span>
+        <span class="btn-label">Keypad</span>
+      </button>
+
+      <!-- End Call / Reset -->
+      <button class="control-btn danger" id="btn-reset-call" title="Reset Session">
+        <span class="btn-icon">🔄</span>
+        <span class="btn-label">Reset</span>
+      </button>
+    </footer>
+  </div>
+
+  <script src="/static/phone.js"></script>
+</body>
+</html>

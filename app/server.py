@@ -45,6 +45,7 @@ app = FastAPI(
 )
 
 from pathlib import Path
+from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 # CORS middleware for supervisor console
@@ -58,7 +59,27 @@ app.add_middleware(
 
 FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
 if FRONTEND_DIR.exists():
+    app.mount("/static", StaticFiles(directory=str(FRONTEND_DIR)), name="static")
     app.mount("/console", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="console")
+
+
+@app.get("/")
+@app.get("/call")
+def get_phone_ui():
+    """Dead-simple mobile phone call UI for the presenter."""
+    phone_html = FRONTEND_DIR / "phone.html"
+    if phone_html.exists():
+        return FileResponse(phone_html)
+    return RedirectResponse(url="/console")
+
+
+@app.get("/viewer")
+def get_viewer_ui():
+    """Dead-simple real-time live inspection viewer for judges."""
+    viewer_html = FRONTEND_DIR / "viewer.html"
+    if viewer_html.exists():
+        return FileResponse(viewer_html)
+    return RedirectResponse(url="/console")
 
 
 # -----------------------------------------------------------------------------
@@ -109,6 +130,9 @@ class TurnResponse(BaseModel):
     agent_response: str
     state_machine: StateMachineModel
     current_claim: Optional[CurrentClaimModel] = None
+    raw_transcript: Optional[str] = None
+    masked_transcript: Optional[str] = None
+    redacted_pii: Optional[List[Dict[str, Any]]] = None
 
 
 class SessionInitRequest(BaseModel):
@@ -118,31 +142,45 @@ class SessionInitRequest(BaseModel):
 
 
 # -----------------------------------------------------------------------------
-# WebSocket Manager for Live Supervisor Console
+# WebSocket Manager for Live Supervisor Console & Judge Live Viewer
 # -----------------------------------------------------------------------------
 
 class ConnectionManager:
     def __init__(self):
         self.active_connections: Dict[str, List[WebSocket]] = {}
+        self.global_connections: List[WebSocket] = []
 
     async def connect(self, session_id: str, websocket: WebSocket):
         await websocket.accept()
-        if session_id not in self.active_connections:
-            self.active_connections[session_id] = []
-        self.active_connections[session_id].append(websocket)
+        if session_id in ("all", "live"):
+            self.global_connections.append(websocket)
+        else:
+            if session_id not in self.active_connections:
+                self.active_connections[session_id] = []
+            self.active_connections[session_id].append(websocket)
 
     def disconnect(self, session_id: str, websocket: WebSocket):
+        if websocket in self.global_connections:
+            self.global_connections.remove(websocket)
         if session_id in self.active_connections:
             if websocket in self.active_connections[session_id]:
                 self.active_connections[session_id].remove(websocket)
 
     async def broadcast(self, session_id: str, message: Dict[str, Any]):
+        # Broadcast to session-specific subscribers
         if session_id in self.active_connections:
             for connection in list(self.active_connections[session_id]):
                 try:
                     await connection.send_text(json.dumps(message))
                 except Exception:
                     self.disconnect(session_id, connection)
+        # Broadcast to global live viewers (e.g. judges' screen)
+        for connection in list(self.global_connections):
+            try:
+                await connection.send_text(json.dumps(message))
+            except Exception:
+                if connection in self.global_connections:
+                    self.global_connections.remove(connection)
 
 
 manager = ConnectionManager()
@@ -228,8 +266,14 @@ async def process_turn(req: TurnRequest):
         },
     )
 
-    # Broadcast turn and state machine transitions to connected supervisor consoles
-    await manager.broadcast(req.session_id, result)
+    result["raw_transcript"] = req.raw_transcript
+    result["masked_transcript"] = masked_transcript
+    result["redacted_pii"] = redacted_pii
+
+    # Broadcast turn and state machine transitions to connected supervisor consoles and live viewers
+    broadcast_payload = dict(result)
+    broadcast_payload["type"] = "TURN_PROCESSED"
+    await manager.broadcast(req.session_id, broadcast_payload)
 
     return result
 
@@ -335,3 +379,34 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
             logger.info(f"Received WS message from console for session {session_id}: {data}")
     except WebSocketDisconnect:
         manager.disconnect(session_id, websocket)
+
+
+@app.websocket("/ws/live")
+async def live_websocket_endpoint(websocket: WebSocket):
+    """Global WebSocket feed for the judge backend viewer."""
+    await manager.connect("live", websocket)
+    await websocket.send_text(json.dumps({
+        "type": "INITIAL_STATE",
+        "session_id": "live-stream",
+        "status": "connected",
+        "message": "Connected to ClaimGuard Real-Time Live Inspection Stream",
+    }))
+    try:
+        while True:
+            data = await websocket.receive_text()
+            logger.info(f"Received WS message on /ws/live: {data}")
+    except WebSocketDisconnect:
+        manager.disconnect("live", websocket)
+
+
+@app.post("/api/session/reset")
+def reset_demo_session(session_id: Optional[str] = "demo-session"):
+    """Reset session commit window and active claim state for clean demo restarts."""
+    cw = get_commit_window()
+    cw.clear_session(session_id)
+    runner = get_agent_runner()
+    runner._conversations.pop(session_id, None)
+    runner._session_claims.pop(session_id, None)
+    runner._session_policies.pop(session_id, None)
+    runner._session_naive_committed.pop(session_id, None)
+    return {"status": "reset", "session_id": session_id}
