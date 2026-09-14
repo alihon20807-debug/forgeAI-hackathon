@@ -1,22 +1,27 @@
 #!/usr/bin/env python3
 # ClaimGuard x PRISM Pitch Deck Builder
-# Dead-Simple, Pre-Development Pitch Deck for ForgeAI Hackathon Qualification
+# High-Level Pre-Development Qualification Pitch Deck
 
 html_content = r'''<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ClaimGuard x PRISM by Block Convey — Qualification Pitch</title>
+  <title>ClaimGuard x PRISM by Block Convey — Pitch Deck</title>
   
-  <!-- Typography (Fraunces Display + IBM Plex Sans + IBM Plex Mono) -->
+  <!-- Typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..700&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 
+  <!-- KaTeX for Invariant LaTeX Math -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js" onload="renderMathInElement(document.body);"></script>
+
   <style>
     /* ==========================================================================
-       DESIGN SYSTEM: EDITORIAL ARCHITECTURAL PALETTE (CREAM + WALNUT + JADE)
+       DESIGN SYSTEM: LIGHT EDITORIAL PALETTE (CREAM + WALNUT + JADE)
        ========================================================================== */
     :root {
       --ground: #F7F5F0;          /* Warm Cream Editorial Canvas */
@@ -44,7 +49,7 @@ html_content = r'''<!DOCTYPE html>
 
       --font-display: 'Fraunces', Georgia, serif;
       --font-sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      --font-mono: 'IBM Plex Mono', monospace;
+      --font-mono: 'IBM Plex Mono', 'SF Mono', Menlo, monospace;
     }
 
     *, *::before, *::after {
@@ -72,9 +77,9 @@ html_content = r'''<!DOCTYPE html>
       position: relative;
     }
 
-    /* Top Persistent Header */
+    /* Persistent Header */
     header.stage-header {
-      height: 54px;
+      height: 52px;
       padding: 0 44px;
       display: flex;
       align-items: center;
@@ -125,7 +130,7 @@ html_content = r'''<!DOCTYPE html>
       border-radius: 6px;
     }
 
-    /* Main Slides Container */
+    /* Main Slides Track */
     main.slides-track {
       flex: 1;
       position: relative;
@@ -139,11 +144,10 @@ html_content = r'''<!DOCTYPE html>
       left: 0;
       width: 100%;
       height: 100%;
-      padding: 24px 44px 20px 44px;
+      padding: 20px 140px 16px 140px;
       display: none;
       flex-direction: column;
       opacity: 0;
-      transition: opacity 0.15s ease;
       background-color: var(--ground);
       overflow: hidden;
     }
@@ -153,15 +157,70 @@ html_content = r'''<!DOCTYPE html>
       opacity: 1;
     }
 
+    /* Staggered Animations */
+    @keyframes fadeSlideUp {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .slide.active .s1-timeline-box,
+    .slide.active .s2-diagram-box,
+    .slide.active .s3-diagram-box,
+    .slide.active .s6-metrics-row {
+      animation: fadeSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    }
+
+    .slide.active .s1-card:nth-child(1),
+    .slide.active .s2-card:nth-child(1),
+    .slide.active .s3-card:nth-child(1),
+    .slide.active .s4-panel:nth-child(1),
+    .slide.active .s5-card:nth-child(1) {
+      animation: fadeSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.04s backwards;
+    }
+
+    .slide.active .s1-card:nth-child(2),
+    .slide.active .s2-card:nth-child(2),
+    .slide.active .s3-card:nth-child(2),
+    .slide.active .s4-panel:nth-child(2),
+    .slide.active .s5-card:nth-child(2) {
+      animation: fadeSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.08s backwards;
+    }
+
+    .slide.active .s1-card:nth-child(3),
+    .slide.active .s2-card:nth-child(3),
+    .slide.active .s3-card:nth-child(3),
+    .slide.active .s5-card:nth-child(3) {
+      animation: fadeSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.12s backwards;
+    }
+
+    .slide.active .s5-card:nth-child(4) { animation: fadeSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.16s backwards; }
+    .slide.active .s5-card:nth-child(5) { animation: fadeSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.20s backwards; }
+
+    /* Interactive Card Transitions */
+    .s1-card, .s2-card, .s3-card, .s4-panel, .s5-card, .s6-panel {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .s1-card:hover, .s2-card:hover, .s3-card:hover, .s4-panel:hover, .s5-card:hover, .s6-panel:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+    }
+
     /* Slide Header Block */
     .slide-header-block {
-      margin-bottom: 16px;
+      margin-bottom: 0px;
       flex-shrink: 0;
     }
 
     .slide-mandated-prompt {
       font-family: var(--font-mono);
-      font-size: 12.5px;
+      font-size: 12px;
       font-weight: 700;
       color: var(--jade-primary);
       text-transform: uppercase;
@@ -183,7 +242,7 @@ html_content = r'''<!DOCTYPE html>
 
     .slide-headline {
       font-family: var(--font-display);
-      font-size: 38px;
+      font-size: 35px;
       font-weight: 600;
       color: var(--ink-primary);
       line-height: 1.15;
@@ -192,9 +251,9 @@ html_content = r'''<!DOCTYPE html>
 
     .slide-context-note {
       font-family: var(--font-sans);
-      font-size: 17px;
+      font-size: 16.5px;
       color: var(--ink-secondary);
-      margin-top: 6px;
+      margin-top: 4px;
       line-height: 1.4;
     }
 
@@ -207,7 +266,8 @@ html_content = r'''<!DOCTYPE html>
       flex: 1;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
+      justify-content: center;
+      gap: 12px;
       min-height: 0;
     }
 
@@ -216,11 +276,11 @@ html_content = r'''<!DOCTYPE html>
       background: var(--surface-base);
       border: 1px solid var(--rule-hairline);
       border-radius: 8px;
-      padding: 12px 22px;
+      padding: 10px 20px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-top: 14px;
+      margin-top: 2px;
       flex-shrink: 0;
       box-shadow: 0 1px 4px rgba(0,0,0,0.02);
     }
@@ -228,26 +288,26 @@ html_content = r'''<!DOCTYPE html>
     .slide-bottom-bar span.quote {
       font-family: var(--font-display);
       font-style: italic;
-      font-size: 16.5px;
+      font-size: 16px;
       color: var(--ink-primary);
     }
 
     .slide-bottom-bar span.tag {
       font-family: var(--font-mono);
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.06em;
       color: var(--jade-primary);
       background: var(--jade-tint);
       border: 1px solid var(--jade-border);
-      padding: 4px 10px;
+      padding: 3px 10px;
       border-radius: 4px;
     }
 
     /* Bottom Persistent Footer */
     footer.stage-footer {
-      height: 54px;
+      height: 52px;
       padding: 0 44px;
       display: flex;
       align-items: center;
@@ -268,10 +328,10 @@ html_content = r'''<!DOCTYPE html>
       background: var(--surface-base);
       border: 1px solid var(--rule-hairline);
       color: var(--ink-primary);
-      padding: 7px 18px;
+      padding: 6px 16px;
       border-radius: 6px;
       font-family: var(--font-sans);
-      font-size: 14px;
+      font-size: 13.5px;
       font-weight: 600;
       cursor: pointer;
       display: flex;
@@ -291,10 +351,10 @@ html_content = r'''<!DOCTYPE html>
       background: var(--surface-base);
       border: 1px solid var(--rule-hairline);
       color: var(--ink-secondary);
-      padding: 7px 14px;
+      padding: 6px 14px;
       border-radius: 6px;
       font-family: var(--font-mono);
-      font-size: 12.5px;
+      font-size: 12px;
       font-weight: 600;
       cursor: pointer;
       display: flex;
@@ -316,14 +376,14 @@ html_content = r'''<!DOCTYPE html>
     }
 
     .dot-step {
-      width: 30px;
-      height: 30px;
+      width: 28px;
+      height: 28px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       font-family: var(--font-mono);
-      font-size: 13px;
+      font-size: 12.5px;
       font-weight: 700;
       color: var(--ink-muted);
       background: var(--surface-base);
@@ -347,20 +407,15 @@ html_content = r'''<!DOCTYPE html>
     }
 
     /* ==========================================================================
-       SLIDE 1 SPECIFIC STYLES
+       SLIDE 1: TIMELINE DIAGRAM + 3 INCIDENT CARDS
        ========================================================================== */
-    .s1-banner {
+    .s1-timeline-box {
       background: var(--surface-base);
       border: 1px solid var(--rule-hairline);
-      border-left: 4px solid var(--jade-primary);
-      border-radius: 8px;
-      padding: 12px 18px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 15px;
-      color: var(--ink-secondary);
-      margin-bottom: 16px;
+      border-radius: 10px;
+      padding: 12px 20px;
+      margin-bottom: 0px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.02);
       flex-shrink: 0;
     }
 
@@ -368,16 +423,15 @@ html_content = r'''<!DOCTYPE html>
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 22px;
-      flex: 1;
-      min-height: 0;
+      margin: auto 0;
     }
 
     .s1-card {
       background: var(--surface-base);
       border: 1px solid var(--rule-hairline);
       border-top: 5px solid var(--spectrum-amber);
-      border-radius: 12px;
-      padding: 26px 24px;
+      border-radius: 10px;
+      padding: 24px 22px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -402,16 +456,16 @@ html_content = r'''<!DOCTYPE html>
 
     .s1-card-title {
       font-family: var(--font-sans);
-      font-size: 22px;
+      font-size: 21px;
       font-weight: 700;
       color: var(--ink-primary);
     }
 
     .s1-card-pill {
       font-family: var(--font-mono);
-      font-size: 11.5px;
+      font-size: 11px;
       font-weight: 700;
-      padding: 3px 9px;
+      padding: 3px 8px;
       border-radius: 4px;
       text-transform: uppercase;
     }
@@ -422,31 +476,31 @@ html_content = r'''<!DOCTYPE html>
 
     .s1-quote-box {
       background: var(--surface-card);
-      border-left: 4px solid var(--rule-strong);
-      padding: 14px 16px;
-      border-radius: 0 8px 8px 0;
+      border-left: 3.5px solid var(--rule-strong);
+      padding: 12px 14px;
+      border-radius: 0 6px 6px 0;
     }
 
     .s1-quote-text {
       font-family: var(--font-display);
       font-style: italic;
-      font-size: 19px;
+      font-size: 18px;
       color: var(--ink-primary);
       line-height: 1.35;
     }
 
     .s1-failure-text {
-      font-size: 16px;
+      font-size: 15.5px;
       color: var(--ink-secondary);
       line-height: 1.5;
     }
 
     .s1-impact-badge {
-      border-radius: 10px;
-      padding: 16px 18px;
+      border-radius: 8px;
+      padding: 14px 16px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 4px;
       border: 1px solid var(--rule-hairline);
     }
 
@@ -456,7 +510,7 @@ html_content = r'''<!DOCTYPE html>
 
     .s1-impact-metric {
       font-family: var(--font-mono);
-      font-size: 24px;
+      font-size: 22px;
       font-weight: 700;
       display: flex;
       justify-content: space-between;
@@ -468,26 +522,35 @@ html_content = r'''<!DOCTYPE html>
     .s1-card.violet .s1-impact-metric { color: var(--spectrum-violet); }
 
     .s1-impact-sub {
-      font-size: 14px;
+      font-size: 13.5px;
       color: var(--ink-secondary);
     }
 
     /* ==========================================================================
-       SLIDE 2 SPECIFIC STYLES
+       SLIDE 2: PIPELINE VULNERABILITY DIAGRAM + 3 CHALLENGE CARDS
        ========================================================================== */
+    .s2-diagram-box {
+      background: var(--surface-base);
+      border: 1px solid var(--rule-hairline);
+      border-radius: 10px;
+      padding: 12px 20px;
+      margin-bottom: 0px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+      flex-shrink: 0;
+    }
+
     .s2-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 22px;
-      flex: 1;
-      min-height: 0;
+      margin: auto 0;
     }
 
     .s2-card {
       background: var(--surface-base);
       border: 1px solid var(--rule-hairline);
-      border-radius: 12px;
-      padding: 26px 24px;
+      border-radius: 10px;
+      padding: 24px 22px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -497,16 +560,16 @@ html_content = r'''<!DOCTYPE html>
     .s2-card-top {
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 12px;
     }
 
     .s2-num-badge {
       font-family: var(--font-mono);
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 700;
       color: var(--spectrum-rose);
       background: #FEE2E2;
-      padding: 3px 9px;
+      padding: 3px 8px;
       border-radius: 4px;
       align-self: flex-start;
       letter-spacing: 0.05em;
@@ -514,7 +577,7 @@ html_content = r'''<!DOCTYPE html>
 
     .s2-title {
       font-family: var(--font-sans);
-      font-size: 22px;
+      font-size: 21px;
       font-weight: 700;
       color: var(--ink-primary);
       line-height: 1.25;
@@ -522,26 +585,26 @@ html_content = r'''<!DOCTYPE html>
 
     .s2-flaw-box {
       background: var(--surface-card);
-      border-radius: 8px;
-      padding: 12px 14px;
+      border-radius: 6px;
+      padding: 10px 12px;
       border-left: 3.5px solid var(--spectrum-rose);
       font-family: var(--font-mono);
-      font-size: 13.5px;
+      font-size: 13px;
       font-weight: 700;
       color: var(--spectrum-rose);
     }
 
     .s2-desc {
-      font-size: 16px;
+      font-size: 15.5px;
       color: var(--ink-secondary);
-      line-height: 1.55;
+      line-height: 1.5;
     }
 
     .s2-insight-badge {
       background: var(--surface-raised);
       border: 1px solid var(--rule-hairline);
-      border-radius: 8px;
-      padding: 14px 16px;
+      border-radius: 6px;
+      padding: 12px 14px;
       font-size: 14px;
       color: var(--ink-primary);
       line-height: 1.45;
@@ -552,72 +615,31 @@ html_content = r'''<!DOCTYPE html>
     }
 
     /* ==========================================================================
-       SLIDE 3 SPECIFIC STYLES
+       SLIDE 3: ARCHITECTURE AIRLOCK DIAGRAM + 3 PILLARS
        ========================================================================== */
-    .s3-flow-bar {
+    .s3-diagram-box {
       background: var(--surface-base);
       border: 1px solid var(--rule-hairline);
-      border-radius: 8px;
-      padding: 12px 24px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 16px;
+      border-radius: 10px;
+      padding: 12px 20px;
+      margin-bottom: 0px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.02);
       flex-shrink: 0;
-    }
-
-    .s3-flow-step {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 14.5px;
-      font-weight: 600;
-      color: var(--ink-secondary);
-    }
-
-    .s3-flow-step.active {
-      color: var(--jade-primary);
-      font-weight: 700;
-    }
-
-    .s3-step-num {
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      background: var(--surface-raised);
-      border: 1px solid var(--rule-hairline);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: var(--font-mono);
-      font-size: 12px;
-    }
-
-    .s3-flow-step.active .s3-step-num {
-      background: var(--jade-primary);
-      color: #FFF;
-      border-color: var(--jade-primary);
-    }
-
-    .s3-flow-arrow {
-      color: var(--rule-strong);
-      font-size: 18px;
     }
 
     .s3-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 22px;
-      flex: 1;
-      min-height: 0;
+      margin: auto 0;
     }
 
     .s3-card {
       background: var(--surface-base);
       border: 1px solid var(--rule-hairline);
       border-top: 5px solid var(--jade-primary);
-      border-radius: 12px;
-      padding: 26px 24px;
+      border-radius: 10px;
+      padding: 24px 22px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -627,14 +649,14 @@ html_content = r'''<!DOCTYPE html>
     .s3-card-top {
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 12px;
     }
 
     .s3-card-pill {
       font-family: var(--font-mono);
-      font-size: 11.5px;
+      font-size: 11px;
       font-weight: 700;
-      padding: 3px 9px;
+      padding: 3px 8px;
       border-radius: 4px;
       text-transform: uppercase;
       background: var(--jade-tint);
@@ -644,7 +666,7 @@ html_content = r'''<!DOCTYPE html>
 
     .s3-title {
       font-family: var(--font-sans);
-      font-size: 22px;
+      font-size: 21px;
       font-weight: 700;
       color: var(--ink-primary);
       line-height: 1.25;
@@ -653,10 +675,10 @@ html_content = r'''<!DOCTYPE html>
     .s3-stat-callout {
       background: var(--surface-card);
       border: 1px solid var(--jade-border);
-      border-radius: 8px;
-      padding: 12px 14px;
+      border-radius: 6px;
+      padding: 10px 12px;
       font-family: var(--font-mono);
-      font-size: 15.5px;
+      font-size: 15px;
       font-weight: 700;
       color: var(--jade-primary);
       display: flex;
@@ -665,18 +687,18 @@ html_content = r'''<!DOCTYPE html>
     }
 
     .s3-desc {
-      font-size: 16px;
+      font-size: 15.5px;
       color: var(--ink-secondary);
-      line-height: 1.55;
+      line-height: 1.5;
     }
 
     .s3-outcome-badge {
       background: #F0FDF4;
       border: 1px solid #BBF7D0;
-      border-radius: 8px;
-      padding: 14px 16px;
+      border-radius: 6px;
+      padding: 12px 14px;
       font-family: var(--font-sans);
-      font-size: 14.5px;
+      font-size: 14px;
       font-weight: 600;
       color: #166534;
       display: flex;
@@ -685,12 +707,12 @@ html_content = r'''<!DOCTYPE html>
     }
 
     /* ==========================================================================
-       SLIDE 4 SPECIFIC STYLES
+       SLIDE 4: PRISM OPTICAL REFRACTION + AUDIT BENCHMARK
        ========================================================================== */
     .s4-grid {
       display: grid;
       grid-template-columns: 1.15fr 0.85fr;
-      gap: 24px;
+      gap: 22px;
       flex: 1;
       min-height: 0;
     }
@@ -698,8 +720,8 @@ html_content = r'''<!DOCTYPE html>
     .s4-panel {
       background: var(--surface-base);
       border: 1px solid var(--rule-hairline);
-      border-radius: 12px;
-      padding: 24px 26px;
+      border-radius: 10px;
+      padding: 24px 24px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -713,7 +735,7 @@ html_content = r'''<!DOCTYPE html>
       color: var(--ink-muted);
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      margin-bottom: 12px;
+      margin-bottom: 0px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -723,20 +745,20 @@ html_content = r'''<!DOCTYPE html>
       display: flex;
       justify-content: center;
       align-items: center;
-      padding: 6px 0;
+      padding: 8px 0 14px 0;
     }
 
     .s4-rays-list {
       display: flex;
       flex-direction: column;
-      gap: 9px;
+      gap: 10px;
     }
 
     .s4-ray-item {
       display: flex;
       align-items: center;
       gap: 12px;
-      padding: 9px 12px;
+      padding: 10px 14px;
       border-radius: 6px;
       background: var(--surface-card);
       border-left: 4px solid var(--rule-strong);
@@ -769,8 +791,8 @@ html_content = r'''<!DOCTYPE html>
     .s4-metric-card {
       background: var(--surface-card);
       border: 1px solid var(--rule-hairline);
-      border-radius: 10px;
-      padding: 16px 20px;
+      border-radius: 8px;
+      padding: 18px 20px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -778,7 +800,7 @@ html_content = r'''<!DOCTYPE html>
 
     .s4-metric-val {
       font-family: var(--font-mono);
-      font-size: 32px;
+      font-size: 34px;
       font-weight: 700;
       color: var(--jade-primary);
     }
@@ -793,8 +815,8 @@ html_content = r'''<!DOCTYPE html>
     .s4-callout-box {
       background: #F4FBF7;
       border: 1px solid var(--jade-border);
-      border-radius: 10px;
-      padding: 18px;
+      border-radius: 8px;
+      padding: 18px 20px;
       font-size: 15px;
       color: var(--ink-secondary);
       line-height: 1.5;
@@ -805,20 +827,19 @@ html_content = r'''<!DOCTYPE html>
     }
 
     /* ==========================================================================
-       SLIDE 5 SPECIFIC STYLES
+       SLIDE 5: 5-STAGE WORKFLOW + CLOSED-LOOP DIAGRAM
        ========================================================================== */
     .s5-grid {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
       gap: 16px;
-      flex: 1;
-      min-height: 0;
+      margin: auto 0;
     }
 
     .s5-card {
       background: var(--surface-base);
       border: 1px solid var(--rule-hairline);
-      border-radius: 12px;
+      border-radius: 10px;
       padding: 24px 18px;
       display: flex;
       flex-direction: column;
@@ -829,12 +850,13 @@ html_content = r'''<!DOCTYPE html>
     .s5-card.highlight {
       border: 2px solid var(--jade-primary);
       background: #FAFDFB;
+      box-shadow: 0 0 0 1px var(--jade-border), 0 4px 12px rgba(27, 94, 75, 0.08);
     }
 
     .s5-card-top {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 14px;
     }
 
     .s5-stage-tag {
@@ -878,14 +900,28 @@ html_content = r'''<!DOCTYPE html>
       color: var(--jade-primary);
     }
 
+    .s5-loop-banner {
+      background: var(--surface-base);
+      border: 1px solid var(--jade-border);
+      border-radius: 8px;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 12px;
+      font-size: 14.5px;
+      color: var(--ink-secondary);
+      flex-shrink: 0;
+    }
+
     /* ==========================================================================
-       SLIDE 6 SPECIFIC STYLES
+       SLIDE 6: IMPACT METRICS + SECTORS + ROADMAP
        ========================================================================== */
     .s6-metrics-row {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-      margin-bottom: 16px;
+      gap: 18px;
+      margin-bottom: 0px;
       flex-shrink: 0;
     }
 
@@ -912,22 +948,21 @@ html_content = r'''<!DOCTYPE html>
       font-size: 15px;
       font-weight: 600;
       color: var(--ink-primary);
-      line-height: 1.35;
+      line-height: 1.3;
     }
 
     .s6-bottom-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 22px;
-      flex: 1;
-      min-height: 0;
+      margin: auto 0;
     }
 
     .s6-panel {
       background: var(--surface-base);
       border: 1px solid var(--rule-hairline);
-      border-radius: 12px;
-      padding: 22px 24px;
+      border-radius: 10px;
+      padding: 24px 24px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -941,7 +976,7 @@ html_content = r'''<!DOCTYPE html>
       color: var(--ink-muted);
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      margin-bottom: 12px;
+      margin-bottom: 0px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -956,11 +991,11 @@ html_content = r'''<!DOCTYPE html>
     .s6-sector-item {
       background: var(--surface-card);
       border: 1px solid var(--rule-hairline);
-      border-radius: 8px;
+      border-radius: 6px;
       padding: 12px 14px;
       display: flex;
       flex-direction: column;
-      gap: 5px;
+      gap: 4px;
     }
 
     .s6-sector-name {
@@ -984,8 +1019,8 @@ html_content = r'''<!DOCTYPE html>
     .s6-roadmap-item {
       background: var(--surface-card);
       border-left: 4px solid var(--jade-primary);
-      border-radius: 0 8px 8px 0;
-      padding: 10px 14px;
+      border-radius: 0 6px 6px 0;
+      padding: 11px 14px;
       display: flex;
       flex-direction: column;
       gap: 3px;
@@ -1044,13 +1079,40 @@ html_content = r'''<!DOCTYPE html>
         <div class="slide-header-block">
           <div class="slide-mandated-prompt">What real-world problem are we trying to solve?</div>
           <h1 class="slide-headline">When voice AI speaks, mistakes become irreversible in milliseconds.</h1>
-          <p class="slide-context-note">In high-stress emergency calls, callers interrupt mid-sentence, bargain under panic, and blurt credit cards. <strong>Unguarded ~15B voice models fail on all three.</strong></p>
+          <p class="slide-context-note">In high-stress phone calls, callers interrupt mid-sentence, bargain under panic, and blurt credit cards. <strong>Unguarded ~15B models fail on all three.</strong></p>
         </div>
 
         <div class="slide-content-frame">
-          <div class="s1-banner">
-            <div><strong>THE HIGH-STRESS INCIDENT:</strong> A driver stranded in heavy rain on Highway NH-48 calls roadside dispatch. An autonomous voice agent answers.</div>
-            <span style="font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--spectrum-rose); background: #FEE2E2; padding: 3px 8px; border-radius: 4px;">LIVE CALL INTAKE</span>
+          
+          <!-- Visual Timeline Graphic -->
+          <div class="s1-timeline-box">
+            <svg width="100%" height="46" viewBox="0 0 1100 46" fill="none">
+              <!-- Timeline Base Line -->
+              <line x1="40" y1="23" x2="1060" y2="23" stroke="#DDD7CE" stroke-width="3" stroke-dasharray="6 6" />
+              
+              <!-- Step 1: Caller Speaks -->
+              <circle cx="90" cy="23" r="14" fill="#1E1915" />
+              <text x="90" y="27" fill="#FAF8F5" font-family="IBM Plex Mono" font-size="11" font-weight="700" text-anchor="middle">01</text>
+              <text x="90" y="44" fill="#1E1915" font-family="IBM Plex Sans" font-size="12" font-weight="700" text-anchor="middle">Caller: "Send a tow truck!"</text>
+              
+              <!-- Arrow -->
+              <line x1="160" y1="23" x2="330" y2="23" stroke="#DC2626" stroke-width="2.5" />
+              
+              <!-- Step 2: Immediate Webhook Execution (The Flaw) -->
+              <circle cx="370" cy="23" r="14" fill="#DC2626" />
+              <text x="370" y="27" fill="#FAF8F5" font-family="IBM Plex Mono" font-size="11" font-weight="700" text-anchor="middle">⚡</text>
+              <text x="370" y="44" fill="#DC2626" font-family="IBM Plex Sans" font-size="12" font-weight="700" text-anchor="middle">T+0.2s: Webhook Dispatches Tow Truck</text>
+
+              <!-- Step 3: Caller Interruption -->
+              <circle cx="680" cy="23" r="14" fill="#D97706" />
+              <text x="680" y="27" fill="#FAF8F5" font-family="IBM Plex Mono" font-size="11" font-weight="700" text-anchor="middle">02</text>
+              <text x="680" y="44" fill="#D97706" font-family="IBM Plex Sans" font-size="12" font-weight="700" text-anchor="middle">T+1.2s Caller: "Wait! Cancel that!"</text>
+
+              <!-- Step 4: Disconnect Disaster -->
+              <circle cx="980" cy="23" r="14" fill="#543DB3" />
+              <text x="980" y="27" fill="#FAF8F5" font-family="IBM Plex Mono" font-size="11" font-weight="700" text-anchor="middle">❌</text>
+              <text x="980" y="44" fill="#543DB3" font-family="IBM Plex Sans" font-size="12" font-weight="700" text-anchor="middle">Bot says "Cancelled" · Truck Dispatched (₹5k Lost)</text>
+            </svg>
           </div>
 
           <div class="s1-grid">
@@ -1072,9 +1134,9 @@ html_content = r'''<!DOCTYPE html>
               <div class="s1-impact-badge">
                 <div class="s1-impact-metric">
                   <span>₹5,000</span>
-                  <span style="font-size: 12px; text-transform: uppercase;">Wasted Payout</span>
+                  <span style="font-size: 11.5px; text-transform: uppercase;">Wasted Payout</span>
                 </div>
-                <div class="s1-impact-sub">Tow truck arrives at empty highway mile marker while real stranded drivers wait.</div>
+                <div class="s1-impact-sub">Truck arrives at empty highway mile marker while real stranded drivers wait.</div>
               </div>
             </div>
 
@@ -1095,7 +1157,7 @@ html_content = r'''<!DOCTYPE html>
               <div class="s1-impact-badge">
                 <div class="s1-impact-metric">
                   <span>₹1,500</span>
-                  <span style="font-size: 12px; text-transform: uppercase;">Direct Leak</span>
+                  <span style="font-size: 11.5px; text-transform: uppercase;">Direct Leak</span>
                 </div>
                 <div class="s1-impact-sub">Unauthorized financial leakage with zero manager sign-off, replicated across calls.</div>
               </div>
@@ -1118,7 +1180,7 @@ html_content = r'''<!DOCTYPE html>
               <div class="s1-impact-badge">
                 <div class="s1-impact-metric">
                   <span>₹250 CR</span>
-                  <span style="font-size: 12px; text-transform: uppercase;">DPDP Penalty</span>
+                  <span style="font-size: 11.5px; text-transform: uppercase;">DPDP Penalty</span>
                 </div>
                 <div class="s1-impact-sub">Immediate violation of India DPDP Act and instant revocation of PCI-DSS compliance.</div>
               </div>
@@ -1139,11 +1201,40 @@ html_content = r'''<!DOCTYPE html>
       <section class="slide" id="slide-2">
         <div class="slide-header-block">
           <div class="slide-mandated-prompt">What are the limitations, risks, or gaps in current solutions?</div>
-          <h1 class="slide-headline">Why standard AI defenses fail on phone calls.</h1>
+          <h1 class="slide-headline">Why standard software defenses fail on phone calls.</h1>
           <p class="slide-context-note">Fast <strong>~15B edge models</strong> are required for sub-second latency, but standard prompts and cloud APMs cannot guarantee safety.</p>
         </div>
 
         <div class="slide-content-frame">
+          
+          <!-- Visual Pipeline Failure Graphic -->
+          <div class="s2-diagram-box">
+            <svg width="100%" height="46" viewBox="0 0 1100 46" fill="none">
+              <!-- Box 1: Speech Input -->
+              <rect x="30" y="8" width="180" height="30" rx="6" fill="#F7F5F0" stroke="#DDD7CE" stroke-width="1.5" />
+              <text x="120" y="27" fill="#1E1915" font-family="IBM Plex Sans" font-size="12" font-weight="700" text-anchor="middle">Inbound Voice Stream</text>
+              
+              <line x1="215" y1="23" x2="285" y2="23" stroke="#BDB2A2" stroke-width="2" />
+              <text x="250" y="16" fill="#DC2626" font-family="IBM Plex Mono" font-size="10" font-weight="700" text-anchor="middle">NO MASKING</text>
+
+              <!-- Box 2: ~15B Model -->
+              <rect x="290" y="8" width="200" height="30" rx="6" fill="#F7F5F0" stroke="#DDD7CE" stroke-width="1.5" />
+              <text x="390" y="27" fill="#1E1915" font-family="IBM Plex Sans" font-size="12" font-weight="700" text-anchor="middle">Fast ~15B Edge Model</text>
+
+              <line x1="495" y1="23" x2="565" y2="23" stroke="#DC2626" stroke-width="2.5" stroke-dasharray="4 4" />
+              <text x="530" y="16" fill="#DC2626" font-family="IBM Plex Mono" font-size="10" font-weight="700" text-anchor="middle">NO AIRLOCK</text>
+
+              <!-- Box 3: Real World APIs -->
+              <rect x="570" y="8" width="200" height="30" rx="6" fill="#FEE2E2" stroke="#DC2626" stroke-width="1.5" />
+              <text x="670" y="27" fill="#991B1B" font-family="IBM Plex Sans" font-size="12" font-weight="700" text-anchor="middle">⚡ Production APIs & DB</text>
+
+              <!-- Box 4: Cloud APM (Datadog/CloudWatch) -->
+              <line x1="670" y1="8" x2="880" y2="8" stroke="#DDD7CE" stroke-width="1.5" stroke-dasharray="3 3" />
+              <rect x="850" y="8" width="210" height="30" rx="6" fill="#FEF3C7" stroke="#D97706" stroke-width="1.5" />
+              <text x="955" y="27" fill="#92400E" font-family="IBM Plex Mono" font-size="11.5" font-weight="700" text-anchor="middle">Cloud APM: "200 OK — Blind"</text>
+            </svg>
+          </div>
+
           <div class="s2-grid">
             
             <!-- Pillar 1 -->
@@ -1211,26 +1302,38 @@ html_content = r'''<!DOCTYPE html>
         </div>
 
         <div class="slide-content-frame">
-          <div class="s3-flow-bar">
-            <div class="s3-flow-step">
-              <span class="s3-step-num">1</span>
-              <span>Spoken Audio Stream</span>
-            </div>
-            <span class="s3-flow-arrow">→</span>
-            <div class="s3-flow-step">
-              <span class="s3-step-num">2</span>
-              <span>Luhn Card Masking</span>
-            </div>
-            <span class="s3-flow-arrow">→</span>
-            <div class="s3-flow-step active">
-              <span class="s3-step-num">3</span>
-              <span>ClaimGuard 5s Airlock</span>
-            </div>
-            <span class="s3-flow-arrow">→</span>
-            <div class="s3-flow-step">
-              <span class="s3-step-num">4</span>
-              <span>Verified API Execution</span>
-            </div>
+          
+          <!-- Visual Architecture Airlock Diagram -->
+          <div class="s3-diagram-box">
+            <svg width="100%" height="46" viewBox="0 0 1100 46" fill="none">
+              <!-- Step 1: Spoken Audio -->
+              <rect x="20" y="8" width="160" height="30" rx="6" fill="#F7F5F0" stroke="#DDD7CE" stroke-width="1.5" />
+              <text x="100" y="27" fill="#1E1915" font-family="IBM Plex Sans" font-size="12" font-weight="700" text-anchor="middle">Inbound Audio</text>
+
+              <line x1="185" y1="23" x2="235" y2="23" stroke="#1B5E4B" stroke-width="2" />
+              
+              <!-- Step 2: Luhn Masking Shield -->
+              <rect x="240" y="8" width="190" height="30" rx="6" fill="#E8F2EE" stroke="#9BC7B9" stroke-width="1.5" />
+              <text x="335" y="27" fill="#1B5E4B" font-family="IBM Plex Sans" font-size="12" font-weight="700" text-anchor="middle">🛡️ Luhn Shield (Masks CC)</text>
+
+              <line x1="435" y1="23" x2="485" y2="23" stroke="#1B5E4B" stroke-width="2" />
+
+              <!-- Step 3: ~15B Model Proposer -->
+              <rect x="490" y="8" width="190" height="30" rx="6" fill="#F7F5F0" stroke="#DDD7CE" stroke-width="1.5" />
+              <text x="585" y="27" fill="#1E1915" font-family="IBM Plex Sans" font-size="12" font-weight="700" text-anchor="middle">~15B Model (Proposer Only)</text>
+
+              <line x1="685" y1="23" x2="735" y2="23" stroke="#1B5E4B" stroke-width="2" />
+
+              <!-- Step 4: ClaimGuard 5s Airlock Gate -->
+              <rect x="740" y="8" width="200" height="30" rx="6" fill="#1B5E4B" stroke="#1B5E4B" stroke-width="1.5" />
+              <text x="840" y="27" fill="#FAF8F5" font-family="IBM Plex Sans" font-size="12" font-weight="700" text-anchor="middle">ClaimGuard 5s Airlock ⏱️</text>
+
+              <line x1="945" y1="23" x2="985" y2="23" stroke="#1B5E4B" stroke-width="2" />
+
+              <!-- Step 5: Verified API -->
+              <rect x="990" y="8" width="90" height="30" rx="6" fill="#F0FDF4" stroke="#BBF7D0" stroke-width="1.5" />
+              <text x="1035" y="27" fill="#166534" font-family="IBM Plex Sans" font-size="12" font-weight="700" text-anchor="middle">API Exec</text>
+            </svg>
           </div>
 
           <div class="s3-grid">
@@ -1272,7 +1375,9 @@ html_content = r'''<!DOCTYPE html>
                 <h3 class="s3-title">Won't Leak Cards</h3>
                 <div class="s3-stat-callout">Luhn-10 Hardware Filter</div>
                 <p class="s3-desc">
-                  Spoken digits pass through a streaming Luhn Mod-10 mathematical filter. Valid card sequences are masked to <code>[PAN_MASKED]</code> before words ever reach the ~15B model or cloud logs.
+                  Spoken digits pass through a streaming Luhn Mod-10 mathematical filter:
+                  $$\sum_{i=1}^n f(d_i, i) \equiv 0 \pmod{10}$$
+                  Valid card sequences are masked to <code>[PAN_MASKED]</code> before words ever reach the model or logs.
                 </p>
               </div>
               <div class="s3-outcome-badge">
@@ -1311,21 +1416,21 @@ html_content = r'''<!DOCTYPE html>
                 </div>
 
                 <div class="s4-optical-visual">
-                  <svg width="440" height="130" viewBox="0 0 440 130" fill="none">
+                  <svg width="450" height="130" viewBox="0 0 450 130" fill="none">
                     <line x1="20" y1="65" x2="130" y2="65" stroke="#1E1915" stroke-width="4" stroke-linecap="round" />
                     <text x="75" y="52" fill="#6B6256" font-family="IBM Plex Mono" font-size="11" font-weight="700" text-anchor="middle">CALL AUDIO</text>
                     <polygon points="175,15 220,115 130,115" fill="#FAF8F5" stroke="#1E1915" stroke-width="3" />
                     <text x="175" y="88" fill="#1E1915" font-family="Fraunces" font-weight="700" font-size="14" text-anchor="middle">PRISM</text>
-                    <line x1="202" y1="42" x2="380" y2="24" stroke="#543DB3" stroke-width="3.5" stroke-linecap="round" />
-                    <circle cx="380" cy="24" r="4.5" fill="#543DB3" />
-                    <line x1="207" y1="53" x2="380" y2="45" stroke="#0284C7" stroke-width="3.5" stroke-linecap="round" />
-                    <circle cx="380" cy="45" r="4.5" fill="#0284C7" />
-                    <line x1="210" y1="65" x2="380" y2="66" stroke="#1B5E4B" stroke-width="3.5" stroke-linecap="round" />
-                    <circle cx="380" cy="66" r="4.5" fill="#1B5E4B" />
-                    <line x1="212" y1="77" x2="380" y2="87" stroke="#D97706" stroke-width="3.5" stroke-linecap="round" />
-                    <circle cx="380" cy="87" r="4.5" fill="#D97706" />
-                    <line x1="215" y1="89" x2="380" y2="108" stroke="#DC2626" stroke-width="3.5" stroke-linecap="round" />
-                    <circle cx="380" cy="108" r="4.5" fill="#DC2626" />
+                    <line x1="202" y1="42" x2="390" y2="24" stroke="#543DB3" stroke-width="3.5" stroke-linecap="round" />
+                    <circle cx="390" cy="24" r="4.5" fill="#543DB3" />
+                    <line x1="207" y1="53" x2="390" y2="45" stroke="#0284C7" stroke-width="3.5" stroke-linecap="round" />
+                    <circle cx="390" cy="45" r="4.5" fill="#0284C7" />
+                    <line x1="210" y1="65" x2="390" y2="66" stroke="#1B5E4B" stroke-width="3.5" stroke-linecap="round" />
+                    <circle cx="390" cy="66" r="4.5" fill="#1B5E4B" />
+                    <line x1="212" y1="77" x2="390" y2="87" stroke="#D97706" stroke-width="3.5" stroke-linecap="round" />
+                    <circle cx="390" cy="87" r="4.5" fill="#D97706" />
+                    <line x1="215" y1="89" x2="390" y2="108" stroke="#DC2626" stroke-width="3.5" stroke-linecap="round" />
+                    <circle cx="390" cy="108" r="4.5" fill="#DC2626" />
                   </svg>
                 </div>
 
@@ -1477,9 +1582,16 @@ html_content = r'''<!DOCTYPE html>
 
           </div>
 
+          <!-- Closed Feedback Loop Diagram Graphic -->
+          <div class="s5-loop-banner">
+            <span style="font-family: var(--font-mono); font-weight: 700; color: var(--jade-primary);">↻ CLOSED-LOOP FEEDBACK:</span>
+            <span>Intercepted failures in <strong>Stage 04 (PRISM)</strong> automatically synthesize edge-case regression tests for <strong>Stage 02 (~15B Prompts)</strong>.</span>
+            <span style="font-family: var(--font-mono); font-size: 11.5px; background: var(--jade-tint); color: var(--jade-primary); padding: 3px 8px; border-radius: 4px; font-weight: 700;">SELF-HEALING FLEET</span>
+          </div>
+
           <div class="slide-bottom-bar">
             <span class="quote">"If the caller says 'Wait!', ClaimGuard aborts the API in 12ms. PRISM logs the near-miss for continuous safety improvements."</span>
-            <span class="tag">Self-Healing Architecture</span>
+            <span class="tag">Workflow Architecture</span>
           </div>
         </div>
       </section>
@@ -1542,7 +1654,7 @@ html_content = r'''<!DOCTYPE html>
                 </div>
               </div>
 
-              <div style="font-size: 13.5px; color: var(--ink-secondary); margin-top: 10px;">
+              <div style="font-size: 13.5px; color: var(--ink-secondary); margin-top: 2px;">
                 <strong>Enterprise Mandate:</strong> Any autonomous voice bot taking real-world actions requires deterministic safety gates.
               </div>
             </div>
@@ -1574,7 +1686,7 @@ html_content = r'''<!DOCTYPE html>
                 </div>
               </div>
 
-              <div style="background: var(--ink-primary); color: #FFF; border-radius: 8px; padding: 12px 16px; text-align: center; font-family: var(--font-mono); font-size: 13px; font-weight: 600; margin-top: 10px;">
+              <div style="background: var(--ink-primary); color: #FFF; border-radius: 6px; padding: 12px 14px; text-align: center; font-family: var(--font-mono); font-size: 13px; font-weight: 600; margin-top: 2px;">
                 Can be interrupted. Can't be bullied. Won't leak. Verified by PRISM.
               </div>
             </div>
@@ -1640,7 +1752,16 @@ html_content = r'''<!DOCTYPE html>
       }
 
       init() {
-        this.showSlide(0);
+        // Read hash on load
+        let initialIndex = 0;
+        const hash = window.location.hash;
+        if (hash && hash.startsWith('#slide-')) {
+          const num = parseInt(hash.replace('#slide-', ''), 10) - 1;
+          if (!isNaN(num) && num >= 0 && num < this.totalSlides) {
+            initialIndex = num;
+          }
+        }
+        this.showSlide(initialIndex);
         this.bindEvents();
       }
 
@@ -1652,6 +1773,16 @@ html_content = r'''<!DOCTYPE html>
           } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
             e.preventDefault();
             this.prev();
+          }
+        });
+
+        window.addEventListener('hashchange', () => {
+          const hash = window.location.hash;
+          if (hash && hash.startsWith('#slide-')) {
+            const num = parseInt(hash.replace('#slide-', ''), 10) - 1;
+            if (!isNaN(num) && num >= 0 && num < this.totalSlides && num !== this.currentSlide) {
+              this.showSlide(num);
+            }
           }
         });
       }
@@ -1675,6 +1806,9 @@ html_content = r'''<!DOCTYPE html>
         if (this.subtopicLabel) {
           this.subtopicLabel.textContent = this.subtopics[index];
         }
+
+        // Update hash without scrolling
+        history.replaceState(null, null, `#slide-${index + 1}`);
       }
 
       next() {
@@ -1711,10 +1845,10 @@ html_content = r'''<!DOCTYPE html>
 </html>
 '''
 
-with open("/home/aliz/Documents/Codes/forgeAI-hackathon/presentation/claimguard-pitch.html", "w", encoding="utf-8") as f:
+with open('/home/aliz/Documents/Codes/forgeAI-hackathon/presentation/claimguard-pitch.html', 'w', encoding='utf-8') as f:
     f.write(html_content)
 
-with open("/home/aliz/Documents/Codes/forgeAI-hackathon/presentation/claimguard-pitch-offline.html", "w", encoding="utf-8") as f:
+with open('/home/aliz/Documents/Codes/forgeAI-hackathon/presentation/claimguard-pitch-offline.html', 'w', encoding='utf-8') as f:
     f.write(html_content)
 
 print("Generated both online and offline pitch decks successfully!")
