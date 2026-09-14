@@ -63,12 +63,14 @@
           </div>
 
           <div class="ptt-controls">
-            <button id="ptt-button" class="ptt-btn">
+            <button id="ptt-button" class="ptt-btn" title="Click & Hold or Hold Spacebar to record">
               <span class="mic-icon">🎙️</span>
               <span class="ptt-text">PUSH TO TALK (SPACEBAR)</span>
             </button>
+
+            <!-- Mode Selector & Controls -->
             <div class="scenario-selector-wrap">
-              <label for="scenario-select">Test Replay Scenario:</label>
+              <label for="scenario-select">Preset Scenario:</label>
               <select id="scenario-select" class="scenario-dropdown">
                 <option value="scenario_b_revocation">Cat B: True Revocation + Card ("Mera card 4532...")</option>
                 <option value="scenario_c_trap">Cat C: Look-alike Trap ("Don't hold back, send now")</option>
@@ -77,7 +79,13 @@
                 <option value="scenario_a_clean">Cat A: Clean Control (Dispatch Flatbed)</option>
                 <option value="scenario_d_correction">Cat D: Correction (Swap Mechanic for Crane)</option>
               </select>
-              <button id="simulate-turn-btn" class="btn-secondary">Simulate Turn</button>
+              <button id="simulate-turn-btn" class="btn-secondary" title="Simulate this turn with animations">Simulate</button>
+            </div>
+
+            <!-- Real-time Text Input Fallback (for Noisy Auditorium / Silent Demo) -->
+            <div class="text-fallback-wrap">
+              <input type="text" id="text-input-turn" class="text-turn-input" placeholder="Or type voice text here (e.g. Wait, don't send tow truck, card 4532...)..." />
+              <button id="btn-send-text" class="btn-send-text">Send Turn</button>
             </div>
           </div>
         </div>
