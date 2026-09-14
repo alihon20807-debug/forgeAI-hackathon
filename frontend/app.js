@@ -357,6 +357,10 @@ document.addEventListener("DOMContentLoaded", () => {
       else masked = masked.replace(p.matched, "[PHONE REDACTED]");
     });
 
+    const lower = rawText.toLowerCase();
+    let transitions = [];
+    let agentReply = "";
+    let vetoStatus = "Clean";
     let customVerdict = null;
 
     if (lower.includes("don't send") || lower.includes("dont send") || lower.includes("cancel") || lower.includes("ruk jao")) {
