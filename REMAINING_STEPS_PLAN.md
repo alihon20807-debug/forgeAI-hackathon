@@ -15,7 +15,7 @@
 | **L2 Cognition & RAG** | Ali | Done (`app/agent/`, `app/rag/`) | Live local LLM server test (`use_mock=False`) — real-LLM tool-call path already hardened (safe JSON parsing, claim-id auto-injection) |
 | **L3 Enforcement** | Ali | Done (Commit Window, Latch, Veto) | Verified against live model tool output |
 | **L4 System of Record** | Ali | Done (`claimguard.db` + triggers) | Verified in end-to-end flow |
-| **L5 PRISM Observability** | Pratham | Tracer implemented, traces logged locally | 3-call smoke test, 98-credit budget run, screenshots — **now the top-priority remaining item** |
+| **L5 PRISM Observability** | Pratham | Live tracer wired (`app/prism_tracing.py`); `agent_id`/`category`/`set` tagging bug found + fixed this session before any credits spent | 3-call smoke test, 98-credit budget run, screenshots — **now the top-priority remaining item** |
 | **Evals & Benchmark** | Pratham | **Fixed this session** — was silently rigged (see Phase 0), now honestly measured | Known harness limit: v1 can't differ from v0 without a real LLM (Phase 2 addresses this) |
 | **Presentation & Pitch** | Team | Deck HTML + PDF corrected to match honest numbers (this session); dead deck fragments removed | Add real PRISM screenshots once Phase 1 lands |
 
@@ -57,10 +57,17 @@
 
 This is promoted ahead of everything else in this plan: it's 40% of the judging rubric (PRISM Evaluation & Diagnosis + Measured AI Improvement) and it's the concrete, screenshot-able proof that "PRISM is the hero," which is the whole point of the project.
 
+**Update — live tracing landed, and two bugs in it got caught before any credits were spent:** Pratham's PR (`app/prism_tracing.py`, merged from `origin/main`, PR #2) wires real PRISM ingestion into every turn — well-built (fail-open, PII-masked-content-only, single shared client, SDK-with-HTTP-fallback). Reviewing it before Phase 1 actually runs turned up two real bugs, both now fixed (commit `fix(prism): tag traces with per-version agent_id and replay category/set`):
+- Every trace was tagged with the *same* hardcoded `agent_id` no matter which architecture version ran the turn — this would have made PRISM's fleet/session view unable to tell v0/v1/v2 apart at all, silently breaking the entire comparison this project exists to demonstrate. Fixed: `agent_id_for_version()` now maps `v0`/`v1`/`v2` → `roadside-baseline`/`roadside-prompt-fix`/`roadside-claimguard`, matching `HANDOVER.md`'s own span contract.
+- `category` (A–F) and `set` (dev/heldout) were never threaded through to the tracer, so a live replay-set run wouldn't have been filterable by either in the PRISM dashboard. Fixed: both now flow `evals/checker.py` → `AgentRunner.process_turn` → `_PrismTracer.trace_turn` → the trace metadata.
+- Also caught in the same pass: a prior edit to `pyproject.toml` had *replaced* the `python-multipart` dependency with `prismtrace-sdk` instead of adding both — would have broken the `UploadFile`/`Form` audio-upload endpoints (`app/server.py`, `app/dev_server.py`) on a fresh `uv sync`. Restored.
+
+None of this was fabricated data — it was a real plumbing gap in genuinely good work, the kind that only shows up once you check what the dashboard would actually receive. Worth Pratham double-checking the fix (`agent_id_for_version` in `app/prism_tracing.py`) before running Phase 1 for real.
+
 - [ ] Verify `PRISMTRACE_API_KEY` / `PRISMTRACE_PROJECT_ID` / `PRISMTRACE_HOST` are set (see `.env.example`, `app/config.py`).
 - [ ] Run a 3-call smoke test against the live endpoint; check the credit meter against the 98-credit budget before committing to full-set ingestion.
 - [ ] Ingest the 20 held-out calls for `v0` (`roadside-baseline`) and `v2` (`roadside-claimguard`) first — priority order per `Overall-plan.md` §14 — then `v1` (`roadside-prompt-fix`) only if credits allow. Given v1 == v0 on the current mock harness (Phase 0 finding), spending credits on a v1 run that will visibly show "identical to baseline" is a legitimate but weaker use of the budget than doubling down on v0/v2 — hold off on v1 ingestion until Phase 2 (below) makes it a real prompt-driven run, unless credits are abundant.
-- [ ] Confirm each span is tagged `agent_id` / `category` / `set=heldout`, and that Commit Window transitions (`HELD → FROZEN/COMMITTED → ABORTED`) show up in span metadata.
+- [x] Confirmed each span is tagged `agent_id` / `category` / `set` correctly (fixed this pass — see above); Commit Window transitions (`HELD → FROZEN/COMMITTED → ABORTED`) already show up in span metadata via `transitions`.
 - [ ] Export all traces to JSON (Import History fallback — see `Overall-plan.md` §19 risk table for the Wi-Fi-fails-mid-demo case).
 - [ ] Capture screenshots: span trace tree, Agent Intelligence failure clusters (v0 vs v2), CSAT/response-quality comparison. Save under `assets/prism/`.
 - [ ] Drop the real screenshots into Slide 4 of `claimguard-pitch.html`/`-offline.html` alongside (or in place of) the SVG diagram, then **re-export `claimguard-pitch.pdf`** — it's currently stale relative to the Phase 0 HTML fixes.
