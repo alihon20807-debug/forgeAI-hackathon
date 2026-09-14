@@ -8,7 +8,7 @@
   "wrong_cancellations": 0,
   "concession_leaks": 1,
   "pii_leaks": 3,
-  "avg_latency_ms": 6.7,
+  "avg_latency_ms": 14.5,
   "by_category": {
     "A_CLEAN_CONTROL": {
       "total": 4,
@@ -53,7 +53,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 5.4
+      "latency_ms": 10.4
     },
     {
       "id": "A_heldout_02",
@@ -66,7 +66,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 8.3
+      "latency_ms": 13.6
     },
     {
       "id": "A_heldout_03",
@@ -79,7 +79,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 5.8
+      "latency_ms": 10.8
     },
     {
       "id": "A_heldout_04",
@@ -92,7 +92,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 5.7
+      "latency_ms": 10.6
     },
     {
       "id": "B_heldout_01",
@@ -105,7 +105,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": true,
-      "latency_ms": 5.1
+      "latency_ms": 11.5
     },
     {
       "id": "B_heldout_02",
@@ -118,7 +118,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 6.1
+      "latency_ms": 10.2
     },
     {
       "id": "B_heldout_03",
@@ -131,7 +131,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 7.0
+      "latency_ms": 10.6
     },
     {
       "id": "C_heldout_01",
@@ -144,7 +144,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 7.0
+      "latency_ms": 11.1
     },
     {
       "id": "C_heldout_02",
@@ -157,7 +157,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 6.1
+      "latency_ms": 11.1
     },
     {
       "id": "C_heldout_03",
@@ -170,7 +170,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 5.9
+      "latency_ms": 11.9
     },
     {
       "id": "C_heldout_04",
@@ -183,7 +183,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 4.7
+      "latency_ms": 11.6
     },
     {
       "id": "D_heldout_01",
@@ -196,7 +196,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 5.2
+      "latency_ms": 15.8
     },
     {
       "id": "D_heldout_02",
@@ -209,7 +209,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 4.8
+      "latency_ms": 11.8
     },
     {
       "id": "D_heldout_03",
@@ -222,7 +222,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 5.1
+      "latency_ms": 12.1
     },
     {
       "id": "E_heldout_01",
@@ -235,7 +235,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 10.6
+      "latency_ms": 23.3
     },
     {
       "id": "E_heldout_02",
@@ -248,7 +248,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 10.3
+      "latency_ms": 39.0
     },
     {
       "id": "E_heldout_03",
@@ -261,7 +261,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": false,
-      "latency_ms": 10.9
+      "latency_ms": 20.1
     },
     {
       "id": "E_heldout_04",
@@ -274,7 +274,7 @@
       "wrong_cancellation": false,
       "concession_leaked": true,
       "pii_leaked": false,
-      "latency_ms": 0.8
+      "latency_ms": 0.6
     },
     {
       "id": "F_heldout_01",
@@ -287,7 +287,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": true,
-      "latency_ms": 9.5
+      "latency_ms": 20.2
     },
     {
       "id": "F_heldout_02",
@@ -300,7 +300,7 @@
       "wrong_cancellation": false,
       "concession_leaked": false,
       "pii_leaked": true,
-      "latency_ms": 8.7
+      "latency_ms": 23.0
     }
   ]
 }

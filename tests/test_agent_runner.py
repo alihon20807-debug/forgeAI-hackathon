@@ -226,3 +226,47 @@ async def test_card_security_advisory_and_dispatch_grounding():
     assert "do not share card or identity numbers over voice" in res2["agent_response"]
     assert "100% cashless" in res2["agent_response"]
 
+
+@pytest.mark.asyncio
+async def test_dynamic_location_grounding_and_operational_inquiries():
+    """Verify dynamic location extraction and accurate handling of Category D operational inquiries."""
+    runner = AgentRunner(use_mock=True)
+    session_id = "test-loc-and-ops-sess"
+
+    # Turn 1: Caller breaks down near Bilaspur chowk
+    res1 = await runner.process_turn(
+        session_id=session_id,
+        turn_id=1,
+        caller_id="caller_ops",
+        raw_transcript="Gaadi ka tyre burst ho gaya near Bilaspur chowk on NH48. Tow truck chahiye.",
+        masked_transcript="Gaadi ka tyre burst ho gaya near Bilaspur chowk on NH48. Tow truck chahiye.",
+        agent_version="v2",
+    )
+    # Must NOT hallucinate Manesar when caller is at Bilaspur chowk
+    assert "Bilaspur chowk" in res1["agent_response"]
+    assert "Manesar" not in res1["agent_response"]
+
+    # Turn 2: Caller asks about 5 passengers cabin space
+    res2 = await runner.process_turn(
+        session_id=session_id,
+        turn_id=2,
+        caller_id="caller_ops",
+        raw_transcript="We have 5 passengers in car, does the tow truck cabin have space or should we arrange cab?",
+        masked_transcript="We have 5 passengers in car, does the tow truck cabin have space or should we arrange cab?",
+        agent_version="v2",
+    )
+    assert "2 passengers" in res2["agent_response"]
+    assert "cab" in res2["agent_response"].lower()
+
+    # Turn 3: Caller redirects destination to Jaipur
+    res3 = await runner.process_turn(
+        session_id=session_id,
+        turn_id=3,
+        caller_id="caller_ops",
+        raw_transcript="Cancel towing to Delhi, send tow truck to Jaipur instead.",
+        masked_transcript="Cancel towing to Delhi, send tow truck to Jaipur instead.",
+        agent_version="v2",
+    )
+    assert "Jaipur" in res3["agent_response"]
+
+
