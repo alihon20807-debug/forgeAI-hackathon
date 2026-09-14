@@ -2,9 +2,9 @@
 
 **This is the source of truth for what's in the pitch deck. Do not open `claimguard-pitch.html` (or its offline twin) to find out what the deck says — read this instead.** The HTML/PDF are gitignored build outputs now (see `.gitignore`), not something to read for information; they exist only to actually present to judges. If this file and the HTML ever disagree, that means someone edited the HTML without updating this file — fix this file to match reality, don't trust the HTML as the record.
 
-**Files:** `claimguard-pitch.html` (online, Google Fonts + KaTeX CDN) and `claimguard-pitch-offline.html` (same content, offline-safe). Both are single-file, hand-built (no reveal.js), 6 slides, arrow-key/click navigation, auto-play toggle. `claimguard-pitch.pdf` is a headless-Chromium print export of the online HTML. `claimguard-deck.html`/`-offline.html` were an earlier, fully superseded draft — deleted, not kept around.
+**Files:** `claimguard-pitch.html` (online, Google Fonts + KaTeX CDN) and `claimguard-pitch-offline.html` (same content, offline-safe). Both are single-file, hand-built (no reveal.js), 7 slides, arrow-key/click navigation, auto-play toggle. `claimguard-pitch.pdf` is a headless-Chromium print export of the online HTML. `claimguard-deck.html`/`-offline.html` were an earlier, fully superseded draft — deleted, not kept around.
 
-**Design system:** warm cream ground (`#F7F5F0`), roasted-walnut ink (`#1E1915`), imperial-jade accent (`#1B5E4B`). Type: Fraunces (display/headlines), IBM Plex Sans (body), IBM Plex Mono (labels/data/mono callouts). A 5-color "spectrum" accent set (violet/cyan/jade/amber/rose) is used specifically on Slide 4's PRISM visual to tie back to the product's own name. One real KaTeX-rendered formula (Luhn checksum) on Slide 3.
+**Design system:** warm cream ground (`#F7F5F0`), roasted-walnut ink (`#1E1915`), imperial-jade accent (`#1B5E4B`). Type: Fraunces (display/headlines), IBM Plex Sans (body), IBM Plex Mono (labels/data/mono callouts). A 5-color "spectrum" accent set (violet/cyan/jade/amber/rose) is used specifically on Slide 5's PRISM visual to tie back to the product's own name. One real KaTeX-rendered formula (Luhn checksum) on Slide 3.
 
 ---
 
@@ -44,7 +44,30 @@
   3. *Won't Leak Cards* — "Luhn-10 Hardware Filter" — a real, genuine KaTeX-rendered Luhn checksum formula ($$\sum_{i=1}^n f(d_i, i) \equiv 0 \pmod{10}$$) masks card numbers to `[CARD REDACTED]` before the model ever sees them.
 - **Bottom quote:** "Deterministic, local enforcement. No prompt promises — just mathematical guarantees." (tag: ClaimGuard Core Architecture)
 
-## Slide 4 — PRISM Usage (the centerpiece slide)
+## Slide 4 — System Architecture Blueprint
+
+- **Eyebrow:** "L0–L6 End-to-End Architectural Blueprint"
+- **Headline:** "Separation of Cognition & Deterministic Enforcement."
+- **Context line:** "How ClaimGuard isolates the small proposer model from consequential execution, observed continuously by Block Convey's PRISM."
+- **Interactive Scenario Simulator:** Live switchable audit flows for 4 distinct failure/success modes:
+  1. *🚨 Mid-Call Revocation (Cat B)* — Highlights L0 (Audio), L1 (Shield), L3 (Commit Window HELD ➔ ABORTED), L5 (PRISM). Prevents ₹4,500 ghost payout.
+  2. *🛡️ Deductible Pressure & Sycophancy (Cat E)* — Highlights L0, L1, L2, L3 (Outbound Veto), L4 (SQLite Trigger), L5. Blocks unauthorized fee concession.
+  3. *🔒 Spoken Aadhaar & Phone Number (Cat F)* — Highlights L0, L1 (Verhoeff D5 Check & Indian Regex), L2, L3, L5. Redacts PII in <4.0ms before tokens reach LLM context.
+  4. *✅ Valid Clean Claim (Cat A)* — Full pipeline pass-through with HELD ➔ COMMITTED atomic write to SQLite System of Record.
+- **Left panel — 7-Layer Blueprint Flow:**
+  - *L0: Perception* — Mic Edge & Audio Ingestion (Whisper STT · 180ms, PTT audio stream, Indic lexical bias).
+  - *L1: Edge Shield* — Mathematical PII Shield (<4.0ms, Luhn checksum for 13-19D cards, Verhoeff Dihedral D5 for 12D Aadhaar, Indian phone regex). Zero cloud tokens.
+  - *L2: Cognition* — Small Model Proposer (Isolated Proposer, Holo/Gemma. Proposes `open_claim()`, `stage_dispatch()`. Zero direct DB access).
+  - *L3: Core Airlock* — ClaimGuard Deterministic Enforcement (9.9ms measured decision latency; Commit Window HELD ➔ FROZEN ➔ ABORTED/COMMITTED; Outbound Veto; Policy Latch).
+  - *L4: SoR* — SQLite System of Record (Physical SQL BEFORE UPDATE triggers block unauthorized modifications; atomic rollback).
+  - *L5: Observability* — PRISM Telemetry Spine (Structured spans ingested via `/api/spans/ingest`; maps near-misses, CSAT, IRDAI compliance metadata).
+  - *L6: Control* — Supervisor & Fleet Console (Near-miss triage, human-in-the-loop override, regression test synthesis).
+- **Right panel — Execution Audit & Telemetry Inspector:**
+  - Dynamic display showing inbound spoken utterance, L1 pre-LLM masked buffer, deterministic enforcement verdict status, and live PRISM telemetry span proof JSON.
+  - Architectural Invariant badges: *Invariant #2: Pre-LLM PII* and *Invariant #3: Measured Ground Truth*.
+- **Bottom quote:** "The LLM proposes; deterministic code disposes." (tag: ClaimGuard Architectural Blueprint)
+
+## Slide 5 — PRISM Usage (the centerpiece slide)
 
 - **Eyebrow (locked format):** "How PRISM is used to monitor, evaluate, detect failures, and improve the AI system"
 - **Headline:** "PRISM: The diagnostic instrument watching every turn."
@@ -71,7 +94,7 @@
   Callout box: "A prompt fix alone changes nothing measurable — v1 matches v0 exactly on this harness, because there is no architectural gate for a prompt to strengthen. Only deterministic L3 enforcement (v2) achieves 100% compliance."
 - **Bottom quote:** "PRISM allows engineering teams to prove voice safety with mathematical audit traces." (tag: Verified Telemetry)
 
-## Slide 5 — System Workflow
+## Slide 6 — System Workflow
 
 - **Eyebrow (locked, mandated exact text):** "Input → AI/RAG/Agent System → PRISM Monitoring & Evaluation → Failure Detection → Improvement"
 - **Headline:** "How an emergency call flows through the system."
@@ -85,7 +108,7 @@
 - **Closed feedback-loop banner:** "Intercepted failures in Stage 04 (PRISM) automatically synthesize edge-case regression tests for Stage 02 (Voice Agent Prompts)." tagged "SELF-HEALING FLEET."
 - **Bottom quote:** "If the caller says 'Wait!', ClaimGuard freezes the action before it can execute. PRISM logs the near-miss for continuous safety improvements."
 
-## Slide 6 — Impact & Future Scope
+## Slide 7 — Impact & Future Scope
 
 - **Eyebrow (locked format):** "Key benefits, real-world impact, scalability, and future enhancements"
 - **Headline:** "Every regulated call center needs this architecture."
@@ -106,8 +129,8 @@
 All previously noted issues have now been **fully identified, corrected, and verified** across both `claimguard-pitch.html` and `claimguard-pitch-offline.html`:
 
 1. **"~15B" model size removed**: Replaced with honest references to "small production models" / "small edge-class models" / "small proposer model", aligning with `docs/Overall-plan.md` §10.
-2. **Slide 5 count harmonized**: Synchronized to "SUITE: 60/60 Passing", exactly matching the 60-call replay set (`evals/replay_set.json`).
+2. **Slide 6 count harmonized**: Synchronized to "SUITE: 60/60 Passing", exactly matching the 60-call replay set (`evals/replay_set.json`).
 3. **Turn-based airlock timing clarified**: Replaced dramatized "5.0-second" claims with accurate "Next-Turn Action Latch" and "Turn-Based Safety Airlock" descriptions matching the actual turn-age Commit Window (`app/enforcement/commit_window.py`).
-4. **Slide 6 future scope distinguished**: Banking, Telecom, and Healthcare sectors are now explicitly marked as `(Future)` extensions rather than present capabilities.
-5. **Slide 4 benchmark metrics verified against ground truth**: Cat F corrected to `6 Leaked` (6/6 failed in Cat F on v0/v1), and Overall Reliability Accuracy verified at `65.0%` (39/60 passed).
+4. **Slide 7 future scope distinguished**: Banking, Telecom, and Healthcare sectors are now explicitly marked as `(Future)` extensions rather than present capabilities.
+5. **Slide 5 benchmark metrics verified against ground truth**: Cat F corrected to `6 Leaked` (6/6 failed in Cat F on v0/v1), and Overall Reliability Accuracy verified at `65.0%` (39/60 passed).
 6. **Slide 1 DPDP penalty sensation removed**: Replaced the arbitrary `₹250 CR` metric with qualitative `STATUTORY DPDP Breach` citing statutory compliance requirements under the DPDP Act 2023 and PCI-DSS.
