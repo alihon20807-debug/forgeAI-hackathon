@@ -1,0 +1,244 @@
+"""PRISM Observability Spine for ClaimGuard.
+
+Implements direct manual span ingestion (POST /api/spans/ingest) with:
+1. Single shared httpx.Client connection pool across the process.
+2. Verified auth header: X-PRISMtrace-Key.
+3. Stable agent_id tagging across versions:
+   - roadside-baseline (v0)
+   - roadside-prompt-fix (v1)
+   - roadside-claimguard (v2)
+4. Commit Window transition emission as span attributes.
+5. Local JSONL trace buffering for PRISM Import History offline fallback.
+"""
+
+from __future__ import annotations
+
+import json
+import logging
+import os
+import threading
+import uuid
+from contextlib import contextmanager
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+import httpx
+
+from app.config import (
+    DATA_DIR,
+    PRISMTRACE_API_KEY,
+    PRISMTRACE_HOST,
+    PRISMTRACE_PROJECT_ID,
+)
+
+logger = logging.getLogger("claimguard.prism")
+
+TRACES_FILE = DATA_DIR / "prism_traces.jsonl"
+
+
+def _iso_now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def get_agent_id_for_version(version: str) -> str:
+    v = (version or "v2").lower()
+    if v == "v0":
+        return "roadside-baseline"
+    elif v == "v1":
+        return "roadside-prompt-fix"
+    return "roadside-claimguard"
+
+
+class PRISMTracer:
+    """Singleton PRISM Tracing client."""
+
+    def __init__(
+        self,
+        host: Optional[str] = None,
+        project_id: Optional[str] = None,
+        api_key: Optional[str] = None,
+    ) -> None:
+        self.host = (host or PRISMTRACE_HOST).rstrip("/")
+        self.project_id = project_id or PRISMTRACE_PROJECT_ID
+        self.api_key = api_key or PRISMTRACE_API_KEY
+        self.headers = {
+            "X-PRISMtrace-Key": self.api_key,
+            "Content-Type": "application/json",
+        }
+        self._client: Optional[httpx.Client] = None
+        if self.api_key:
+            self._client = httpx.Client(headers=self.headers, timeout=15.0)
+
+    def _get_client(self) -> Optional[httpx.Client]:
+        if self._client is None and self.api_key:
+            self._client = httpx.Client(headers=self.headers, timeout=15.0)
+        return self._client
+
+    def post_spans_async(
+        self,
+        trace_id: str,
+        session_id: str,
+        spans: List[Dict[str, Any]],
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        """Send spans to PRISM in background thread (fail-open) and buffer locally."""
+        payload = {
+            "trace_id": trace_id,
+            "project_id": self.project_id,
+            "session_id": session_id,
+            "metadata": metadata or {},
+            "spans": spans,
+        }
+
+        # 1. Local backup buffer for PRISM Import History fallback
+        try:
+            with open(TRACES_FILE, "a", encoding="utf-8") as f:
+                f.write(json.dumps(payload) + "\n")
+        except Exception as e:
+            logger.warning(f"Could not append trace to local buffer: {e}")
+
+        # 2. If no API key configured, stop here safely
+        client = self._get_client()
+        if not client or not self.project_id or not self.api_key:
+            return
+
+        def _send():
+            try:
+                url = f"{self.host}/api/spans/ingest"
+                resp = client.post(url, json=payload)
+                if not (200 <= resp.status_code < 300):
+                    logger.warning(f"[PRISM] Ingest status {resp.status_code}: {resp.text[:200]}")
+            except Exception as exc:
+                logger.warning(f"[PRISM] Ingest request failed: {exc}")
+
+        threading.Thread(target=_send, daemon=True).start()
+
+
+class TurnTracer:
+    """Tracks spans for a single conversational turn."""
+
+    def __init__(
+        self,
+        session_id: str,
+        user_utterance: str,
+        agent_version: str = "v2",
+        category: Optional[str] = None,
+        eval_set: str = "dev",
+        tracer: Optional[PRISMTracer] = None,
+    ) -> None:
+        self.session_id = session_id
+        self.agent_version = agent_version
+        self.agent_id = get_agent_id_for_version(agent_version)
+        self.category = category or "A_CLEAN_CONTROL"
+        self.eval_set = eval_set
+        self.trace_id = f"tr-{session_id}-{uuid.uuid4().hex[:6]}"
+        self.root_span_id = f"sp-root-{uuid.uuid4().hex[:6]}"
+        self.user_utterance = user_utterance
+        self.start_iso = _iso_now()
+        self.spans: List[Dict[str, Any]] = []
+        self.tracer = tracer or get_prism_tracer()
+
+    @contextmanager
+    def span(self, name: str, span_type: str = "custom", attributes: Optional[Dict[str, Any]] = None):
+        span_id = f"sp-{uuid.uuid4().hex[:6]}"
+        start = _iso_now()
+        record = {"status": "ok", "error_message": None, "output": None}
+        try:
+            yield record
+        except Exception as exc:
+            record["status"] = "error"
+            record["error_message"] = str(exc)
+            raise
+        finally:
+            end = _iso_now()
+            span_dict = {
+                "span_id": span_id,
+                "parent_span_id": self.root_span_id,
+                "name": name,
+                "span_type": span_type,
+                "start_time": start,
+                "end_time": end,
+                "status": record["status"],
+                "error_message": record["error_message"],
+                "attributes": {
+                    **(attributes or {}),
+                    "output": str(record["output"])[:2000] if record["output"] is not None else None,
+                },
+            }
+            self.spans.append(span_dict)
+
+    def record_enforcement_transition(
+        self,
+        action_id: str,
+        action_type: str,
+        from_state: str,
+        to_state: str,
+        reason: str,
+    ) -> None:
+        now = _iso_now()
+        self.spans.append({
+            "span_id": f"sp-enf-{uuid.uuid4().hex[:6]}",
+            "parent_span_id": self.root_span_id,
+            "name": "enforcement_commit_window",
+            "span_type": "guardrail",
+            "start_time": now,
+            "end_time": now,
+            "status": "ok",
+            "attributes": {
+                "agent_id": self.agent_id,
+                "action_id": action_id,
+                "action_type": action_type,
+                "from_state": from_state,
+                "to_state": to_state,
+                "transition": f"{from_state}->{to_state}",
+                "reason": reason,
+            },
+        })
+
+    def finish(
+        self,
+        agent_reply: str,
+        extra_metadata: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        end_iso = _iso_now()
+        root = {
+            "span_id": self.root_span_id,
+            "parent_span_id": None,
+            "name": "agent_turn",
+            "span_type": "chain",
+            "start_time": self.start_iso,
+            "end_time": end_iso,
+            "status": "ok",
+            "input_text": self.user_utterance[:10000],
+            "output_text": agent_reply[:10000],
+            "attributes": {
+                "agent_id": self.agent_id,
+                "agent_version": self.agent_version,
+                "category": self.category,
+                "set": self.eval_set,
+            },
+        }
+
+        all_spans = [root] + self.spans
+        meta = {
+            "agent_id": self.agent_id,
+            "agent_version": self.agent_version,
+            "category": self.category,
+            "set": self.eval_set,
+            **(extra_metadata or {}),
+        }
+
+        self.tracer.post_spans_async(
+            trace_id=self.trace_id,
+            session_id=self.session_id,
+            spans=all_spans,
+            metadata=meta,
+        )
+
+
+_GLOBAL_TRACER = PRISMTracer()
+
+
+def get_prism_tracer() -> PRISMTracer:
+    return _GLOBAL_TRACER
