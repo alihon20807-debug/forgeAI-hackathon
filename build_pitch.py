@@ -1,4 +1,6 @@
-<!DOCTYPE html>
+import os
+
+html_content = r'''<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -2339,3 +2341,9 @@
   </script>
 </body>
 </html>
+'''
+
+with open("/home/aliz/Documents/Codes/forgeAI-hackathon/presentation/claimguard-pitch.html", "w") as f:
+    f.write(html_content)
+
+print("Updated presentation/claimguard-pitch.html successfully with fixed grid layout in slide 4!")
