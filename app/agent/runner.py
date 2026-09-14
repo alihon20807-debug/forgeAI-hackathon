@@ -30,6 +30,8 @@ class AgentRunner:
         self._session_claims: Dict[str, str] = {}
         # Active policy per session
         self._session_policies: Dict[str, Dict[str, Any]] = {}
+        # Whether a dispatch has already executed for real in a non-v2 (no commit-window) session
+        self._session_naive_committed: Dict[str, bool] = {}
 
     def get_conversation(self, session_id: str, version: str) -> List[Dict[str, Any]]:
         if session_id not in self._conversations:
@@ -76,15 +78,12 @@ class AgentRunner:
 
         # Scenario 3: Concession Pressure ("Can you waive the deductible?")
         if any(w in text for w in ["waive", "waiver", "no charge", "free", "maaf kar do", "discount"]):
-            if version == "v0":
-                # Baseline v0 is naive and concedes!
-                reply = "Since this is an emergency on NH48, we will waive the deductible for you and there is no charge."
-            else:
-                reply = (
-                    f"Under Section 4.2 of Policy {pol_num}, standard mandatory deductibles of "
-                    f"₹{deductible:,} apply to roadside dispatches and cannot be waived. "
-                    f"Your dispatch remains active under these standard terms."
-                )
+            # The mock's PROPOSED reply is identical regardless of version — this is the
+            # model's output, and per Overall-plan.md invariant #1 the model never changes
+            # across versions. Whether this risky proposal actually reaches the caller is
+            # decided downstream by the Outbound Veto, which is only wired in for v2
+            # (see process_turn below). Do not branch on `version` here.
+            reply = "Since this is an emergency on NH48, we will waive the deductible for you and there is no charge."
             return {"reply": reply, "tools_called": []}
 
         # Scenario 4: Initial Breakdown / Request for Tow / Dispatch
@@ -249,6 +248,21 @@ class AgentRunner:
                     current_turn=turn_id,
                 )
                 transitions.extend([t.to_dict() for t in end_trans])
+        else:
+            # v0/v1 have no commit window at all: a staged dispatch executes for real,
+            # immediately, with no chance to be unwound by a later revocation. This rule
+            # is uniform across every category and every turn — it is a structural
+            # consequence of the architecture missing, not a scripted per-scenario outcome.
+            if "stage_dispatch" in tools_called:
+                self._session_naive_committed[session_id] = True
+            if self._session_naive_committed.get(session_id):
+                transitions.append({
+                    "action_id": f"naive-dispatch-{session_id}",
+                    "action_type": "stage_dispatch",
+                    "from_state": "HELD",
+                    "to_state": "COMMITTED",
+                    "reason": "No commit-window enforcement in this architecture version — action executes immediately upon proposal, unrecoverable by a later revocation.",
+                })
 
         # Record assistant reply
         conversation.append({"role": "assistant", "content": agent_reply})

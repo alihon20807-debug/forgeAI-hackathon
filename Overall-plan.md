@@ -6,7 +6,8 @@ ForgeAI · graVITas'26 · VIT Vellore
 
 ## 0. Read me first
 
-- **This is the sole canonical plan.** An earlier draft was folded into this document and deleted — there is no second plan file. Everyone (teammates, and any AI agent working on this repo) works from this file.
+- **The objective: win first place at ForgeAI (graVITas'26, VIT Vellore) among hundreds of competing teams.** Every section below serves that objective, not the rubric table in isolation. **Presentation is the top strategic lever** — judges see a very large number of entries in a short window, so what actually earns a shortlist is how viscerally demo-able and legible the pitch is, not just how correct the engineering is underneath it. "Demo & Pitch" is nominally only 15% of the rubric, but a flat, correctly-engineered demo loses to a technically comparable one that's genuinely watchable — so demo/pitch quality is treated as a first-class design constraint throughout this document, not confined to §15.
+- **This is the sole canonical plan.** An earlier draft was folded into this document and deleted — there is no second plan file. Everyone (teammates, and any AI agent working on this repo) works from this file. The pitch-deck build spec at `presentation/Slides-Plan.md` is a derived execution document (exact slide content, visuals, build instructions for whoever builds the HTML deck) sourced entirely from this plan — it is not a second plan, and it should never contain a claim this document doesn't already make.
 - **PRISM is the central highlight, not a feature bolted on at the end.** ClaimGuard exists to give PRISM something real to diagnose and prove an improvement on. 40% of the judging rubric (PRISM Evaluation & Diagnosis + Measured AI Improvement) is directly PRISM-dependent — see §14 and §13, which is why they're the longest sections in this document, deliberately.
 - **This is a pitch and idea document, deliberately code-light.** Right now we are not building — we are designing the thing worth building and the story that sells it. Technical depth below exists only where it feeds the pitch: architecture shape, PRISM integration, evaluation method. No raw code.
 - **Nothing here gets turned into a deck, a build, or a submission without a separate explicit go-ahead.** This document is the thing to approve first.
@@ -111,8 +112,10 @@ By building a small-model voice claims agent for an insurance call center, instr
                          │        L2 · COGNITION                     │
                          │  small local LLM (llama.cpp, ~3–8B)       │
                          │  RAG over policy corpus (tool call)       │
-                         │  tool calls: lookup_policy, open_claim,   │
-                         │  stage_dispatch, update_claim, escalate   │
+                         │  tool calls: lookup_policy,               │
+                         │  search_policy_docs, open_claim,          │
+                         │  stage_dispatch, update_claim,            │
+                         │  escalate_to_human                        │
                          └───────────────────┬───────────────────────┘
                                               │ proposed actions (HELD)
                          ┌───────────────────▼───────────────────────┐
@@ -264,7 +267,7 @@ Split deliberately into what we can promise regardless of how the PRISM session 
 | Layer | PRISM touchpoint | Depends on |
 |---|---|---|
 | L1 Perception | Voice turns posted to `/api/voice/turns` | Confirming non-ElevenLabs sources are accepted (§20 Q3) |
-| L2 Cognition | RAG corpus uploaded via Knowledge Base (`kb_upload`) so groundedness is checked against our real source documents | Confirming availability on our tier (§20 Q5, was Q2) |
+| L2 Cognition | RAG corpus uploaded via Knowledge Base (`kb_upload`) so groundedness is checked against our real source documents | Confirming availability on our tier (§20 Q5) |
 | Whole call | `submit_trajectory` for goal adherence / tool compliance / efficiency / safety | Confirming Trajectory Evaluation is enabled on our tier (§20 Q4) |
 
 **What's honestly out of reach on our plan, stated up front rather than discovered on stage:** Guardrails, Evaluators Hub, and Annotations are locked on our dashboard tier. We do not pretend otherwise. The framing this earns us is actually stronger than pretending we have them: **ClaimGuard *is* the guardrail layer we built ourselves; PRISM is the independent auditor that checks our work** — a real separation of duties, which is the more sophisticated story to tell a room of people who build guardrail products for a living.
@@ -274,6 +277,8 @@ Split deliberately into what we can promise regardless of how the PRISM session 
 ---
 
 ## 15. Demo & Pitch narrative (Demo & Pitch 15%)
+
+Given presentation is the top strategic lever (§0), every beat below is written to be *watched*, not read — pacing, visual clarity on the live console/dashboard, and a legible payoff matter as much as functional correctness underneath them.
 
 Roughly 75 seconds of live mic, one call, no cuts, with a recorded fallback ready:
 
@@ -310,7 +315,7 @@ Each beat is deliberately mapped to a rubric line: beat 1–2 is Solution & Tech
 
 - **P1 — Agent & Guard:** the model, tools, RAG corpus and retrieval; the commit window, policy latch, and outbound veto.
 - **P2 — Voice & Console:** the STT pipeline and its native-language handling; the live supervisor console; recorded fallback clips and a backup demo video.
-- **P3 — Evidence & Pitch:** the Replay Set and its labels; the local checker; the PRISM project (tracing, tagging, the credit-managed run plan); screenshots, charts, and the pitch materials themselves.
+- **P3 — Evidence & Pitch:** the Replay Set and its labels; the local checker; the PRISM project (tracing, tagging, the credit-managed run plan); screenshots, charts, and the pitch materials themselves (the 6-slide deck built per `presentation/Slides-Plan.md`).
 
 ---
 
@@ -359,3 +364,4 @@ Each beat is deliberately mapped to a rubric line: beat 1–2 is Solution & Tech
 - **Pass 1** added the fixed Minimum Viable Demo boundary (§2, invariant 9) so scope can't drift once the build starts, and reconciled §4/§5's apparent tension between "no real telephony" and "we're building what PRISM's customers run" explicitly rather than leaving it implicit.
 - **Pass 2** sharpened the Innovation argument in §10 (named the underlying principle, defined "passes the clean controls" precisely instead of leaving it vague), and derisked §14 by splitting it into a guaranteed tier that doesn't depend on the PRISM session going well, and a conditional tier that clearly does.
 - **Pass 3** added per-category dataset counts to §12 plus an explicit small-sample honesty caveat, and added §21, a direct table of the objections judges are most likely to raise — each answered from material already in this document, nothing new invented to answer them.
+- **Pass 4** made the top-line objective explicit in §0 (win first place; presentation treated as a first-class constraint, not just the 15%-weighted rubric line), cross-referenced `presentation/Slides-Plan.md` as a derived execution document so it's never mistaken for a second plan, fixed a tool-name mismatch between §7's diagram and §9's tool list (both now read `lookup_policy, search_policy_docs, open_claim, stage_dispatch, update_claim, escalate_to_human`), and cleaned up a stray renumbering artifact in §14.
