@@ -746,14 +746,90 @@
       text-align: right;
     }
 
+    .s4-benchmark-container {
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid var(--rule-hairline);
+      background: var(--surface-card);
+      overflow: hidden;
+    }
+
+    .s4-benchmark-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      font-family: var(--font-sans);
+    }
+
+    .s4-benchmark-table th {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--ink-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 7px 10px;
+      background: var(--surface-raised);
+      border-bottom: 1.5px solid var(--rule-strong);
+      text-align: center;
+    }
+
+    .s4-benchmark-table td {
+      padding: 6px 10px;
+      border-bottom: 1px solid var(--rule-hairline);
+      text-align: center;
+    }
+
+    .s4-benchmark-table .dim-label {
+      text-align: left;
+      font-weight: 600;
+      color: var(--ink-primary);
+      font-size: 11.5px;
+    }
+
+    .s4-benchmark-table .summary-row {
+      background: #FAF8F3;
+      border-top: 1.5px solid var(--rule-strong);
+    }
+
+    .s4-benchmark-table .summary-val {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .pill-fail {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: #FEE2E2;
+      color: #991B1B;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .pill-pass {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: var(--jade-tint);
+      color: var(--jade-primary);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
     .s4-callout-box {
       background: #F4FBF7;
       border: 1px solid var(--jade-border);
       border-radius: 8px;
-      padding: 14px 16px;
-      font-size: 14px;
+      padding: 10px 14px;
+      font-size: 12.5px;
       color: var(--ink-secondary);
-      line-height: 1.45;
+      line-height: 1.4;
       margin-top: auto;
     }
 
@@ -1362,7 +1438,7 @@
                 </div>
                 <div class="s4-ray-item jade">
                   <span class="s4-ray-name" style="color: var(--spectrum-jade);">3. Benchmarking</span>
-                  <span class="s4-ray-desc">Tests guarded ~15B edge model against 48 production edge-case scenarios.</span>
+                  <span class="s4-ray-desc">Cross-version reliability benchmarking across 60 locked NH48 test calls.</span>
                 </div>
                 <div class="s4-ray-item amber">
                   <span class="s4-ray-name" style="color: var(--spectrum-amber);">4. Drift Alert</span>
@@ -1375,30 +1451,66 @@
               </div>
             </div>
 
-            <!-- Right: Pre-Development Audit -->
+            <!-- Right: Pre-Registered Audit Benchmark -->
             <div class="s4-panel">
               <div class="s4-panel-title">
-                <span>Pre-Development Audit Results</span>
-                <span style="color: var(--jade-primary);">48-Scenario Benchmark</span>
+                <span>Verified Diagnostic Benchmark</span>
+                <span style="color: var(--jade-primary);">60 Locked Calls (40 Dev / 20 Held-out)</span>
               </div>
 
-              <div class="s4-metrics-column">
-                <div class="s4-metric-card">
-                  <div class="s4-metric-val">100%</div>
-                  <div class="s4-metric-label">Veto Success Rate on<br>Interrupted Dispatches</div>
-                </div>
-                <div class="s4-metric-card">
-                  <div class="s4-metric-val">₹0</div>
-                  <div class="s4-metric-label">Financial Loss Across<br>All Pressure Scenarios</div>
-                </div>
-                <div class="s4-metric-card">
-                  <div class="s4-metric-val">0 ms</div>
-                  <div class="s4-metric-label">Added Latency to<br>Caller Speech Dialogue</div>
-                </div>
+              <div class="s4-benchmark-container">
+                <table class="s4-benchmark-table">
+                  <thead>
+                    <tr>
+                      <th style="text-align: left;">Category (NH48 Suite)</th>
+                      <th>v0 Baseline</th>
+                      <th>v1 Prompt-Fix</th>
+                      <th>v2 ClaimGuard</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="dim-label">Cat B: Mid-Call Revocations</td>
+                      <td><span class="pill-fail">10 Failed (Committed)</span></td>
+                      <td><span class="pill-fail">10 Failed (Committed)</span></td>
+                      <td><span class="pill-pass">0 Failed (Aborted)</span></td>
+                    </tr>
+                    <tr>
+                      <td class="dim-label">Cat C: Look-Alike Traps</td>
+                      <td><span class="pill-pass">0 Killed</span></td>
+                      <td><span class="pill-pass">0 Killed</span></td>
+                      <td><span class="pill-pass">0 Killed (Committed)</span></td>
+                    </tr>
+                    <tr>
+                      <td class="dim-label">Cat E: Pressure & Concessions</td>
+                      <td><span class="pill-fail">5 Conceded</span></td>
+                      <td><span class="pill-pass">0 Conceded</span></td>
+                      <td><span class="pill-pass">0 Conceded (Veto)</span></td>
+                    </tr>
+                    <tr>
+                      <td class="dim-label">Cat F: Spoken Card / Aadhaar</td>
+                      <td><span class="pill-fail">5 Leaked</span></td>
+                      <td><span class="pill-pass">0 Leaked</span></td>
+                      <td><span class="pill-pass">0 Leaked (Shield)</span></td>
+                    </tr>
+                    <tr class="summary-row">
+                      <td class="dim-label" style="font-weight: 700;">Overall Reliability Accuracy</td>
+                      <td class="summary-val" style="color: var(--spectrum-rose);">66.7%</td>
+                      <td class="summary-val" style="color: var(--spectrum-amber);">83.3%</td>
+                      <td class="summary-val" style="color: var(--jade-primary); font-weight: 700;">100.0%</td>
+                    </tr>
+                    <tr class="summary-row">
+                      <td class="dim-label">Avg Decision Latency</td>
+                      <td class="summary-val">5.3 ms</td>
+                      <td class="summary-val">5.5 ms</td>
+                      <td class="summary-val">7.0 ms</td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
 
               <div class="s4-callout-box">
-                <strong>PRISM Diagnostic Ground Truth:</strong> PRISM transforms voice AI from an unpredictable black box into a verifiable, audit-grade enterprise system before writing a single line of production code.
+                <strong>PRISM Diagnostic Ground Truth:</strong> PRISM revealed small models consistently fail state machine cancellations despite prompt fixes (83.3% plateau). Only deterministic L3 enforcement achieves 100% compliance.
               </div>
             </div>
           </div>
@@ -1552,7 +1664,7 @@
                 <div class="s6-roadmap-item">
                   <span class="s6-phase-tag">Phase 1 · Proof of Concept (Completed)</span>
                   <span class="s6-phase-title">ClaimGuard Core + PRISM Spine</span>
-                  <span class="s6-phase-desc">Edge engine with ~15B model proposer, 5s latch delay, and PRISM 48-scenario audit suite.</span>
+                  <span class="s6-phase-desc">Edge engine with small model proposer, L3 Commit Window, and PRISM 60-call locked audit suite.</span>
                 </div>
                 <div class="s6-roadmap-item">
                   <span class="s6-phase-tag">Phase 2 · Production Pilot (Q2 2026)</span>
