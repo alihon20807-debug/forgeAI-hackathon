@@ -17,7 +17,7 @@
 | **L4 System of Record** | Ali | Done (`claimguard.db` + triggers) | Verified in end-to-end flow |
 | **L5 PRISM Observability** | Pratham | Tracer implemented, traces logged locally | 3-call smoke test, 98-credit budget run, screenshots — **now the top-priority remaining item** |
 | **Evals & Benchmark** | Pratham | **Fixed this session** — was silently rigged (see Phase 0), now honestly measured | Known harness limit: v1 can't differ from v0 without a real LLM (Phase 2 addresses this) |
-| **Presentation & Pitch** | Team | Deck HTML corrected to match honest numbers (this session) | Re-export `claimguard-pitch.pdf`; add real PRISM screenshots once Phase 1 lands |
+| **Presentation & Pitch** | Team | Deck HTML + PDF corrected to match honest numbers (this session); dead deck fragments removed | Add real PRISM screenshots once Phase 1 lands |
 
 ---
 
@@ -69,12 +69,14 @@ This is promoted ahead of everything else in this plan: it's 40% of the judging 
 
 ## 4. Phase 2 — Real Local LLM Validation (Ali) — makes v1 real, strengthens v0/v2 further
 
-Not blocking (the MVD boundary in `Overall-plan.md` §2 invariant 9 is satisfied by the honest mock-based v0-vs-v2 result already), but the highest-leverage way to make the story stronger before Phase 1's traces go up:
+Not blocking (the MVD boundary in `Overall-plan.md` §2 invariant 9 is satisfied by the honest mock-based v0-vs-v2 result already), but the highest-leverage way to make the story stronger before Phase 1's traces go up. **This phase is already underway** — a local `llama-server` serving `Holo-3.1-9B` is live at `127.0.0.1:8080` as of this writing, `USE_MOCK_LLM` is unset (defaults false), and `app/agent/tools.py` already picked up robustness fixes for alternate real-model argument key names (`location`/`service` as well as `pickup_location`/`service_type`). Good progress — one concrete gap found and diagnosed below, left for Ali to resolve since this is live, active work:
 
-- [ ] Confirm a local GGUF model + `llama-server` is available (paths noted in the original plan); otherwise fall back to LiteLLM/hosted per `Overall-plan.md` §19.
-- [ ] Run `use_mock=False` end-to-end for at least Categories B/E/F (the ones that actually differentiate v0/v1/v2) so v1's prompt fix gets a genuine chance to show partial improvement, instead of being architecturally identical to v0.
-- [ ] Verify malformed tool-call JSON or hallucinated arguments fall back to a safe clarification rather than crashing a turn (the `_safe_parse_json` hardening already landed in `app/agent/runner.py` — confirm it holds up against a real model's occasional malformed output).
+- [ ] **Diagnosed gap (not yet fixed):** ran a read-only two-turn diagnostic against the live model in `agent_version="v2"` for the Category B revocation scenario (`AgentRunner(use_mock=False).process_turn(...)`, no code changed). Turn 1 ("I need a tow truck, my car broke down on NH48 near Manesar.") never produced a tool call at all — the model responded conversationally, asking about passenger safety and policy info first, with **zero tool calls**. That means nothing was ever staged into the Commit Window, so turn 2's revocation had nothing to freeze or abort — both `tests/test_server.py::test_turn_handover_contract_cat_b_revocation` and `::test_turn_concession_vetoed` fail against this live model as a direct consequence (the second one because the model never said anything concession-shaped for the veto to catch, either — it asked for policy details first). This is a tool-calling *elicitation* problem with the currently-wired model, not a bug in the enforcement layer itself — `app/enforcement/commit_window.py` and `outbound_veto.py` were not touched and are not implicated.
+- [ ] This is exactly the scenario `Overall-plan.md` §10's fairness rule anticipated: *"'passes the clean controls' means the model correctly calls the right tool with the right arguments on every Category-A clean-control conversation, with no held/frozen state ever triggered. If it can't clear that bar, it's a strawman... we move up exactly one size and say so, before any v0 number is reported."* Two options, per that rule: (a) strengthen the system prompt / tool-choice forcing so the small model reliably calls `open_claim`/`stage_dispatch` on an unambiguous breakdown report, or (b) if a 9B model genuinely can't clear the clean-control bar reliably, step up one model size and say so on stage — both are legitimate, honest paths; silently ignoring the gap is not.
+- [ ] Once tool-calling is reliable: run `use_mock=False` end-to-end for Categories B/E/F (the ones that actually differentiate v0/v1/v2) so v1's prompt fix gets a genuine chance to show partial improvement, instead of being architecturally identical to v0 (Phase 0 finding).
+- [ ] Verify malformed tool-call JSON or hallucinated arguments fall back to a safe clarification rather than crashing a turn (the `_safe_parse_json` hardening already in `app/agent/runner.py` — confirm it holds against this model's occasional malformed output).
 - [ ] If this produces a real v1 result, re-run `evals/checker.py`, regenerate the deck's v1 column, and decide whether v1 is now worth ingesting into PRISM (Phase 1).
+- [ ] Once tool-calling is reliable, re-run `tests/test_server.py` — the two failures above should clear on their own, since they're symptoms of the elicitation gap, not of a test or enforcement bug.
 
 ---
 
@@ -99,9 +101,10 @@ Not blocking (the MVD boundary in `Overall-plan.md` §2 invariant 9 is satisfied
 - [x] Corrected the five fabricated/inconsistent numbers in `claimguard-pitch.html` and `claimguard-pitch-offline.html` (this session).
 - [x] Neutered `build_pitch.py` so it can't silently reintroduce them.
 - [x] Clarified `presentation/readme.md` on which files are current.
-- [ ] Re-export `claimguard-pitch.pdf` from the corrected HTML (currently stale).
+- [x] Re-exported `claimguard-pitch.pdf` from the corrected HTML via headless Chromium (6 pages, ~1.1MB) — no longer stale.
+- [x] Removed `claimguard-pitch.archive` and `ignore.ignore` — confirmed via repo-wide grep that nothing referenced either file; both were dead fragments of the old `build_pitch.py` output, sitting at the repo root outside `presentation/` where they were easy to open by mistake.
+- [x] Verified `evals/replay_set.json`'s per-category dev/held-out counts exactly match `Overall-plan.md` §12's table (8/4, 7/3, 8/4, 7/3, 6/4, 4/2 = 40/20) — no drift found here.
 - [ ] After Phase 1 lands real screenshots, revisit Slide 4 so it isn't still SVG-only where a real screenshot would land better.
-- [ ] `claimguard-pitch.archive` and the stray `ignore.ignore` file at the repo root look like dead fragments from an earlier deck iteration — not touched this pass; confirm nothing references them and remove if genuinely dead.
 
 ---
 
