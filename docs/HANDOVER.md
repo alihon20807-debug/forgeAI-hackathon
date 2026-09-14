@@ -5,19 +5,23 @@
 
 ---
 
-## 0. Start here — current status (updated 2026-09-15, ~45 min to judging)
+## 0. Start here — current status (updated 2026-09-15, Round 2 prep)
 
-**We're in the final push. PRISM's site is temporarily down (organizers confirmed, ~10-15 min). Everyone: `git pull` now — two real bugs in the live PRISM tracer were just found and fixed, and you need them before you run anything against PRISM again.**
+**Round 2 is a 2-3 minute PPT pitch to judges (not a live demo), weighted: PRISM Usage & Evaluation Strategy 35%, Foundation of the working model 25%, Innovation 15%, Problem/Solution fit 15%, Pitch/PPT 10%. Organizers have said PRISM judging is relaxed this round since PRISM itself had an outage — so the 65% outside PRISM is where this round gets won.**
 
-The role split and API contracts below are still accurate and worth reading once, but **the day-to-day task list has moved to `docs/REMAINING_STEPS_PLAN.md`** — check it first every session.
+**PRISM credit budget: only ~21 of 100 credits remain.** 75 credits were spent on 15 separate `rca_cluster_analysis` runs (5 credits each) between 4 AM and tonight — pre-existing history, not caused by today's work, most likely someone running PRISM's Root Cause Analysis repeatedly without realizing each click costs 5 credits. **Nobody should call anything from PRISM's paid catalog (RCA analyze, backfill, narrative, remediation) without confirming the cost with the team first** — the margin for error is thin now. `/api/spans/ingest` (live tracing, the smoke test, the held-out run) is free and unaffected.
 
-**What just got fixed (commits `aa42d8a`, `47e34e6`) — read this before touching PRISM ingestion:**
-Every trace sent so far showed `model: Unknown` and came back `Flagged: Yes` with no Quality/Response score on the dashboard (visible in the team's own screenshot of `prism.blockconvey.com/scores`). Root cause: our spans never carried a `model` field and used an invalid `span_type` ("guardrail" isn't in PRISM's real vocabulary of `chain|llm|tool|agent|retrieval`). Both are fixed — every turn now emits a proper `llm`-type span with a `model` value, correctly labeled `mock-deterministic` for harness/benchmark runs (which are mocked) vs. the real model name only for genuinely live calls. Verified locally with a dry-run smoke test; not yet verified against the live dashboard because PRISM is down. **Pratham: this is the first thing to check the moment PRISM is back — confirm the 3-call smoke test scores cleanly (no `Unknown`, no `Flagged`) before spending any more of the 98-credit budget on a full run.**
+**PRISM tracer is fixed and confirmed working live.** Two real bugs (missing `model` field, invalid `span_type` — both caused every trace to show `Unknown`/`Flagged` with no score) were found and fixed (`aa42d8a`, `47e34e6`). The 3-call smoke test has since been confirmed to score correctly on the live dashboard.
 
-**Immediate per-person tasks, right now, while PRISM is down:**
-- **Pratham (top priority, this is 40% of the rubric):** `git pull`. The instant PRISM is back: `.venv/bin/python scripts/prism_benchmark.py --smoke`, check the dashboard for clean scores, then `--heldout` if it looks right, then `--export` regardless as your offline fallback. Screenshot the scored trace list + a baseline-vs-claimguard fleet comparison the moment you have one — that's the single most judge-facing artifact we have. Full steps in `docs/PRATHAM_PRISM_GUIDE.md`.
-- **Ojas:** no dependency on the PRISM fix — keep going on Phase 3/4 (demo rehearsal timing, backup screencast) in parallel, don't wait.
-- **Ali:** validated the tracer fix locally (dry-run + full test suite, 53/53 pass); standing by to help Pratham interpret the live dashboard once it's back, and to jump on Phase 4 rehearsal after.
+**Five real backend bugs found via live end-to-end testing today, all fixed and pushed to `main`** (see `docs/REMAINING_STEPS_PLAN.md`'s Phase 2 "2026-09-15" entry for full detail on each): a broken `LLM_API_KEY` header that silently killed every real-model call, v0/v1's committed state not reaching the live console, a prompt-ordering bug that made the real model ask a clarifying question instead of staging (previously misdiagnosed as "model can't tool-call"), missing caller-context injection, and a chain-of-thought tag leak. Also fixed: the live console's own text-input path was bypassing the server's real PII validation (`frontend/app.js`).
+
+**Model decision revised:** the planned 35B-class model does not fit this laptop's 16GB GPU (the file is 18.7GB — confirmed OOM, not a config issue). The local real-model backend is now `gemma-4-12B-it-Q4_0.gguf`, verified live against the actual demo script (clean dispatch + true revocation, both correct).
+
+**Per-person status:**
+- **Pratham:** PRISM live tracing confirmed working; held-out ingestion in progress. Hold off on anything from the paid catalog given the credit situation above.
+- **Ojas:** judge-demo-ribbon console viewer merged and verified against the fixed backend — all its DOM references and both its backend calls (`/api/call/turn`, `/api/voice/transcribe`) check out.
+- **Ali:** backend bugs above fixed and verified live; a full 60-call real-model benchmark (`evals.checker --version v2 --split all --real`) is running to get an honest real-model pass rate (the existing 66.7%/66.7%/100% numbers have only ever measured the mock) — check `evals/results/eval_v2_all_realmodel.json` once it exists rather than trusting a number from memory.
+- **Whole team:** deck polish (stale "~15B" references, an internal count mismatch) is partially done — 2 of 4 known issues from `docs/presentation/DECK-CONTENT.md` remain; pitch rehearsal for the 2-3 min slot hasn't started yet.
 
 ---
 
