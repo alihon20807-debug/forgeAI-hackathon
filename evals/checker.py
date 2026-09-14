@@ -25,6 +25,7 @@ from typing import Any, Dict, List
 
 from app.agent.runner import AgentRunner
 from app.db.database import init_db
+from app.observability.prism_tracer import TurnTracer
 from app.security.pii_shield import redact_pii
 
 REPLAY_SET_PATH = Path(__file__).resolve().parent / "replay_set.json"
@@ -72,6 +73,17 @@ class Evaluator:
                 call_masked_text = masked_text
                 call_redacted_pii = redacted_items
 
+            # PRISM tracing: build one TurnTracer per turn, same pattern as
+            # app/server.py's /api/call/turn — process_turn no longer traces
+            # itself (that used to double-fire a trace alongside server.py's).
+            tracer = TurnTracer(
+                session_id=session_id,
+                user_utterance=raw_utterance,
+                agent_version=self.version,
+                category=category,
+                eval_set=scenario["split"],
+            )
+
             turn_res = await self.runner.process_turn(
                 session_id=session_id,
                 turn_id=turn_idx,
@@ -80,12 +92,27 @@ class Evaluator:
                 masked_transcript=call_masked_text,
                 redacted_pii=call_redacted_pii,
                 agent_version=self.version,
-                category=category,
-                eval_set=scenario["split"],
             )
 
             t1 = time.perf_counter()
             total_latency_ms += (t1 - t0) * 1000.0
+
+            for tr in turn_res.get("state_machine", {}).get("transitions", []):
+                tracer.record_enforcement_transition(
+                    action_id=tr["action_id"],
+                    action_type=tr["action_type"],
+                    from_state=tr["from_state"],
+                    to_state=tr["to_state"],
+                    reason=tr["reason"],
+                )
+            tracer.finish(
+                agent_reply=turn_res["agent_response"],
+                extra_metadata={
+                    "turn_id": turn_idx,
+                    "caller_id": f"eval_caller_{scenario['id']}",
+                    "pii_redacted_count": len(call_redacted_pii),
+                },
+            )
 
             agent_response = turn_res["agent_response"].lower()
 

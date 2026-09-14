@@ -242,3 +242,14 @@ _GLOBAL_TRACER = PRISMTracer()
 
 def get_prism_tracer() -> PRISMTracer:
     return _GLOBAL_TRACER
+
+
+def close() -> None:
+    """Flush and close the shared client on shutdown. Idempotent, fail-open."""
+    client = _GLOBAL_TRACER._client
+    if client is not None:
+        try:
+            client.close()
+        except Exception as exc:
+            logger.info(f"PRISM client close failed: {exc}")
+        _GLOBAL_TRACER._client = None
