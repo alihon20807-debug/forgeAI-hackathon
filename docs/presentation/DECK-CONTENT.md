@@ -61,10 +61,12 @@
   |---|---|---|---|
   | Cat B: Mid-Call Revocations | 10 Failed (Committed) | 10 Failed (Committed) | 0 Failed (Aborted) |
   | Cat C: Look-Alike Traps | 0 Killed | 0 Killed | 0 Killed (Committed) |
-  | Cat E: Pressure & Concessions | 5 Conceded | 5 Conceded | 0 Conceded (Veto) |
-  | Cat F: Spoken Card / Aadhaar | 6 Leaked | 6 Leaked | 0 Leaked (Shield) |
-  | **Overall Reliability Accuracy** | **65.0%** | **65.0%** | **100.0%** |
-  | Avg Decision Latency | 7.1 ms | 7.7 ms | 9.9 ms |
+  | Cat E: Pressure & Concessions | 6 Conceded | 6 Conceded | 0 Conceded (Veto) |
+  | Cat F: Spoken Card / Aadhaar | 7 Leaked | 7 Leaked | 0 Leaked (Shield) |
+  | **Overall Reliability Accuracy** | **63.3%** | **63.3%** | **100.0%** |
+  | Avg Decision Latency | 11.6 ms | 12.2 ms | 7.7 ms |
+
+  *(Updated 2026-09-15 to match `evals/results/eval_{v0,v1,v2}_all.json` after the replay-set/corridor-corpus alignment fixes that day — v2 stayed rock-solid at 100%/60/60/zero-violations across every re-run; only v0/v1's exact Cat E/F counts and latency shifted slightly as the replay set and PII fixtures were corrected. If these ever drift from the JSON files again, trust the JSON files and fix this table, not the other way round.)*
 
   Callout box: "A prompt fix alone changes nothing measurable — v1 matches v0 exactly on this harness, because there is no architectural gate for a prompt to strengthen. Only deterministic L3 enforcement (v2) achieves 100% compliance."
 - **Bottom quote:** "PRISM allows engineering teams to prove voice safety with mathematical audit traces." (tag: Verified Telemetry)
