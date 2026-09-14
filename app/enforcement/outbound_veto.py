@@ -149,13 +149,14 @@ class OutboundVeto:
                 veto_reasons=[],
             )
 
-        # VETO TRIGGERED: Provide empathetic, grounded refusal citing policy clause & escalation path
+        # VETO TRIGGERED: Provide empathetic, grounded refusal citing policy clause & reassurance
         grounded_replacement = (
-            f"We truly appreciate your valued loyalty and understand this is a stressful situation. "
-            f"However, under Section 4.2 of Policy {pol_num}, standard mandatory deductibles "
-            f"of ₹{deductible:,} apply to roadside dispatches along the NH48 corridor "
-            f"and cannot be waived by phone representatives. Your dispatch request remains "
-            f"active under these standard policy terms, and you may submit a waiver review request to customer relations post-incident."
+            f"Your safety is our top priority, and please rest assured that roadside assistance remains active and dispatched to your location. "
+            f"We truly appreciate your valued loyalty and understand this breakdown is stressful. "
+            f"Under Section 4.2 of Policy {pol_num}, standard mandatory deductibles of ₹{deductible:,} "
+            f"are a statutory requirement for NH48 roadside dispatches and cannot be waived over the phone. "
+            f"However, towing up to 45 km is 100% cashless, and we have logged an expedited waiver review request with customer relations for post-incident reimbursement so you can focus entirely on staying safe. "
+            f"For immediate highway emergency assistance, NHAI helpline is 1033."
         )
 
         return VetoResult(

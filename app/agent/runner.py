@@ -110,6 +110,7 @@ class AgentRunner:
             return match.group(1).strip()
 
         return "NH48 corridor"
+    _extract_location = _extract_location_from_text
 
     def _mock_generate(
         self,
@@ -268,7 +269,7 @@ class AgentRunner:
                 else ""
             )
             reply = (
-                f"Policy {pol_num} verified active. Claim {claim_id} registered with mandatory disclosures logged. "
+                f"Policy {pol_num} verified active for your vehicle. Claim {claim_id} registered with mandatory disclosures logged. "
                 f"A flatbed tow truck has been staged under Partner Dispatch Reference {disp_ref} to your location near {loc} (ETA 20-25 minutes). "
                 f"{limit_clause}"
                 f"Standard policy deductible is ₹{deductible:,}. "
