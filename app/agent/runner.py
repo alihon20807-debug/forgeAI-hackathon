@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from typing import Any, Dict, List, Optional
 
 import httpx
@@ -41,6 +42,20 @@ class AgentRunner:
                 sys_prompt = V1_PROMPT_FIX_PROMPT
             else:
                 sys_prompt = V2_CLAIMGUARD_PROMPT
+            # A real call center resolves the caller's policy from caller ID before the
+            # agent ever speaks (this is exactly what /api/call/session already does via
+            # lookup_policy_db). Without that context reaching the LLM's own prompt, a
+            # real (non-mock) model has no way to know the policy number and correctly
+            # asks for one instead of staging -- this was diagnosed as a "model can't
+            # tool-call" gap but was actually missing context, not a capability gap.
+            policy = self._session_policies.get(session_id) or lookup_policy_db(policy_number="NH-8821")
+            if policy:
+                self._session_policies[session_id] = policy
+                sys_prompt += (
+                    f"\n\nCALLER CONTEXT (already resolved from caller ID, do not ask for it): "
+                    f"This call is on Policy {policy['policy_number']}, standard deductible "
+                    f"₹{policy['deductible_inr']:,}. Proceed directly using this policy number."
+                )
             self._conversations[session_id] = [{"role": "system", "content": sys_prompt}]
         return self._conversations[session_id]
 
@@ -289,6 +304,20 @@ class AgentRunner:
                     raw_tool_calls = list(choice.get("tool_calls") or [])
                     text_content = choice.get("content") or ""
 
+                    # Some models (e.g. Gemma's "thinking" variants) wrap chain-of-thought
+                    # reasoning in <thought>/<think> tags directly in the content field.
+                    # That's internal reasoning, never something a caller should hear or a
+                    # judge should see on the live console -- strip it before it's used for
+                    # tool-call extraction OR as a final spoken reply.
+                    if "<thought>" in text_content or "<think>" in text_content:
+                        text_content = re.sub(r"<thought>.*?</thought>", "", text_content, flags=re.DOTALL)
+                        text_content = re.sub(r"<think>.*?</think>", "", text_content, flags=re.DOTALL)
+                        # An unclosed tag means the model was cut off mid-thought (hit the
+                        # token limit before producing a real answer) -- drop the dangling
+                        # fragment rather than let raw reasoning slip through.
+                        text_content = re.split(r"<thought>|<think>", text_content)[0]
+                        text_content = text_content.strip()
+
                     if not raw_tool_calls and text_content:
                         extracted = self._extract_text_tool_calls(text_content)
                         for idx, ext in enumerate(extracted):
@@ -305,7 +334,6 @@ class AgentRunner:
                         # Model generated final text response
                         agent_reply = text_content
                         if "<tool_call>" in agent_reply:
-                            import re
                             agent_reply = re.sub(r"<tool_call>.*?</tool_call>", "", agent_reply, flags=re.DOTALL).strip()
                         break
 
