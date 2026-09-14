@@ -98,7 +98,7 @@ class TurnRequest(BaseModel):
     turn_id: int
     caller_id: str
     raw_transcript: str
-    masked_transcript: str
+    masked_transcript: Optional[str] = None
     redacted_pii: Optional[List[RedactedPII]] = Field(default_factory=list)
     agent_version: Optional[str] = "v2"  # "v0", "v1", "v2"
 
