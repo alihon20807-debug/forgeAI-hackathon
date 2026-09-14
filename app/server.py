@@ -19,6 +19,7 @@ from pydantic import BaseModel, Field
 from app.agent.runner import get_agent_runner
 from app.db.database import get_claim_db, get_dispatches_by_claim_db, init_db, lookup_policy_db
 from app.enforcement.commit_window import get_commit_window
+from app.prism_tracing import close as close_prism_tracer
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("claimguard.server")
@@ -33,6 +34,7 @@ async def lifespan(app: FastAPI):
     yield
     # Shutdown
     logger.info("ClaimGuard Server shutting down.")
+    close_prism_tracer()  # flush + close the shared PRISM client (fail-open)
 
 
 app = FastAPI(

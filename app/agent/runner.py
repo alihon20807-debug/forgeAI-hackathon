@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import time
 from typing import Any, Dict, List, Optional
 
 import httpx
@@ -14,6 +15,7 @@ from app.config import LLM_BASE_URL, LLM_API_KEY, LLM_MODEL, USE_MOCK_LLM
 from app.db.database import get_claim_db, lookup_policy_db
 from app.enforcement.commit_window import ActionState, get_commit_window
 from app.enforcement.outbound_veto import OutboundVeto
+from app.prism_tracing import get_prism_tracer
 
 logger = logging.getLogger("claimguard.agent")
 
@@ -173,6 +175,7 @@ class AgentRunner:
         agent_version: str = "v2",
     ) -> Dict[str, Any]:
         """Process one conversational turn according to ClaimGuard architecture."""
+        start_time = time.perf_counter()
         cw = get_commit_window()
 
         # -------------------------------------------------------------
@@ -269,7 +272,7 @@ class AgentRunner:
                 "locked_fields": ["deductible_inr", "liability_ratio"],
             }
 
-        return {
+        response_data = {
             "session_id": session_id,
             "turn_id": turn_id,
             "agent_response": agent_reply,
@@ -279,6 +282,32 @@ class AgentRunner:
             },
             "current_claim": current_claim,
         }
+
+        # -------------------------------------------------------------
+        # 6. PRISM Live Tracing (Fail-Open)
+        # -------------------------------------------------------------
+        try:
+            latency_ms = int((time.perf_counter() - start_time) * 1000)
+            tracer = get_prism_tracer()
+            tracer.trace_turn(
+                session_id=session_id,
+                turn_id=turn_id,
+                caller_id=caller_id,
+                user_input=masked_transcript,
+                agent_output=agent_reply,
+                latency_ms=latency_ms,
+                tools_called=[{"name": t} for t in tools_called],
+                transitions=transitions,
+                agent_version=agent_version,
+                extra_metadata={
+                    "claim_id": claim_id or "NONE",
+                    "redacted_pii_count": len(redacted_pii or []),
+                },
+            )
+        except Exception as e:
+            logger.debug(f"PRISM turn tracing fail-open error: {e}")
+
+        return response_data
 
 
 _GLOBAL_AGENT_RUNNER = AgentRunner()
