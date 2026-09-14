@@ -1,9 +1,10 @@
 # ClaimGuard — Final Plan (ForgeAI 2026)
 
-> **One line:** a Hinglish/Tanglish roadside-claims voice agent built on a deliberately cheap model.
+> **One line:** a Hinglish roadside-claims voice agent built on a deliberately cheap model.
 > PRISM finds where it breaks; ClaimGuard fixes it; a pre-registered held-out test set proves it.
 >
 > **Tagline:** *Can be interrupted. Can't be bullied. Won't leak.*
+> **Thesis:** *The LLM proposes; deterministic code disposes.*
 
 Research backing every PRISM claim below lives in `research/prism/` (labelled VERIFIED / INFERRED / NOT FOUND).
 Items marked **[confirm]** get answered at the PRISM session before we rely on them.
@@ -40,7 +41,7 @@ Items marked **[confirm]** get answered at the PRISM session before we rely on t
 
 **1. Can be interrupted: the speech-aware commit window**
 - **Staging.** Every high-cost tool call is created in `HELD` state, never executed straight away.
-- **Freeze (instant, dumb, safe).** A cancel-like word appears in the live transcript ("ruko", "cancel", "vendam", "beda", in Latin *and* native script). All held actions go to `FROZEN`. A false positive costs about a second of pause, never a cancelled ambulance.
+- **Freeze (instant, dumb, safe).** A cancel-like word appears in the live transcript ("ruko", "cancel karo", "mat bhejo", "hold on", in Latin *and* Devanagari script). All held actions go to `FROZEN`. A false positive costs about a second of pause, never a cancelled ambulance.
 - **Resolve (the LLM, scoped).** The model sees the held actions plus the utterance. It returns a validated structure: `{cancel:[ids], keep:[ids], modify:[…], new:[…], ambiguous:bool}`.
   - It decides *which* action is revoked, so "tow cancel, ambulance bhejo" works.
   - If `ambiguous`, the agent asks one short question ("Tow truck cancel kar doon?"). We confirm only when needed, never on every action.
@@ -54,6 +55,9 @@ Items marked **[confirm]** get answered at the PRISM session before we rely on t
 - Deductible and liability fields are locked by SQLite triggers, and the agent has no tool that can write them. Database breaches are impossible *by construction*, so we don't brag about that metric.
 - What we *measure* is the part a latch can't stop: **spoken concessions** ("haan waive kar dunga") and **invented policy facts**.
 - The fix: refusals grounded in RAG ("clause 3.2 ke hisaab se ₹2,500 fixed hai"), an empathetic script, and an `escalate_to_human` offer.
+- **Outbound veto** (from the SafeDispatch draft), which checks the drafted reply before it is spoken:
+  - any ₹ amount must equal a number the policy engine returned
+  - concession phrases ("waive", "maaf kar denge", "free kar dete hain", "hamari galti") are vetoed and replaced by a grounded template
 
 **3. Won't leak: local-first PII handling**
 - Raw audio never leaves the laptop, because whisper.cpp runs locally.
@@ -101,7 +105,7 @@ Items marked **[confirm]** get answered at the PRISM session before we rely on t
 | E | Pressure + policy questions (RAG) | deductible waiver begging, "bol do aapki galti hai", "towing kitne km free hai?" | no concession, grounded answer |
 | F | Spoken identifiers | synthetic card or Aadhaar number mid-claim | masked everywhere downstream |
 
-- **Languages:** about 70% Hinglish, 20% Tanglish (**only if a teammate speaks Tamil natively**, never faked) and 10% English.
+- **Languages:** about 80% Hinglish and 20% Indian English. No Tamil, because nobody on the team speaks it and we won't fake it.
 - **Held-out split:** 40 dev conversations (used while fixing) and 20 held-out (touched only for final numbers).
 - **Pre-registration:** labels are committed to git before any run. The commit timestamp proves we didn't fit labels to results.
 - **Real-voice subset:** about 20 conversations recorded by all three teammates on a phone mic, some over traffic noise, then run through whisper.cpp. We report text versus voice results separately (the effect of speech-recognition noise).
@@ -115,14 +119,22 @@ Items marked **[confirm]** get answered at the PRISM session before we rely on t
 | **v1 Prompt fix** | apply PRISM **AI Remediation** recommendations, human-approved | shows what prompting alone buys |
 | **v2 ClaimGuard** | v1 + commit window + policy latch + scrubber (+ retrieval fix if PRISM flags it) | shows what architecture buys |
 
-- **Tagging.** Every trace carries `metadata.agent_version` (plus `category` and `set=dev|heldout`). PRISM has no dataset or experiment compare feature (VERIFIED), so comparison is done with filtered views plus evaluator re-runs on each cohort **[confirm]**.
-- **Observe with real PRISM features:**
-  - Trajectory Evaluation (goal adherence, tool compliance, efficiency, safety)
-  - deterministic rules: *intent change acknowledged*, *all tool calls completed*, *no orphaned state*, *grounded in retrieved source*, *figures match the record*, *latency within threshold*
-  - Response quality and CSAT, flagged-for-review
-  - Agent Intelligence failure clusters
-  - Guardrails in **Monitor** mode: PII/PHI plus Regex rules for Aadhaar, card and mobile numbers **[confirm tier]**
-  - one custom evaluator, "conceded under pressure" **[confirm fields]**
+- **Tagging.** Each version gets its own stable `agent_id` (`roadside-baseline`, `roadside-prompt-fix`, `roadside-claimguard`), so PRISM's fleet view shows them side by side. Metadata adds `category` and `set=dev|heldout`. PRISM has no dataset or experiment compare feature (VERIFIED).
+- **What our PRISM plan unlocks** (the teammate checked the dashboard):
+  - Guardrails, Evaluators Hub and Annotations are **LOCKED**, and we have **98 credits**.
+  - So the pitch can't rest on toggling PRISM guardrails. ClaimGuard *is* the guardrail layer; PRISM is the independent auditor.
+- **Observe with unlocked features:**
+  - traces, Sessions and Agent Runs per `agent_id`
+  - automatic scores: Response quality, CSAT, Intent, flagged-for-review reasons
+  - **Warning:** the dashboard's "Compliance Score" *is* the CSAT score (VERIFIED in docs). It may go *up* when the bot caves, so never headline it as compliance.
+  - Root Cause & Remediation and Agent Intelligence failure clusters
+  - Trajectory Evaluation via `submit_trajectory` **[confirm unlocked + credit cost]**
+  - Knowledge Base: upload the RAG corpus with `kb_upload` so PRISM sees the source **[confirm]**
+- **Credit protocol:**
+  - send a 3-conversation test batch first and read the credit meter
+  - the full Replay Set always runs locally through our checker (free)
+  - PRISM gets what the budget allows, in priority order: v0 and v2 on held-out, then v1, then dev
+  - write a JSON export of every trace; the dashboard's **Import history** is the fallback if the network or live emit fails
 - **PII measurement path:** measure it on LLM traces and spans, not on the voice-turns path. PRISM scrubs voice transcripts server-side, which would hide the baseline leak.
 - **Our own checker** compares final database state against labels and produces the metrics below. They are shown *next to* PRISM's scores (PRISM has no custom-score API, VERIFIED).
 
@@ -133,10 +145,10 @@ Items marked **[confirm]** get answered at the PRISM session before we rely on t
 | Wrong commits (executed an action the caller revoked) | checker |
 | Wrong cancellations (killed an action the caller wanted) | checker |
 | Unneeded clarifying questions (the cost of safety) | checker |
-| Spoken concessions / invented policy facts | checker + custom evaluator |
-| Raw identifiers reaching LLM or telemetry | checker + PRISM guardrail hits |
+| Spoken concessions / invented policy facts | checker + PRISM flagged reasons |
+| Raw identifiers reaching LLM or telemetry | checker + PRISM flagged traces |
 | End-of-speech → commit latency (the cost of safety) | checker |
-| Trajectory scores, deterministic-rule pass rates, flagged count | PRISM |
+| Response quality, flagged count, root-cause clusters (+ trajectory scores if unlocked) | PRISM |
 
 ## 5. Demo (about 75 seconds, live mic with a recorded fallback)
 1. **Interrupt:** "NH48 Vellore bypass pe gaadi band ho gayi, tow truck bhejo… arey ruko ruko, dost aa gaya, cancel karo."
@@ -162,7 +174,7 @@ Items marked **[confirm]** get answered at the PRISM session before we rely on t
 
 ## 7. Timeline
 - **Now → first review:** idea deck (problem, design, evaluation plan, *hypotheses only*). PRISM signup and setup-doctor handshake.
-- **PRISM session (120 min):** answer §9, send test traces and test voice turns, set up guardrails and evaluators.
+- **PRISM session (120 min):** answer §9, send the 3-conversation credit test batch and one test voice turn.
 - **Before 9 PM:**
   - Replay Set written, labelled, **committed**
   - corpus docs drafted
@@ -175,7 +187,7 @@ Items marked **[confirm]** get answered at the PRISM session before we rely on t
 - **3–4 AM:** freeze v2 → final held-out run → evaluator passes → charts, screenshots, backup demo video. Commit everything.
 - **Day 2:** slides with real numbers, rehearsal, Q&A drill.
 
-**Cut order if behind:** Tanglish → stretch model comparison → Synthetic Scenarios → voice subset size. **Never cut** the held-out set or the v0/v2 PRISM comparison.
+**Cut order if behind:** stretch model comparison → Synthetic Scenarios → voice subset size. **Never cut** the held-out set or the v0/v2 PRISM comparison.
 
 ## 8. Contradictions resolved
 
@@ -189,9 +201,17 @@ Items marked **[confirm]** get answered at the PRISM session before we rely on t
 | PRISM voice tracer is ElevenLabs-only | we use whisper.cpp | post turns to `/api/voice/turns`; the payload is generic **[confirm]** |
 | PRISM scrubs voice PII server-side | would hide the baseline leak | measure PII on LLM traces and spans |
 | "Custom evaluators exist" vs "no custom-score API" | both true | evaluators configured in PRISM; checker metrics shown alongside |
-| Before/after feature | none exists | `agent_version` tags + evaluator re-runs per cohort |
+| Before/after feature | none exists | one `agent_id` per version (fleet view) + metadata filters |
 | "Validated" wording | PRISM means 7 days of production | never say it; say "re-tested on the identical held-out set" |
-| Guardrail Enforce works only on the proxy | we run a local model | PRISM **Monitors** (independent auditor), ClaimGuard **enforces**: separation of duties **[confirm Monitor on SDK traces]** |
+| PRISM Guardrails / Evaluators Hub | **locked** on our plan (dashboard) | ClaimGuard enforces; PRISM audits through unlocked scores, sessions and root cause: separation of duties |
+| "Compliance Score 25% → 90%" (SafeDispatch) | the score is CSAT, and 25% came from one ping trace | never headline it; only measured numbers |
+| Trace per turn vs 98 credits | per-turn tracing may exhaust credits | 3-call test batch decides granularity; full set runs locally |
+| Deliberately broken v0 (SafeDispatch) | a strawman; "rollback 0→100%" is true by construction | fair v0 (good prompt, told the policy); traps make metrics able to fail |
+| English-only, US framing ($250, SSN) | generic; wrong market | Hinglish + Indian English, ₹, Aadhaar |
+| Full 7-state dialog FSM | brittle and heavy for first-timers | light required-slots checklist + action states |
+| Confirm before every commit vs never | slow in emergencies vs unrealistic | verbal confirm for tow/mechanic; ambulance immediate; resolver asks when ambiguous |
+| ElevenLabs voice (paid, stretch) | cost and demo risk | whisper.cpp local, primary |
+| Paid Anthropic/OpenAI key | not available; strong model fails less | small local model; Gemini free tier fallback |
 | Gemma 27B | won't fit 16 GB next to whisper; we want cheap | small local model; bigger model is a stretch comparison |
 | Cheap model = strawman? | judges will ask | must pass controls; same model for all versions; held-out set |
 | Synthetic Scenarios vs fixed before/after | non-deterministic | Synthetic = discovery; Replay Set = measurement |
@@ -199,18 +219,19 @@ Items marked **[confirm]** get answered at the PRISM session before we rely on t
 | Real insurer or brand | impersonation risk | fictional insurer |
 
 ## 9. Questions for the PRISM session (in priority order)
-1. Which tier do hackathon credits unlock? Are Guardrails (Monitor) and Evaluators Hub available?
-2. Does `/api/voice/turns` accept non-ElevenLabs transcripts, and do they appear in Sessions?
-3. Do Monitor-mode guardrails and the deterministic rules run on SDK- and HTTP-ingested traces and trajectories?
-4. Can Evaluators be re-run on a metadata-filtered cohort and compared side by side?
-5. How many credits does one evaluator pass or Synthetic Scenario batch cost? Does Synthetic Scenarios need a public endpoint?
-6. Do scores and rules behave sensibly on code-mixed Hinglish/Tanglish?
-7. What fields does a custom evaluator take (judge prompt, rubric, output type)?
+1. What does one trace, one voice turn, and one trajectory cost in credits? Does auto-scoring run on every trace?
+2. Can hackathon teams get Evaluators Hub or Guardrails unlocked, even Monitor mode only?
+3. Does `/api/voice/turns` accept non-ElevenLabs transcripts, and do they appear in Sessions?
+4. Is Trajectory Evaluation (`submit_trajectory`) available on our plan?
+5. Does "Import history" consume credits, and are imported traces scored like live ones?
+6. What exactly does the dashboard "Compliance Score" measure? (The docs say CSAT.)
+7. Do scores behave sensibly on code-mixed Hinglish?
 
 ## 10. Honesty rules (anti-LARP)
 - Show no number we didn't measure, and show both error directions plus the latency cost.
 - State what still fails on v2. Keep a slide slot for "what PRISM showed us that we didn't expect".
 - Say "database breaches are impossible by construction", not "0% breaches, measured".
+- Never present the "Compliance Score" as compliance (it's CSAT), and never pre-write target numbers.
 - Don't say "PRISMX", "Validated" or "observability platform" alone. Use PRISM's words: *reliability*, *Evaluators*, *Guardrails*, *Agent Intelligence*, *AI Remediation*.
 - For regulation, keep it short and accurate:
   - DPDP Act data minimisation → the scrubber
@@ -222,9 +243,20 @@ Items marked **[confirm]** get answered at the PRISM session before we rely on t
 
 | Risk | Fallback |
 |---|---|
-| RTX 5080 machine unavailable at the venue or crashes | Gemini Flash-Lite via PRISM proxy for the demo; backup demo video |
+| RTX 5080 laptop (confirmed at venue) crashes | Gemini Flash-Lite via PRISM proxy for the demo; backup demo video |
 | whisper script mixing breaks the freeze lexicon | lexicon in both scripts; romanised initial prompt; typed input mode |
 | Small model can't call tools at all | step up one size (controls must pass) |
 | Venue Wi-Fi (PRISM needs internet) | phone hotspot; all screenshots captured by 4 AM |
-| Credits run out | evaluator passes only on final v0/v1/v2 held-out cohorts |
+| 98 credits run out | 3-call test batch first; full set checked locally; JSON export + Import history |
 | Noisy auditorium | push-to-talk, recorded clips, text box |
+| First-time builders, 7-hour sprint | streaming whisper falls back to push-to-talk; the RAG corpus stays small; "done" = v0 and v2 compared on held-out, everything else is extra |
+
+## 12. Adopted from the teammate's SafeDispatch draft
+- The thesis line: **"The LLM proposes; deterministic code disposes."**
+- A policy engine as the single source of truth for deductible and eligibility; the LLM has no write access.
+- The outbound veto on concessions and wrong ₹ amounts.
+- One toggle, the same scenarios and the same model for every version, with a separate `agent_id` per version.
+- The 3-call credit test batch, and a JSON export with Import history as fallback.
+- Screenshot PRISM straight after the v0 run; record a backup screen capture of a clean call.
+- The build rule: the core solution and all PRISM work happen inside the event window. Before 9 PM we only write the dataset, corpus and design **[confirm with organisers]**.
+- `pip install "prismtrace-sdk>=0.4.3"` needs quotes. Unquoted, the shell treats `>` as a redirect, which is where the stray `=0.4.3` file came from.
