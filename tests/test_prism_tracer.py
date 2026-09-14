@@ -84,3 +84,28 @@ async def test_evaluator_traces_masked_replay_text(monkeypatch, tmp_path):
     payload = json.loads(trace_file.read_text(encoding="utf-8").splitlines()[-1])
     assert raw_card not in trace_file.read_text(encoding="utf-8")
     assert payload["spans"][0]["input_text"] == "My card number is [CARD REDACTED]."
+
+
+@pytest.mark.asyncio
+async def test_benchmark_runner_traces_masked_replay_text(monkeypatch, tmp_path):
+    from scripts.prism_benchmark import run_scenario
+    import app.observability.prism_tracer as prism_tracer
+
+    trace_file = tmp_path / "traces.jsonl"
+    monkeypatch.setattr(prism_tracer, "TRACES_FILE", trace_file)
+
+    class StubRunner:
+        async def process_turn(self, **_kwargs):
+            return {"agent_response": "ok", "state_machine": {"transitions": []}}
+
+    raw_card = "My card number is 4532 0150 1234 5678."
+    await run_scenario(
+        {"id": "security-regression", "category": "F_SPOKEN_IDENTIFIERS", "split": "dev", "turns": [raw_card]},
+        version="v2",
+        runner=StubRunner(),
+        tracer_client=PRISMTracer(api_key=""),
+    )
+
+    payload = json.loads(trace_file.read_text(encoding="utf-8").splitlines()[-1])
+    assert raw_card not in trace_file.read_text(encoding="utf-8")
+    assert payload["spans"][0]["input_text"] == "My card number is [CARD REDACTED]."
