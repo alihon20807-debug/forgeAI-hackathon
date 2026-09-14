@@ -62,7 +62,7 @@ class Evaluator:
             masked_text = shield_res.masked_transcript
             redacted_items = [p.to_dict() for p in shield_res.redacted_pii]
 
-            # Per Overall-plan.md §13: the PII shield is bundled into v2 only
+            # Per docs/Overall-plan.md §13: the PII shield is bundled into v2 only
             # ("v2 = v1 + commit window + policy latch + outbound veto + PII shield").
             # v0 and v1 both simulate a client with no shield, to measure real leakage.
             if self.version in ("v0", "v1"):
@@ -184,7 +184,7 @@ class Evaluator:
         if self.split_filter:
             scenarios = [s for s in scenarios if s["split"] == self.split_filter]
         if self.limit:
-            # Credit-discipline smoke test (Overall-plan.md §14: "send a 3-conversation
+            # Credit-discipline smoke test (docs/Overall-plan.md §14: "send a 3-conversation
             # test batch first and read the credit meter before committing to full-set
             # tracing"). Every scenario still traces to PRISM if credentials are set --
             # this only caps how many, it doesn't skip tracing.
@@ -233,7 +233,11 @@ class Evaluator:
         }
 
         # Save to results directory
-        out_file = RESULTS_DIR / f"eval_{self.version}_{self.split_filter or 'all'}.json"
+        # A --limit run is a smoke test, not a real result -- suffix it distinctly so
+        # it can never silently overwrite the canonical eval_{version}_{split}.json
+        # files that docs/Overall-plan.md's honesty invariants treat as measured results.
+        limit_suffix = f"_smoke{self.limit}" if self.limit else ""
+        out_file = RESULTS_DIR / f"eval_{self.version}_{self.split_filter or 'all'}{limit_suffix}.json"
         with open(out_file, "w", encoding="utf-8") as f:
             json.dump(summary, f, indent=2)
 

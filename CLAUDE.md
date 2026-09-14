@@ -1,7 +1,7 @@
 # ForgeAI Hackathon — Project Notes for Anyone (Human or Agent) Working Here
 
 ## Canonical plan
-`Overall-plan.md` at the repo root is the sole, authoritative project plan. There is no other plan file — an earlier draft (`PLAN.md`) was folded into it and deleted; don't recreate a second plan document.
+`docs/Overall-plan.md` at the repo root is the sole, authoritative project plan. There is no other plan file — an earlier draft (`PLAN.md`) was folded into it and deleted; don't recreate a second plan document.
 
 ## PRISM is the central highlight — not a bolted-on feature
 This project exists to demo PRISM, using ClaimGuard as the vehicle, not the other way round. 40% of the judging rubric (PRISM Evaluation & Diagnosis + Measured AI Improvement) is directly PRISM-dependent. Every future edit to the plan, the deck, or the pitch should keep PRISM load-bearing and visible throughout — in the architecture, the evaluation loop, and the demo — not confined to one slide or one paragraph.
@@ -15,7 +15,7 @@ Hinglish reads as unprofessional in written pitch material. Use it sparingly: **
 Do not turn a plan into a built deliverable (deck, code, submission) without the user explicitly confirming that specific plan first. "We discussed this earlier" is not confirmation.
 
 ## Documentation policy — architecture and implementation notes live in markdown
-Project architecture, implementation notes, and "what's actually built" status must be written down in markdown files, not left implicit in code or in a built HTML deck. A built artifact (`presentation/claimguard-pitch.html` and its offline twin, or any future rendered output) is a publish target, not a source of project information — do not read it to figure out what the project does or what's decided. Read `Overall-plan.md` (and other project markdown, e.g. `REMAINING_STEPS_PLAN.md`, `HANDOVER.md`) instead. If a fact needed for future work isn't captured in markdown yet, write it down in a focused new markdown file (e.g. `architecture.md`) rather than re-deriving it from code or HTML on every future pass — this is meant to be a one-time investment, not repeated effort each session.
+Project architecture, implementation notes, and "what's actually built" status must be written down in markdown files, not left implicit in code or in a built HTML deck. A built artifact (`presentation/claimguard-pitch.html` and its offline twin, or any future rendered output) is a publish target, not a source of project information — do not read it to figure out what the project does or what's decided. Read `docs/Overall-plan.md` (and other project markdown, e.g. `docs/REMAINING_STEPS_PLAN.md`, `docs/HANDOVER.md`) instead. If a fact needed for future work isn't captured in markdown yet, write it down in a focused new markdown file (e.g. `architecture.md`) rather than re-deriving it from code or HTML on every future pass — this is meant to be a one-time investment, not repeated effort each session.
 
 ## PRISM tracing (do not remove)
 
@@ -34,7 +34,7 @@ records for the same conversation in the dashboard. That module is now a
 retired stub that raises `ImportError` on import specifically so a stray
 reintroduction fails loudly instead of silently resurrecting the double-fire.
 The reason this one is canonical, not the other: it matches the team's own
-verified research (`research/prism/03-fastapi-agent-integration-recipe.md`'s
+verified research (`docs/research/prism/03-fastapi-agent-integration-recipe.md`'s
 decision table recommends structured `/api/spans/ingest` for exactly this
 architecture — a hand-rolled FastAPI tool-calling agent), it already had
 correct per-version `agent_id` mapping and `category`/`eval_set` support, and

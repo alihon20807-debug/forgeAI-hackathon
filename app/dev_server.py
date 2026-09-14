@@ -2,7 +2,7 @@
 
 Provides:
 - Static file serving for the Live Supervisor Console (frontend/).
-- REST API turn endpoints matching HANDOVER.md §4.
+- REST API turn endpoints matching docs/HANDOVER.md §4.
 - Pre-LLM mathematical PII scrubbing on all incoming turns.
 - Standalone development without depending on Ali's machine being online.
 """
@@ -84,7 +84,7 @@ def health_check():
 
 @app.post("/api/call/turn", response_model=TurnResponse)
 def process_call_turn(payload: TurnRequest):
-    """Client -> Server Turn Request matching HANDOVER.md §4.1.
+    """Client -> Server Turn Request matching docs/HANDOVER.md §4.1.
     Applies mathematical PII scrubbing before any downstream logic.
     """
     # Invariant 2: Mathematical PII scrubbing pre-LLM, pre-telemetry

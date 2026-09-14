@@ -62,7 +62,7 @@ if FRONTEND_DIR.exists():
 
 
 # -----------------------------------------------------------------------------
-# Request & Response Models (Strictly matching HANDOVER.md §4.1 & §4.2)
+# Request & Response Models (Strictly matching docs/HANDOVER.md §4.1 & §4.2)
 # -----------------------------------------------------------------------------
 
 class RedactedPII(BaseModel):

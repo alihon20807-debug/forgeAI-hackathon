@@ -45,13 +45,13 @@ Let me start by listing the files in the repository root and then read the key m
 _Thinking:_
 
 Good, I can see the markdown files. Let me read the key ones to understand the project structure and plans. I'll start with the main ones:
-1. Overall-plan.md - the canonical plan
+1. docs/Overall-plan.md - the canonical plan
 2. CLAUDE.md - instructions for working in this repo
-3. REMAINING_STEPS_PLAN.md - remaining work
-4. HANDOVER.md - handover notes
+3. docs/REMAINING_STEPS_PLAN.md - remaining work
+4. docs/HANDOVER.md - handover notes
 5. README.md - project overview
-6. presentation/Slides-Plan.md - presentation plan
-7. research/prism/ - PRISM research files
+6. docs/presentation/Slides-Plan.md - presentation plan
+7. docs/research/prism/ - PRISM research files
 
 Let me read these files
 
@@ -69,7 +69,7 @@ Let me read these files
 
 _Thinking:_
 
-Now let me also read the presentation/Slides-Plan.md and the README.md to get the full picture.
+Now let me also read the docs/presentation/Slides-Plan.md and the README.md to get the full picture.
 
 **Tool: read**
 
@@ -81,7 +81,7 @@ Now let me also read the presentation/Slides-Plan.md and the README.md to get th
 
 _Thinking:_
 
-Let me also check the research/prism files and the presentation/readme.md to get the full picture.
+Let me also check the research/prism files and the docs/presentation/readme.md to get the full picture.
 
 **Tool: read**
 
@@ -139,18 +139,18 @@ I've reviewed all the markdown files in the repository. Here's a comprehensive s
 
 | File | Role |
 |------|------|
-| `Overall-plan.md` | **Sole canonical plan** — 367 lines covering architecture, invariants, evaluation, PRISM integration, demo narrative, risks |
+| `docs/Overall-plan.md` | **Sole canonical plan** — 367 lines covering architecture, invariants, evaluation, PRISM integration, demo narrative, risks |
 | `CLAUDE.md` | Project rules (canonical plan location, PRISM centrality, language framing, process rule, documentation policy) |
-| `REMAINING_STEPS_PLAN.md` | Execution plan with 4 phases, status per subsystem, team ownership matrix |
-| `HANDOVER.md` | Team brief with role allocation (Ali: L2/L3/L4, Pratham: L5/Evals, Ojas: L0/L1/L6) |
+| `docs/REMAINING_STEPS_PLAN.md` | Execution plan with 4 phases, status per subsystem, team ownership matrix |
+| `docs/HANDOVER.md` | Team brief with role allocation (Ali: L2/L3/L4, Pratham: L5/Evals, Ojas: L0/L1/L6) |
 | `README.md` | Brief repo overview |
-| `presentation/Slides-Plan.md` | 600-line autonomous HTML deck spec (6 slides, strict design system, animations) |
-| `presentation/readme.md` | Current deck status, warns against `build_pitch.py` (deprecated landmine) |
-| `research/prism/*.md` | 4 PRISM integration docs (SDK, API, FastAPI recipe, evaluation playbook, ecosystem intel) |
+| `docs/presentation/Slides-Plan.md` | 600-line autonomous HTML deck spec (6 slides, strict design system, animations) |
+| `docs/presentation/readme.md` | Current deck status, warns against `build_pitch.py` (deprecated landmine) |
+| `docs/research/prism/*.md` | 4 PRISM integration docs (SDK, API, FastAPI recipe, evaluation playbook, ecosystem intel) |
 
 ---
 
-## Architecture (from Overall-plan.md §7)
+## Architecture (from docs/Overall-plan.md §7)
 
 ```
 L0 Client Edge (mic capture) → L1 Perception (whisper.cpp + PII Shield) → L2 Cognition (small LLM + RAG + tools)
@@ -176,7 +176,7 @@ L5 PRISM Observability Spine — runs alongside L1-L4
 
 ---
 
-## Current Status (from REMAINING_STEPS_PLAN.md)
+## Current Status (from docs/REMAINING_STEPS_PLAN.md)
 
 | Subsystem | State | Critical Gaps |
 |-----------|-------|---------------|
@@ -251,7 +251,7 @@ I'll be thorough but concise, highlighting strengths and weaknesses.
 
 ## Critique of the ClaimGuard × PRISM Project
 
-### Overall Plan (`Overall-plan.md`) — **Strong, with one structural flaw**
+### Overall Plan (`docs/Overall-plan.md`) — **Strong, with one structural flaw**
 
 **Strengths:**
 - Exceptionally clear thesis: "PRISM is the hero, ClaimGuard is the vehicle" — every section reinforces this
@@ -327,12 +327,12 @@ I'll be thorough but concise, highlighting strengths and weaknesses.
 
 **Good:**
 - `CLAUDE.md` captures process rules that survive session handoff
-- `REMAINING_STEPS_PLAN.md` is a true execution tracker with ownership
+- `docs/REMAINING_STEPS_PLAN.md` is a true execution tracker with ownership
 - Research docs are verified/cited, not hallucinated
-- `presentation/readme.md` correctly warns against deprecated files
+- `docs/presentation/readme.md` correctly warns against deprecated files
 
 **Duplication:**
-- `HANDOVER.md` and `REMAINING_STEPS_PLAN.md` both contain team allocation — keep one as source of truth, link from the other.
+- `docs/HANDOVER.md` and `docs/REMAINING_STEPS_PLAN.md` both contain team allocation — keep one as source of truth, link from the other.
 
 ---
 

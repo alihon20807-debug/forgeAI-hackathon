@@ -10,7 +10,7 @@ consumption on a 98-of-100-credit Free-tier budget, plus duplicate,
 differently-shaped records for the same conversation in the dashboard.
 
 This module's own header comment also misquoted its cited source
-(``research/prism/03-fastapi-agent-integration-recipe.md``'s decision
+(``docs/research/prism/03-fastapi-agent-integration-recipe.md``'s decision
 table): it claimed ``/api/traces`` was "the sanctioned path" for a
 hand-rolled FastAPI tool-calling agent, when that table actually
 recommends structured ``/api/spans/ingest`` for exactly this case.

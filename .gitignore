@@ -63,3 +63,6 @@ models/
 presentation/*.html
 presentation/*.pdf
 
+
+# Graphify codebase-graph cache (regenerable, not source)
+graphify-out/

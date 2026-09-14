@@ -75,7 +75,7 @@ class TestPIIShield(unittest.TestCase):
     # 3. Transcript Masking: Cards, Aadhaar, Phone
     # -------------------------------------------------------------
     def test_redact_card_in_fnol_transcript(self):
-        # Example from HANDOVER.md §4.1
+        # Example from docs/HANDOVER.md §4.1
         raw = "Wait, don't send the tow truck, my cousin just showed up! Mera card number 4532 0150 1234 5678 hai for claim."
         result = self.shield.mask(raw)
 

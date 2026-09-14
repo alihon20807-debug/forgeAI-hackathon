@@ -1,19 +1,19 @@
 # ClaimGuard × PRISM — Team Handover & Work Allocation Brief
 **Event:** ForgeAI Hackathon · graVITas'26 · VIT Vellore  
 **Core Thesis:** *PRISM is the hero, ClaimGuard is the vehicle. The LLM proposes; deterministic code disposes.*  
-**Canonical Plan:** Refer to `Overall-plan.md` (authoritative document). Do not deviate from design invariants.
+**Canonical Plan:** Refer to `docs/Overall-plan.md` (authoritative document). Do not deviate from design invariants.
 
 ---
 
 ## 0. Start here — current status (updated 2026-09-14, evening)
 
-The role split and API contracts below are still accurate and worth reading once, but **the day-to-day task list has moved to `REMAINING_STEPS_PLAN.md`** — that file, not this one, tracks what's actually done vs. still open, phase by phase, and is kept current. Check it first every session.
+The role split and API contracts below are still accurate and worth reading once, but **the day-to-day task list has moved to `docs/REMAINING_STEPS_PLAN.md`** — that file, not this one, tracks what's actually done vs. still open, phase by phase, and is kept current. Check it first every session.
 
 **Where things stand right now:**
 - All four subsystems (L0–L4) are built and passing tests (49/49).
 - The eval harness (`evals/checker.py`) had a real integrity bug — it was scripting v0/v1/v2 outcomes instead of measuring them — **found and fixed this session**. The numbers in `evals/results/*.json` and in the pitch deck are now honestly reproducible from the architecture, not hand-written. See the pitfalls section below before touching that code again.
 - Live PRISM tracing is wired end-to-end. Canonical implementation is **`app/observability/prism_tracer.py`** (`TurnTracer`) — a second, parallel tracer (`app/prism_tracing.py`) briefly coexisted and double-fired a trace on every live turn (two different PRISM endpoints, ~2x credit burn); it's now a retired stub that raises `ImportError` if anything tries to import it again. See CLAUDE.md's "PRISM tracing" section for the full story and the current usage pattern.
-- **Next up, in priority order** (see `REMAINING_STEPS_PLAN.md` for the full detail on each): (1) Pratham — run the live PRISM ingestion for real (3-call smoke test first, credit discipline), this is 40% of the rubric and the top remaining priority; (2) Ali — a real local LLM is live but doesn't yet reliably call `stage_dispatch` on a plain breakdown report (diagnosed, not yet fixed — see Phase 2 there); (3) Ojas — real voice clips + fix the Windows paths still sitting in `assets/audio/manifest.json`; (4) whole team — demo rehearsal + backup video.
+- **Next up, in priority order** (see `docs/REMAINING_STEPS_PLAN.md` for the full detail on each): (1) Pratham — run the live PRISM ingestion for real (3-call smoke test first, credit discipline), this is 40% of the rubric and the top remaining priority; (2) Ali — a real local LLM is live but doesn't yet reliably call `stage_dispatch` on a plain breakdown report (diagnosed, not yet fixed — see Phase 2 there); (3) Ojas — real voice clips + fix the Windows paths still sitting in `assets/audio/manifest.json`; (4) whole team — demo rehearsal + backup video.
 
 ---
 
@@ -229,12 +229,12 @@ ClaimGuard is an insurance First-Notice-of-Loss (FNOL) voice agent running on a 
 
 ## 5. Original Kickoff Prompts (historical — the initial build is done)
 
-*These are the prompts that started each teammate's original build and are kept for context on intent/scope. All of the "core deliverables" listed below now exist. For what to actually do next, use `REMAINING_STEPS_PLAN.md` instead — it reflects current, not day-1, status.*
+*These are the prompts that started each teammate's original build and are kept for context on intent/scope. All of the "core deliverables" listed below now exist. For what to actually do next, use `docs/REMAINING_STEPS_PLAN.md` instead — it reflects current, not day-1, status.*
 
 ### 📋 Kickoff Prompt for ALI (Backend, Enforcement & Server)
 ```text
 You are pair programming with Ali on ClaimGuard (ForgeAI Hackathon).
-Refer to Overall-plan.md for all architectural invariants and CLAUDE.md.
+Refer to docs/Overall-plan.md for all architectural invariants and CLAUDE.md.
 
 YOUR ROLE: Backend Lead, Intelligence & Enforcement Architect (L2 Cognition + L3 Enforcement + L4 Storage).
 IMPORTANT SERVER NOTE: During development, you will run the backend locally on your own machine. For the final demo, your laptop will act as the master host for the team's live presentation and benchmark runs.
@@ -257,7 +257,7 @@ Start by implementing app/enforcement/commit_window.py and the SQLite policy lat
 ### 📋 Kickoff Prompt for PRATHAM (PRISM Observability & Evals)
 ```text
 You are pair programming with Pratham on ClaimGuard (ForgeAI Hackathon).
-Refer to Overall-plan.md, research/prism/03-fastapi-agent-integration-recipe.md, and 10-evaluation-playbook.md.
+Refer to docs/Overall-plan.md, docs/research/prism/03-fastapi-agent-integration-recipe.md, and 10-evaluation-playbook.md.
 
 YOUR ROLE: PRISM Observability Lead, Benchmark & Evaluation Architect (L5 Observability Spine + Replay Set + Checker).
 IMPORTANT SERVER NOTE: During development, run the evaluation scripts against local mock agents or test harnesses on your own machine. Do not block on Ali's laptop.
@@ -285,7 +285,7 @@ Start by creating evals/replay_set.json with the 60 pre-registered conversation 
 ### 📋 Kickoff Prompt for OJAS (Voice, Security & Console)
 ```text
 You are pair programming with Ojas on ClaimGuard (ForgeAI Hackathon).
-Refer to Overall-plan.md and presentation/Slides-Plan.md for UI design guidelines and system flow.
+Refer to docs/Overall-plan.md and docs/presentation/Slides-Plan.md for UI design guidelines and system flow.
 
 YOUR ROLE: Voice Pipeline, Security & Supervisor Console Lead (L0 Client Edge + L1 Perception + L6 Human Console).
 IMPORTANT SERVER NOTE: During development, run a lightweight local mock server or client dev server on your own laptop. Do not depend on Ali's machine being online while you develop.
@@ -312,11 +312,11 @@ Start by implementing app/security/pii_shield.py with unit tests for Luhn and Ve
 
 Everything below actually happened in this repo this session. Listed so nobody repeats them — not to blame anyone, the underlying work in every case was otherwise solid.
 
-**1. Don't make a number look right — make it measured.** `evals/checker.py` and `app/agent/runner.py`'s mock agent were hardcoding pass/fail outcomes by version string (`if self.version == "v0": wrong_commit = True`) instead of letting them fall out of the actual architecture. It produced a clean-looking v0→v2 story, but it was circular — it reproduced whatever was written into the harness, not reality. The same pattern showed up independently in the pitch deck, which had a v1 "83.3%" accuracy figure, an invented quote with fake statistics, an invented "₹250 CR DPDP Penalty" figure, and a couple of self-contradictory latency numbers — none traceable to any real run. **The rule:** every number that appears in the deck or in any claim must trace to a specific file in `evals/results/*.json` (or a real PRISM screenshot). If you can't point to where a number came from, don't write it down — leave the claim qualitative instead, or mark it "TBD, needs a real run." This is `Overall-plan.md` §2 invariant #3, and it is the single easiest way to lose credibility with judges who will absolutely spot-check a number.
+**1. Don't make a number look right — make it measured.** `evals/checker.py` and `app/agent/runner.py`'s mock agent were hardcoding pass/fail outcomes by version string (`if self.version == "v0": wrong_commit = True`) instead of letting them fall out of the actual architecture. It produced a clean-looking v0→v2 story, but it was circular — it reproduced whatever was written into the harness, not reality. The same pattern showed up independently in the pitch deck, which had a v1 "83.3%" accuracy figure, an invented quote with fake statistics, an invented "₹250 CR DPDP Penalty" figure, and a couple of self-contradictory latency numbers — none traceable to any real run. **The rule:** every number that appears in the deck or in any claim must trace to a specific file in `evals/results/*.json` (or a real PRISM screenshot). If you can't point to where a number came from, don't write it down — leave the claim qualitative instead, or mark it "TBD, needs a real run." This is `docs/Overall-plan.md` §2 invariant #3, and it is the single easiest way to lose credibility with judges who will absolutely spot-check a number.
 
-**2. When you build a mock/simulation, make sure it can't cheat.** The deterministic mock agent (`AgentRunner._mock_generate`) used to change its *proposed reply* based on which version was being tested — meaning the model's own behavior "knew" it was v0 vs v2, which defeats the entire point of an architecture ablation (`Overall-plan.md` invariant #1: same model, same settings, across every version). Now the mock's proposal is identical regardless of version, and only the version-gated enforcement layer (commit window, outbound veto — both literally `if agent_version == "v2":` in `runner.py`) is allowed to differ. If you add a new mock/simulated component anywhere, ask: "does this component know which condition it's being tested under, and is that fair?"
+**2. When you build a mock/simulation, make sure it can't cheat.** The deterministic mock agent (`AgentRunner._mock_generate`) used to change its *proposed reply* based on which version was being tested — meaning the model's own behavior "knew" it was v0 vs v2, which defeats the entire point of an architecture ablation (`docs/Overall-plan.md` invariant #1: same model, same settings, across every version). Now the mock's proposal is identical regardless of version, and only the version-gated enforcement layer (commit window, outbound veto — both literally `if agent_version == "v2":` in `runner.py`) is allowed to differ. If you add a new mock/simulated component anywhere, ask: "does this component know which condition it's being tested under, and is that fair?"
 
-**3. Don't overwrite good hand-edits with an old generator script.** `build_pitch.py` regenerated both deck HTML files from a hardcoded string full of stale, fabricated numbers every time it was run, and rewrote itself to keep doing so. It's now deprecated and disabled (see its docstring) — **do not resurrect it.** If the deck needs to change, edit `presentation/claimguard-pitch.html` / `-offline.html` directly, and re-check every number against `evals/results/` before publishing. More generally: a script that regenerates a hand-corrected file from an old template is a landmine — if you write one, make sure it reads its content from the current source of truth (`evals/results/`, `Overall-plan.md`) rather than embedding a snapshot.
+**3. Don't overwrite good hand-edits with an old generator script.** `build_pitch.py` regenerated both deck HTML files from a hardcoded string full of stale, fabricated numbers every time it was run, and rewrote itself to keep doing so. It's now deprecated and disabled (see its docstring) — **do not resurrect it.** If the deck needs to change, edit `presentation/claimguard-pitch.html` / `-offline.html` directly, and re-check every number against `evals/results/` before publishing. More generally: a script that regenerates a hand-corrected file from an old template is a landmine — if you write one, make sure it reads its content from the current source of truth (`evals/results/`, `docs/Overall-plan.md`) rather than embedding a snapshot.
 
 **4. When you wire telemetry, check what the dashboard actually receives, not just "does a trace get sent."** An earlier version of the live PRISM tracing fired a trace on every turn, but every trace carried the *same* `agent_id` regardless of whether it was v0, v1, or v2 — so PRISM's fleet/session view would have been unable to tell the architectures apart at all, silently breaking the entire comparison this project exists to prove. `category`/`set` (dev vs. heldout) were also never threaded through, breaking dashboard filtering. **The rule:** after wiring any telemetry/tracing call, look at (or reconstruct) the actual payload it sends and check every field the dashboard needs to filter/group by is really there — don't assume it's covered because the call compiles and doesn't throw.
 
@@ -324,4 +324,4 @@ Everything below actually happened in this repo this session. Listed so nobody r
 
 **5. Edit dependency lists by adding, not replacing.** A prior edit to `pyproject.toml` swapped `python-multipart` out for `prismtrace-sdk` instead of adding both — silently dropping a dependency that `app/server.py`'s and `app/dev_server.py`'s audio-upload endpoints (`UploadFile`/`Form`) actually need at runtime. It only kept working locally because the old install was still sitting in a stale `.venv`. **The rule:** after any `pyproject.toml` change, a fresh `uv sync` (or at minimum a diff review of the full dependency list, not just the lines you meant to touch) catches this before it reaches demo day.
 
-**6. Keep `presentation/readme.md` and this file honest about what's current vs. superseded.** `claimguard-deck.html`/`-offline.html` are an old, superseded draft — `claimguard-pitch.html`/`-offline.html` (+ `.pdf`) are current. If you build a new draft of anything, say so in the relevant readme immediately, not after someone wastes time reading the wrong file.
+**6. Keep `docs/presentation/readme.md` and this file honest about what's current vs. superseded.** `claimguard-deck.html`/`-offline.html` are an old, superseded draft — `claimguard-pitch.html`/`-offline.html` (+ `.pdf`) are current. If you build a new draft of anything, say so in the relevant readme immediately, not after someone wastes time reading the wrong file.

@@ -43,9 +43,9 @@ VERHOEFF_P = [
 # Verhoeff Inverse Table
 VERHOEFF_INV = [0, 4, 3, 2, 1, 5, 6, 7, 8, 9]
 
-# Canonical hackathon sample vectors specified in HANDOVER.md §4.1
+# Canonical hackathon sample vectors specified in docs/HANDOVER.md §4.1
 CANONICAL_TEST_CARDS = {
-    "4532015012345678",  # Specified directly in HANDOVER.md §4.1 turn example
+    "4532015012345678",  # Specified directly in docs/HANDOVER.md §4.1 turn example
 }
 
 
