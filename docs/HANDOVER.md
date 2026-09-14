@@ -5,15 +5,19 @@
 
 ---
 
-## 0. Start here — current status (updated 2026-09-14, evening)
+## 0. Start here — current status (updated 2026-09-15, ~45 min to judging)
 
-The role split and API contracts below are still accurate and worth reading once, but **the day-to-day task list has moved to `docs/REMAINING_STEPS_PLAN.md`** — that file, not this one, tracks what's actually done vs. still open, phase by phase, and is kept current. Check it first every session.
+**We're in the final push. PRISM's site is temporarily down (organizers confirmed, ~10-15 min). Everyone: `git pull` now — two real bugs in the live PRISM tracer were just found and fixed, and you need them before you run anything against PRISM again.**
 
-**Where things stand right now:**
-- All four subsystems (L0–L4) are built and passing tests (49/49).
-- The eval harness (`evals/checker.py`) had a real integrity bug — it was scripting v0/v1/v2 outcomes instead of measuring them — **found and fixed this session**. The numbers in `evals/results/*.json` and in the pitch deck are now honestly reproducible from the architecture, not hand-written. See the pitfalls section below before touching that code again.
-- Live PRISM tracing is wired end-to-end. Canonical implementation is **`app/observability/prism_tracer.py`** (`TurnTracer`) — a second, parallel tracer (`app/prism_tracing.py`) briefly coexisted and double-fired a trace on every live turn (two different PRISM endpoints, ~2x credit burn); it's now a retired stub that raises `ImportError` if anything tries to import it again. See CLAUDE.md's "PRISM tracing" section for the full story and the current usage pattern.
-- **Next up, in priority order** (see `docs/REMAINING_STEPS_PLAN.md` for the full detail on each): (1) Pratham — run the live PRISM ingestion for real (3-call smoke test first, credit discipline), this is 40% of the rubric and the top remaining priority; (2) Ali — a real local LLM is live but doesn't yet reliably call `stage_dispatch` on a plain breakdown report (diagnosed, not yet fixed — see Phase 2 there); (3) Ojas — real voice clips + fix the Windows paths still sitting in `assets/audio/manifest.json`; (4) whole team — demo rehearsal + backup video.
+The role split and API contracts below are still accurate and worth reading once, but **the day-to-day task list has moved to `docs/REMAINING_STEPS_PLAN.md`** — check it first every session.
+
+**What just got fixed (commits `aa42d8a`, `47e34e6`) — read this before touching PRISM ingestion:**
+Every trace sent so far showed `model: Unknown` and came back `Flagged: Yes` with no Quality/Response score on the dashboard (visible in the team's own screenshot of `prism.blockconvey.com/scores`). Root cause: our spans never carried a `model` field and used an invalid `span_type` ("guardrail" isn't in PRISM's real vocabulary of `chain|llm|tool|agent|retrieval`). Both are fixed — every turn now emits a proper `llm`-type span with a `model` value, correctly labeled `mock-deterministic` for harness/benchmark runs (which are mocked) vs. the real model name only for genuinely live calls. Verified locally with a dry-run smoke test; not yet verified against the live dashboard because PRISM is down. **Pratham: this is the first thing to check the moment PRISM is back — confirm the 3-call smoke test scores cleanly (no `Unknown`, no `Flagged`) before spending any more of the 98-credit budget on a full run.**
+
+**Immediate per-person tasks, right now, while PRISM is down:**
+- **Pratham (top priority, this is 40% of the rubric):** `git pull`. The instant PRISM is back: `.venv/bin/python scripts/prism_benchmark.py --smoke`, check the dashboard for clean scores, then `--heldout` if it looks right, then `--export` regardless as your offline fallback. Screenshot the scored trace list + a baseline-vs-claimguard fleet comparison the moment you have one — that's the single most judge-facing artifact we have. Full steps in `docs/PRATHAM_PRISM_GUIDE.md`.
+- **Ojas:** no dependency on the PRISM fix — keep going on Phase 3/4 (demo rehearsal timing, backup screencast) in parallel, don't wait.
+- **Ali:** validated the tracer fix locally (dry-run + full test suite, 53/53 pass); standing by to help Pratham interpret the live dashboard once it's back, and to jump on Phase 4 rehearsal after.
 
 ---
 
