@@ -309,13 +309,18 @@ class AgentRunner:
                     # That's internal reasoning, never something a caller should hear or a
                     # judge should see on the live console -- strip it before it's used for
                     # tool-call extraction OR as a final spoken reply.
-                    if "<thought>" in text_content or "<think>" in text_content:
+                    if any(tag in text_content for tag in ("<thought>", "</thought>", "<think>", "</think>")):
                         text_content = re.sub(r"<thought>.*?</thought>", "", text_content, flags=re.DOTALL)
                         text_content = re.sub(r"<think>.*?</think>", "", text_content, flags=re.DOTALL)
-                        # An unclosed tag means the model was cut off mid-thought (hit the
-                        # token limit before producing a real answer) -- drop the dangling
-                        # fragment rather than let raw reasoning slip through.
+                        # An unclosed opening tag means the model was cut off mid-thought
+                        # (hit the token limit before producing a real answer) -- drop the
+                        # dangling fragment rather than let raw reasoning slip through.
                         text_content = re.split(r"<thought>|<think>", text_content)[0]
+                        # Some responses carry a lone closing tag with no matching opener in
+                        # this same content string (the model's API can split reasoning into
+                        # a separate channel and leave only the boundary marker behind) --
+                        # strip any leftover tag fragment of either kind, open or close.
+                        text_content = re.sub(r"</?(?:think|thought)>", "", text_content)
                         text_content = text_content.strip()
 
                     if not raw_tool_calls and text_content:
