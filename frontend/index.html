@@ -43,6 +43,36 @@
       </div>
     </header>
 
+    <!-- Panel Demo Ribbon: 1-Click Presentation Scenarios -->
+    <div class="panel-demo-ribbon">
+      <div class="ribbon-label">
+        <span class="ribbon-icon">⚡</span>
+        <span class="ribbon-title">Judge Panel Quick Demo:</span>
+      </div>
+      <div class="ribbon-buttons">
+        <button class="ribbon-btn btn-demo-revocation" data-scenario="scenario_b_revocation" id="quick-btn-b">
+          <span class="btn-badge red">REJECTION</span>
+          <span class="btn-label">1. Mid-Call Revocation</span>
+          <span class="btn-sub">"Wait don't send + Card 4532..."</span>
+        </button>
+        <button class="ribbon-btn btn-demo-pressure" data-scenario="scenario_e_pressure" id="quick-btn-e">
+          <span class="btn-badge amber">VETO REJECTION</span>
+          <span class="btn-label">2. Deductible Pressure</span>
+          <span class="btn-sub">"Waive ₹1500 deductible"</span>
+        </button>
+        <button class="ribbon-btn btn-demo-clean" data-scenario="scenario_a_clean" id="quick-btn-a">
+          <span class="btn-badge green">APPROVAL</span>
+          <span class="btn-label">3. Valid FNOL Claim</span>
+          <span class="btn-sub">"Engine broke down near Manesar"</span>
+        </button>
+        <button class="ribbon-btn btn-demo-pii" data-scenario="scenario_f_pii" id="quick-btn-f">
+          <span class="btn-badge purple">DATA SHIELDED</span>
+          <span class="btn-label">4. Hindi PII Scrubber</span>
+          <span class="btn-sub">"Aadhaar 3675... + Phone 98765..."</span>
+        </button>
+      </div>
+    </div>
+
     <!-- Main Workspace Grid -->
     <main class="console-grid">
       <!-- Left Column: Audio Perception & Transcript Flow -->
@@ -130,6 +160,75 @@
             <h2>Deterministic Enforcement & System of Record</h2>
           </div>
           <span class="invariant-badge">The LLM proposes; deterministic code disposes</span>
+        </div>
+
+        <!-- Executive Decision & Work-Done Verdict Card -->
+        <div class="verdict-card" id="verdict-card">
+          <div class="verdict-top-bar">
+            <div class="verdict-status-group">
+              <span class="verdict-pill status-ready" id="verdict-pill">SYSTEM STANDBY</span>
+              <h3 class="verdict-title" id="verdict-title">Ready to Process FNOL Emergency Call</h3>
+            </div>
+            <div class="verdict-financial-badge" id="verdict-financial-badge">
+              <span class="fin-label">Financial Protection:</span>
+              <span class="fin-val" id="verdict-financial-val">₹0 Exposure</span>
+            </div>
+          </div>
+          
+          <p class="verdict-summary" id="verdict-summary">
+            Select a Quick Demo button above or speak into the microphone to witness deterministic enforcement in action.
+          </p>
+
+          <!-- Step-by-Step Work-Done Pipeline -->
+          <div class="work-pipeline-steps">
+            <div class="pipeline-step" id="step-1">
+              <div class="step-num">1</div>
+              <div class="step-info">
+                <span class="step-name">Data Ingestion</span>
+                <span class="step-detail" id="step-1-detail">Awaiting voice / text input</span>
+              </div>
+              <span class="step-status-icon" id="step-1-icon">⏳</span>
+            </div>
+            <div class="pipeline-step" id="step-2">
+              <div class="step-num">2</div>
+              <div class="step-info">
+                <span class="step-name">PII Scrubber</span>
+                <span class="step-detail" id="step-2-detail">Luhn + Verhoeff math check</span>
+              </div>
+              <span class="step-status-icon" id="step-2-icon">⏳</span>
+            </div>
+            <div class="pipeline-step" id="step-3">
+              <div class="step-num">3</div>
+              <div class="step-info">
+                <span class="step-name">Commit Window</span>
+                <span class="step-detail" id="step-3-detail">Grace period evaluation</span>
+              </div>
+              <span class="step-status-icon" id="step-3-icon">⏳</span>
+            </div>
+            <div class="pipeline-step" id="step-4">
+              <div class="step-num">4</div>
+              <div class="step-info">
+                <span class="step-name">Disposition</span>
+                <span class="step-detail" id="step-4-detail">Approval / Rejection verified</span>
+              </div>
+              <span class="step-status-icon" id="step-4-icon">⏳</span>
+            </div>
+          </div>
+
+          <!-- Baseline v0 vs ClaimGuard v2 Comparison Callout -->
+          <div class="comparison-strip" id="comparison-strip">
+            <div class="cmp-col baseline-col">
+              <span class="cmp-tag red">Without ClaimGuard (Baseline LLM)</span>
+              <p class="cmp-text" id="cmp-baseline-text">Unprotected small model would commit dispatch immediately or yield to concession pressure.</p>
+            </div>
+            <div class="cmp-divider">
+              <span class="cmp-vs-badge">VS</span>
+            </div>
+            <div class="cmp-col claimguard-col">
+              <span class="cmp-tag green">With ClaimGuard (Our Prototype)</span>
+              <p class="cmp-text" id="cmp-claimguard-text">Deterministic state machine & database triggers guarantee zero unauthorized dispatch or financial loss.</p>
+            </div>
+          </div>
         </div>
 
         <!-- The Hero Visualizer: Commit Window Kanban -->

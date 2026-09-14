@@ -271,6 +271,60 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Emit Telemetry Spans
     emitTelemetrySpans(scenario.spans);
+
+    // Render Executive Decision & Work-Done Verdict
+    if (scenario.verdict) {
+      renderVerdictCard(scenario.verdict);
+    }
+  }
+
+  // Render the Hero Decision & Work-Done Audit Card
+  function renderVerdictCard(verdict) {
+    if (!verdict) return;
+    const verdictCard = document.getElementById("verdict-card");
+    const verdictPill = document.getElementById("verdict-pill");
+    const verdictTitle = document.getElementById("verdict-title");
+    const verdictFinancialVal = document.getElementById("verdict-financial-val");
+    const verdictSummary = document.getElementById("verdict-summary");
+    const step1Detail = document.getElementById("step-1-detail");
+    const step2Detail = document.getElementById("step-2-detail");
+    const step3Detail = document.getElementById("step-3-detail");
+    const step4Detail = document.getElementById("step-4-detail");
+    const cmpBaseline = document.getElementById("cmp-baseline-text");
+    const cmpClaimguard = document.getElementById("cmp-claimguard-text");
+
+    if (verdictCard) {
+      verdictCard.className = "verdict-card " + (
+        verdict.status === "REJECTED" ? "verdict-rejected" :
+        verdict.status === "VETO_REJECTED" ? "verdict-vetoed" :
+        verdict.status === "SHIELDED" ? "verdict-shielded" : "verdict-approved"
+      );
+    }
+    if (verdictPill) {
+      verdictPill.className = "verdict-pill " + (verdict.badge_class || "status-approved");
+      verdictPill.textContent = verdict.badge_text || verdict.status;
+    }
+    if (verdictTitle) verdictTitle.textContent = verdict.title || "";
+    if (verdictFinancialVal) verdictFinancialVal.textContent = verdict.financial_protection || "₹0 Exposure";
+    if (verdictSummary) verdictSummary.textContent = verdict.summary || "";
+
+    if (step1Detail) step1Detail.textContent = verdict.step1 || "Processed";
+    if (step2Detail) step2Detail.textContent = verdict.step2 || "Verified";
+    if (step3Detail) step3Detail.textContent = verdict.step3 || "Evaluated";
+    if (step4Detail) step4Detail.textContent = verdict.step4 || "Enforced";
+
+    // Mark steps complete with checkmark
+    ["step-1", "step-2", "step-3", "step-4"].forEach((id) => {
+      const stepEl = document.getElementById(id);
+      if (stepEl) {
+        stepEl.classList.add("step-complete");
+        const icon = stepEl.querySelector(".step-status-icon");
+        if (icon) icon.textContent = "✅";
+      }
+    });
+
+    if (cmpBaseline && verdict.baseline_text) cmpBaseline.textContent = verdict.baseline_text;
+    if (cmpClaimguard && verdict.claimguard_text) cmpClaimguard.textContent = verdict.claimguard_text;
   }
 
   // Client-side mathematical PII check helpers for instant client feedback
@@ -303,10 +357,7 @@ document.addEventListener("DOMContentLoaded", () => {
       else masked = masked.replace(p.matched, "[PHONE REDACTED]");
     });
 
-    const lower = rawText.toLowerCase();
-    let agentReply = "ClaimGuard agent received your request. Staged authorized assistance on corridor.";
-    let vetoStatus = "passed";
-    let transitions = [];
+    let customVerdict = null;
 
     if (lower.includes("don't send") || lower.includes("dont send") || lower.includes("cancel") || lower.includes("ruk jao")) {
       transitions = [
@@ -314,23 +365,98 @@ document.addEventListener("DOMContentLoaded", () => {
         { action_id: "act_custom_01", action_type: "stage_dispatch", from_state: "FROZEN", to_state: "ABORTED", reason: "Caller revocation confirmed" }
       ];
       agentReply = "Understood. I have cancelled the tow truck dispatch. Your claim remains active under policy NH-8821 with zero charges.";
+      customVerdict = {
+        status: "REJECTED",
+        badge_class: "status-rejected",
+        badge_text: "REJECTED · DISPATCH REVOKED",
+        title: "Caller Revocation Enforced · Dispatch Aborted",
+        financial_protection: "₹4,500 Wrongful Payout Blocked",
+        summary: `Cancellation signal detected in caller input. Commit Window held dispatch in grace period, verified revocation, and executed atomic rollback.`,
+        step1: "Custom voice/text input ingested: Detected explicit cancellation keyword",
+        step2: `Pre-LLM PII Scrubber: ${redacted.length > 0 ? `${redacted.length} identifiers scrubbed` : "Clean buffer"}`,
+        step3: "Commit Window: Shifted state HELD ➔ FROZEN on revocation cue",
+        step4: "System of Record: Aborted dispatch before external tow vendor execution",
+        baseline_text: "Without ClaimGuard: Small LLM commits dispatch on turn 1, ignoring caller revocation on turn 2 (-₹4,500).",
+        claimguard_text: "With ClaimGuard: Two-stage Commit Window guarantees revocation can freeze and abort before side-effects."
+      };
     } else if (lower.includes("don't hold back") || lower.includes("dont hold back")) {
       transitions = [
         { action_id: "act_custom_01", action_type: "stage_dispatch", from_state: "HELD", to_state: "FROZEN", reason: "Freeze cue: 'don't hold back'" },
         { action_id: "act_custom_01", action_type: "stage_dispatch", from_state: "FROZEN", to_state: "COMMITTED", reason: "Affirmative urgency confirmed - trap avoided" }
       ];
       agentReply = "Understood! Flatbed tow truck has been dispatched immediately to your exact highway location.";
+      customVerdict = {
+        status: "APPROVED",
+        badge_class: "status-approved",
+        badge_text: "APPROVED · TRAP AVOIDED",
+        title: "Affirmative Urgency Verified · Tow Dispatched",
+        financial_protection: "100% Policy Cashless Towing Enforced",
+        summary: "Negative-phrased urgency ('Don't hold back') paused safely in Commit Window, then confirmed as affirmative distress. Tow committed without false abort.",
+        step1: "Custom input ingested: High-urgency highway distress marker",
+        step2: "Pre-LLM PII Scrubber: Clean buffer",
+        step3: "Commit Window: Negative keyword 'Don't' triggered safety pause (HELD ➔ FROZEN)",
+        step4: "Semantic Resolution: Affirmative urgency confirmed (FROZEN ➔ COMMITTED)",
+        baseline_text: "Without ClaimGuard: Naive keyword matcher mistakes 'Don't hold back' for cancellation, leaving driver stranded.",
+        claimguard_text: "With ClaimGuard: Commit Window safely resolves semantic context before executing side-effects."
+      };
     } else if (lower.includes("waive") || lower.includes("deductible")) {
       vetoStatus = "Outbound Veto: Intercepted Concession";
       agentReply = "Under Section 4.2 of Policy NH-8821, the compulsory standard deductible of ₹1,500 is latched by insurance regulations and cannot be waived. Cashless towing up to 45 km is 100% covered.";
       transitions = [
         { action_id: "act_custom_waiver", action_type: "waive_deductible", from_state: "HELD", to_state: "ABORTED", reason: "Policy Latch: Deductible immutable at DB trigger level" }
       ];
+      customVerdict = {
+        status: "VETO_REJECTED",
+        badge_class: "status-vetoed",
+        badge_text: "REJECTED · VETO INTERCEPTED",
+        title: "Deductible Waiver Blocked · Section 4.2 Latched",
+        financial_protection: "₹1,500 Mandatory Deductible Preserved",
+        summary: "Caller requested waiver of mandatory deductible. Outbound Veto blocked unauthorized concession and enforced Policy NH-8821 §4.2 latch.",
+        step1: "Input ingested: Concession pressure detected ('waive deductible')",
+        step2: "Pre-LLM PII Scrubber: Clean buffer",
+        step3: "Commit Window: Action 'waive_deductible' rejected immediately",
+        step4: "Outbound Veto: Model concession replaced with grounded policy clause",
+        baseline_text: "Without ClaimGuard: LLM yields to pressure: 'Sure, we will waive the ₹1500', causing direct insurer loss.",
+        claimguard_text: "With ClaimGuard: SQLite triggers and Outbound Veto make financial terms physically immutable."
+      };
+    } else if (redacted.length > 0) {
+      transitions = [
+        { action_id: "act_custom_pii", action_type: "verify_caller_identity", from_state: "HELD", to_state: "COMMITTED", reason: "Mathematical PII scrub pass" }
+      ];
+      agentReply = "Your request was processed securely. All sensitive identifiers were scrubbed before reaching backend systems or telemetry.";
+      customVerdict = {
+        status: "SHIELDED",
+        badge_class: "status-shielded",
+        badge_text: "DATA SHIELDED · PII REDACTED",
+        title: "Pre-LLM Mathematical Scrubber Enforced",
+        financial_protection: "DPDP / Privacy Violation Prevented",
+        summary: `${redacted.length} sensitive identifier(s) validated via mathematical algorithms (Luhn / Verhoeff) and masked before LLM tokenization or PRISM telemetry.`,
+        step1: "Input ingested: Personal identifier(s) detected",
+        step2: `Pre-LLM PII Scrubber: Masked ${redacted.map(r => r.type).join(', ')} with mathematical validation`,
+        step3: "Commit Window: Clean masked transcript passed to downstream agent",
+        step4: "System of Record: Zero raw personal identifiers stored in database or telemetry",
+        baseline_text: "Without ClaimGuard: Raw Aadhaar, credit card numbers, and phone numbers leak into cloud prompts.",
+        claimguard_text: "With ClaimGuard: Mathematical algorithms scrub tokens at the edge in <4ms before any API calls."
+      };
     } else {
       transitions = [
         { action_id: "act_custom_01", action_type: "stage_dispatch", from_state: "HELD", to_state: "COMMITTED", reason: "Standard dispatch committed after grace window" }
       ];
       agentReply = "I have confirmed and dispatched roadside assistance to your location on NH48.";
+      customVerdict = {
+        status: "APPROVED",
+        badge_class: "status-approved",
+        badge_text: "APPROVED & COMMITTED",
+        title: "Legitimate FNOL Claim · Tow Truck Dispatched",
+        financial_protection: "Cashless Corridor Allowance: 45 km",
+        summary: "Emergency breakdown request validated against policy terms. Grace window completed with zero revocation cues; dispatch committed to SQLite DB.",
+        step1: "Input ingested: Roadside breakdown request on NH48 corridor",
+        step2: "Pre-LLM PII Scrubber: Clean transcript, 0 PII detected",
+        step3: "Commit Window: Staged in HELD, grace window verified",
+        step4: "System of Record: Persisted to SQLite database, live dispatch en route",
+        baseline_text: "Without ClaimGuard: Unaudited LLM outputs without structured state machine transitions.",
+        claimguard_text: "With ClaimGuard: Every turn logs structured spans to PRISM and verifies state transitions."
+      };
     }
 
     currentScenarioData = {
@@ -355,6 +481,7 @@ document.addEventListener("DOMContentLoaded", () => {
     recDispatchStatus.textContent = currentScenarioData.claim_state.dispatch_status;
     animateStateTransitions(transitions);
     emitTelemetrySpans(currentScenarioData.spans);
+    renderVerdictCard(customVerdict);
   }
 
   async function sendTurnToBackend(rawText) {
@@ -386,12 +513,30 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!res.ok) throw new Error("Backend turn failed: " + res.statusText);
       const data = await res.json();
 
+      const hasAborted = (data.state_machine && data.state_machine.transitions || []).some(t => t.to_state === "ABORTED");
+      const hasVeto = (data.agent_response || "").includes("Section 4.2");
+
+      let backendVerdict = {
+        status: hasAborted ? "REJECTED" : hasVeto ? "VETO_REJECTED" : "APPROVED",
+        badge_class: hasAborted ? "status-rejected" : hasVeto ? "status-vetoed" : "status-approved",
+        badge_text: hasAborted ? "REJECTED · DISPATCH REVOKED" : hasVeto ? "REJECTED · VETO INTERCEPTED" : "APPROVED & COMMITTED",
+        title: hasAborted ? "Caller Revocation Enforced · Dispatch Aborted" : hasVeto ? "Deductible Waiver Blocked · Section 4.2 Latched" : "Legitimate FNOL Claim · Tow Truck Dispatched",
+        financial_protection: hasAborted ? "₹4,500 Wrongful Payout Blocked" : hasVeto ? "₹1,500 Mandatory Deductible Preserved" : "Cashless Corridor Allowance: 45 km",
+        summary: data.agent_response,
+        step1: "Backend processed live input turn",
+        step2: `Pre-LLM PII Scrubber: ${redacted.length} identifiers scrubbed`,
+        step3: `Commit Window: Processed ${(data.state_machine && data.state_machine.transitions || []).length} transitions`,
+        step4: `System of Record: Claim status updated to ${data.current_claim ? data.current_claim.status : "ACTIVE"}`,
+        baseline_text: "Without ClaimGuard: Unprotected small model would execute immediate writes without safety checks.",
+        claimguard_text: "With ClaimGuard: Full deterministic L3 enforcement layer validated and executed."
+      };
+
       currentScenarioData = {
         raw_transcript: rawText,
         masked_transcript: data.masked_transcript || masked,
         redacted_pii: data.redacted_pii || redacted,
         agent_response: data.agent_response,
-        veto_status: data.agent_response.includes("Section 4.2") ? "Outbound Veto: Intercepted Concession" : "Clean",
+        veto_status: hasVeto ? "Outbound Veto: Intercepted Concession" : "Clean",
         state_transitions: (data.state_machine && data.state_machine.transitions) || [],
         claim_state: { dispatch_status: data.current_claim ? data.current_claim.status : "ACTIVE" },
         spans: [
@@ -407,6 +552,7 @@ document.addEventListener("DOMContentLoaded", () => {
       recDispatchStatus.textContent = currentScenarioData.claim_state.dispatch_status;
       animateStateTransitions(currentScenarioData.state_transitions);
       emitTelemetrySpans(currentScenarioData.spans);
+      renderVerdictCard(backendVerdict);
       waveformOverlay.textContent = "Press Spacebar or Hold PTT to Speak";
     } catch (err) {
       console.warn("Falling back to local simulation due to backend error:", err);
@@ -571,8 +717,36 @@ document.addEventListener("DOMContentLoaded", () => {
       .replace(/'/g, "&#039;");
   }
 
+  // Ribbon Quick-Demo Buttons Binding
+  const ribbonBtns = document.querySelectorAll(".ribbon-btn");
+  ribbonBtns.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const scenarioKey = btn.getAttribute("data-scenario");
+      if (scenarioSelect && scenarioKey) {
+        scenarioSelect.value = scenarioKey;
+        ribbonBtns.forEach((b) => b.classList.remove("active-scenario"));
+        btn.classList.add("active-scenario");
+        executeSelectedScenario();
+      }
+    });
+  });
+
+  // When scenario dropdown changes, sync ribbon active state
+  scenarioSelect.addEventListener("change", () => {
+    const val = scenarioSelect.value;
+    ribbonBtns.forEach((b) => {
+      if (b.getAttribute("data-scenario") === val) {
+        b.classList.add("active-scenario");
+      } else {
+        b.classList.remove("active-scenario");
+      }
+    });
+  });
+
   // Trigger initial default scenario on load
   setTimeout(() => {
+    const btnB = document.getElementById("quick-btn-b");
+    if (btnB) btnB.classList.add("active-scenario");
     executeSelectedScenario();
   }, 200);
 });

@@ -45,6 +45,20 @@ const REPLAY_SCENARIOS = {
       locked_fields: ["deductible_inr", "liability_ratio"],
       dispatch_status: "ABORTED (Revocation verified)"
     },
+    verdict: {
+      status: "REJECTED",
+      badge_class: "status-rejected",
+      badge_text: "REJECTED · DISPATCH REVOKED",
+      title: "Caller Revocation Enforced · Dispatch Aborted",
+      financial_protection: "₹4,500 Wrongful Payout Blocked",
+      summary: "Caller mid-call revocation ('cousin just showed up') caught during Commit Window grace period. Dispatch aborted before third-party tow partner was billed.",
+      step1: "Audio / Text stream ingested with Indic code-mixing support",
+      step2: "Pre-LLM PII Scrubber: Card 4532... validated via Luhn checksum & redacted",
+      step3: "Commit Window: Freeze cue caught ('Wait, don't send') ➔ HELD shifted to FROZEN",
+      step4: "System of Record: FROZEN transitioned to ABORTED. Database rollback confirmed.",
+      baseline_text: "Unshielded LLM (v0) committed dispatch on turn 1, ignoring caller revocation on turn 2 (Ghost dispatch: -₹4,500).",
+      claimguard_text: "ClaimGuard (v2) held dispatch in grace window, verified revocation, and aborted with zero monetary leakage."
+    },
     spans: [
       {
         name: "stt_perception_whisper",
@@ -98,6 +112,20 @@ const REPLAY_SCENARIOS = {
       locked_fields: ["deductible_inr", "liability_ratio"],
       dispatch_status: "COMMITTED · ETA 22 mins"
     },
+    verdict: {
+      status: "APPROVED",
+      badge_class: "status-approved",
+      badge_text: "APPROVED · TRAP AVOIDED",
+      title: "Look-Alike Trap Resolved · Urgent Dispatch Committed",
+      financial_protection: "100% Policy Cashless Towing Enforced",
+      summary: "Negative-phrased urgency ('Don't hold back, send now') paused safely, then resolved as affirmative intent. Tow truck committed without false rejection.",
+      step1: "Audio stream ingested with high-urgency highway distress marker",
+      step2: "Pre-LLM PII Scrubber: Clean transcript, zero sensitive tokens detected",
+      step3: "Commit Window: Negative keyword 'Don't' triggered safety pause ➔ HELD to FROZEN",
+      step4: "Semantic Resolution: Affirmative urgency confirmed ➔ FROZEN to COMMITTED",
+      baseline_text: "Naive keyword matchers often mistake 'Don't hold back' for a cancellation, leaving emergency callers stranded.",
+      claimguard_text: "Two-stage Commit Window resolved semantic context, ensuring legitimate emergency dispatch proceeds safely."
+    },
     spans: [
       {
         name: "stt_perception_whisper",
@@ -137,6 +165,20 @@ const REPLAY_SCENARIOS = {
       deductible_inr: 1500,
       locked_fields: ["deductible_inr", "liability_ratio"],
       dispatch_status: "STANDBY"
+    },
+    verdict: {
+      status: "VETO_REJECTED",
+      badge_class: "status-vetoed",
+      badge_text: "REJECTED · VETO INTERCEPTED",
+      title: "Deductible Waiver Blocked · Section 4.2 Latched",
+      financial_protection: "₹1,500 Mandatory Deductible Preserved",
+      summary: "Emotional pressure to waive the ₹1,500 deductible was intercepted by Outbound Veto. LLM write blocked at database trigger level; grounded policy clause returned.",
+      step1: "Caller audio processed: Detected emotional bargaining ('customer for 5 years')",
+      step2: "Pre-LLM PII Scrubber: Clean buffer, no personal identifiers found",
+      step3: "Commit Window: Action 'waive_deductible' rejected immediately",
+      step4: "Outbound Veto & DB Trigger: Enforced Policy NH-8821 §4.2 latch. Concession replaced.",
+      baseline_text: "Sycophantic small models (v0/v1) capitulate to pressure: 'Sure, as a loyal customer we will waive the ₹1500', causing direct financial loss.",
+      claimguard_text: "Outbound Veto and SQLite triggers make deductible fields physically immutable to LLM generation."
     },
     spans: [
       {
@@ -190,6 +232,20 @@ const REPLAY_SCENARIOS = {
       locked_fields: ["deductible_inr", "liability_ratio"],
       dispatch_status: "VERIFIED"
     },
+    verdict: {
+      status: "SHIELDED",
+      badge_class: "status-shielded",
+      badge_text: "DATA SHIELDED · IDENTITY VERIFIED",
+      title: "Pre-LLM Mathematical Scrubber Enforced",
+      financial_protection: "DPDP / Privacy Violation Prevented",
+      summary: "Spoken 12-digit Aadhaar and 10-digit mobile number validated mathematically (Verhoeff check) and masked BEFORE transcript reached LLM or PRISM telemetry.",
+      step1: "Voice stream received: Spoken Hindi-English mixed numbers transcribed",
+      step2: "Pre-LLM PII Scrubber: Verhoeff checksum PASS (Aadhaar) + Indian Mobile 10-D regex PASS",
+      step3: "Tokens replaced: [AADHAAR REDACTED] and [PHONE REDACTED] passed to LLM",
+      step4: "Zero plaintext identifiers leaked to PRISM spans or cloud logs.",
+      baseline_text: "Unshielded voice agents send raw spoken Aadhaar and phone numbers into cloud LLM prompts and logging databases, violating privacy regulations.",
+      claimguard_text: "Pre-LLM mathematical scrubber redacts identifiers at the edge (3ms) before tokenization."
+    },
     spans: [
       {
         name: "pii_shield_verhoeff",
@@ -229,6 +285,20 @@ const REPLAY_SCENARIOS = {
       deductible_inr: 1500,
       locked_fields: ["deductible_inr", "liability_ratio"],
       dispatch_status: "COMMITTED · Manesar NH48"
+    },
+    verdict: {
+      status: "APPROVED",
+      badge_class: "status-approved",
+      badge_text: "APPROVED & COMMITTED",
+      title: "Legitimate FNOL Claim · Tow Truck Dispatched",
+      financial_protection: "Cashless Corridor Allowance: 45 km",
+      summary: "Standard emergency breakdown on NH48 corridor. Grace window completed with zero revocation cues; dispatch persisted to SQLite System of Record.",
+      step1: "Audio stream ingested: Highway breakdown near Manesar",
+      step2: "Pre-LLM PII Scrubber: Clean transcript, zero PII tokens",
+      step3: "Commit Window: Staged in HELD, 10s grace window completed with no objection",
+      step4: "System of Record: Transitioned to COMMITTED, dispatch record written to SQLite",
+      baseline_text: "Baseline works for clean calls, but lacks auditability and safety guarantees when unexpected events occur.",
+      claimguard_text: "ClaimGuard logs full state transitions and PRISM telemetry while confirming verified dispatch."
     },
     spans: [
       {
@@ -272,6 +342,20 @@ const REPLAY_SCENARIOS = {
       deductible_inr: 1500,
       locked_fields: ["deductible_inr", "liability_ratio"],
       dispatch_status: "CRANE COMMITTED (Mechanic Aborted)"
+    },
+    verdict: {
+      status: "CORRECTION_SWAP",
+      badge_class: "status-swap",
+      badge_text: "SWAP ENFORCED · RECOVERY CRANE",
+      title: "Service Swap Handled · Mechanic Cancelled, Crane Assigned",
+      financial_protection: "Prevented Double Dispatch Billing",
+      summary: "Caller corrected situation: 'engine completely seized, cancel mechanic, send crane'. First dispatch aborted, second staged and committed.",
+      step1: "Audio stream ingested: Mid-call correction received",
+      step2: "Pre-LLM PII Scrubber: Clean buffer",
+      step3: "Commit Window: Mechanic action shifted from HELD -> ABORTED",
+      step4: "Commit Window: Industrial recovery crane staged in HELD -> COMMITTED to DB",
+      baseline_text: "Standard agents often end up dispatching both service providers, resulting in double billing.",
+      claimguard_text: "Commit Window cleanly manages multiple actions with atomic cancel-and-replace semantics."
     },
     spans: [
       {
