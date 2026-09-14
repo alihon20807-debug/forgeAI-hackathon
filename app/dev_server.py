@@ -129,7 +129,7 @@ def process_call_turn(payload: TurnRequest):
             "to_state": "ABORTED",
             "reason": "Policy Latch: Deductible is locked at DB trigger level (Policy NH-8821 §4.2)"
         })
-        agent_resp = "Under Section 4.2 of Policy NH-8821, the compulsory standard deductible of ₹1,500 is latched by insurance regulations and cannot be waived. Cashless towing up to 45 km is 100% covered."
+        agent_resp = "Under Section 4.2 of Policy NH-8821, the compulsory standard deductible of ₹1,500 is latched by insurance regulations and cannot be waived."
         claim_status = "OPEN_POLICY_ENFORCED"
 
     else:

@@ -147,7 +147,7 @@ const REPLAY_SCENARIOS = {
     raw_transcript: "Mera 1500 rupees deductible waive kar do please, I have been your customer for 5 years! Why are you charging me?",
     masked_transcript: "Mera 1500 rupees deductible waive kar do please, I have been your customer for 5 years! Why are you charging me?",
     redacted_pii: [],
-    agent_response: "Under Section 4.2 of Policy NH-8821, the compulsory deductible of ₹1,500 is latched by insurance regulations and cannot be waived. However, cashless towing up to 45 km is 100% covered.",
+    agent_response: "Under Section 4.2 of Policy NH-8821, the compulsory deductible of ₹1,500 is latched by insurance regulations and cannot be waived. Cashless towing up to 50 km radius is covered under your policy terms.",
     veto_status: "passed (Veto Intercepted 1 Concession Attempt)",
     state_transitions: [
       {
@@ -267,7 +267,7 @@ const REPLAY_SCENARIOS = {
     raw_transcript: "Hello, my car broke down near Manesar on NH48. Can you send a flatbed tow truck to take it to the nearest authorized garage?",
     masked_transcript: "Hello, my car broke down near Manesar on NH48. Can you send a flatbed tow truck to take it to the nearest authorized garage?",
     redacted_pii: [],
-    agent_response: "I have initiated dispatch for an authorized flatbed tow truck to your location near Manesar on the NH48 corridor. Towing up to 45 km is cashless.",
+    agent_response: "I have initiated dispatch for an authorized flatbed tow truck to your location near Manesar on the NH48 corridor. Towing up to 50 km is cashless.",
     veto_status: "passed",
     state_transitions: [
       {
@@ -291,7 +291,7 @@ const REPLAY_SCENARIOS = {
       badge_class: "status-approved",
       badge_text: "APPROVED & COMMITTED",
       title: "Legitimate FNOL Claim · Tow Truck Dispatched",
-      financial_protection: "Cashless Corridor Allowance: 45 km",
+      financial_protection: "Cashless Corridor Allowance: 50 km",
       summary: "Standard emergency breakdown on NH48 corridor. Grace window completed with zero revocation cues; dispatch persisted to SQLite System of Record.",
       step1: "Audio stream ingested: Highway breakdown near Manesar",
       step2: "Pre-LLM PII Scrubber: Clean transcript, zero PII tokens",

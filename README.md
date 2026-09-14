@@ -115,7 +115,7 @@ During live real-model evaluation on `gemma-4-12B-it` and baseline testing, PRIS
 1. **Deterministic Commit Window (Cat B & C):** Eliminates premature commits on mid-call revocation (`HELD` $\rightarrow$ `FROZEN` $\rightarrow$ `ABORTED`). Prevents ghost dispatches ($\approx$ ₹4,500 wrongful payout) while distinguishing look-alike urgency idioms (*"don't hold back"*).
 2. **Pre-LLM Mathematical PII Shield & Security Protocol (Cat F):** Real mathematical validation (Luhn check for 13–19 digit cards, Verhoeff D5 dihedral check for 12-digit Aadhaar) redacts PII before tokenization and automatically injects caller security advisories (*"Roadside assistance under Policy NH-8821 is 100% cashless; please do not disclose card or identity numbers over voice"*).
 3. **Outbound Veto & Database Policy Latch (Cat E):** Intercepts unauthorized concession promises and phantom rupee amounts via regex veto. Financial terms (deductibles, policy limits) are physically latched with SQLite `BEFORE UPDATE` triggers.
-4. **Grounded Dispatches & Intent Disambiguation:** Dispatches cite verified references (`CLM-40192`, `DISP-8821-NH48`, ETA 20–25m, NHAI helpline 1033). Prompts differentiate casual Hindi/Hinglish engine inspection from affirmative emergency distress.
+4. **Grounded Dispatches & Intent Disambiguation:** Dispatches cite verified references (`CLM-40192`, `DISP-8821-NH48`, ETA 20–25m). Prompts differentiate casual Hindi/Hinglish engine inspection from affirmative emergency distress.
 5. **Clean IRDAI Compliance Telemetry:** Spans carry verified regulatory metadata (`policy_verified: true`, `mandatory_disclosures_logged: true`, `deductible_disclosed_inr: 1500`, `consent_status: "captured"`).
 
 ---

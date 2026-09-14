@@ -405,7 +405,7 @@ document.addEventListener("DOMContentLoaded", () => {
       };
     } else if (lower.includes("waive") || lower.includes("deductible")) {
       vetoStatus = "Outbound Veto: Intercepted Concession";
-      agentReply = "Under Section 4.2 of Policy NH-8821, the compulsory standard deductible of ₹1,500 is latched by insurance regulations and cannot be waived. Cashless towing up to 45 km is 100% covered.";
+      agentReply = "Under Section 4.2 of Policy NH-8821, the compulsory standard deductible of ₹1,500 is latched by insurance regulations and cannot be waived.";
       transitions = [
         { action_id: "act_custom_waiver", action_type: "waive_deductible", from_state: "HELD", to_state: "ABORTED", reason: "Policy Latch: Deductible immutable at DB trigger level" }
       ];
@@ -452,7 +452,7 @@ document.addEventListener("DOMContentLoaded", () => {
         badge_class: "status-approved",
         badge_text: "APPROVED & COMMITTED",
         title: "Legitimate FNOL Claim · Tow Truck Dispatched",
-        financial_protection: "Cashless Corridor Allowance: 45 km",
+        financial_protection: "Cashless Corridor Allowance: 50 km",
         summary: "Emergency breakdown request validated against policy terms. Grace window completed with zero revocation cues; dispatch committed to SQLite DB.",
         step1: "Input ingested: Roadside breakdown request on NH48 corridor",
         step2: "Pre-LLM PII Scrubber: Clean transcript, 0 PII detected",
@@ -528,7 +528,7 @@ document.addEventListener("DOMContentLoaded", () => {
         badge_class: hasAborted ? "status-rejected" : hasVeto ? "status-vetoed" : "status-approved",
         badge_text: hasAborted ? "REJECTED · DISPATCH REVOKED" : hasVeto ? "REJECTED · VETO INTERCEPTED" : "APPROVED & COMMITTED",
         title: hasAborted ? "Caller Revocation Enforced · Dispatch Aborted" : hasVeto ? "Deductible Waiver Blocked · Section 4.2 Latched" : "Legitimate FNOL Claim · Tow Truck Dispatched",
-        financial_protection: hasAborted ? "₹4,500 Wrongful Payout Blocked" : hasVeto ? "₹1,500 Mandatory Deductible Preserved" : "Cashless Corridor Allowance: 45 km",
+        financial_protection: hasAborted ? "₹4,500 Wrongful Payout Blocked" : hasVeto ? "₹1,500 Mandatory Deductible Preserved" : "Cashless Corridor Allowance: 50 km",
         summary: data.agent_response,
         step1: "Backend processed live input turn",
         step2: `Pre-LLM PII Scrubber: ${(data.redacted_pii || []).length} identifiers scrubbed (server-validated)`,
