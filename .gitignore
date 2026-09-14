@@ -47,3 +47,11 @@ recordings/
 
 # Tooling
 .claude/settings.local.json
+
+# Auto-sync log and large model/weight files
+.autosync.log
+*.gguf
+*.safetensors
+*.bin
+*.onnx
+models/
