@@ -149,12 +149,13 @@ class OutboundVeto:
                 veto_reasons=[],
             )
 
-        # VETO TRIGGERED: Provide deterministic grounded refusal citing policy clause
+        # VETO TRIGGERED: Provide empathetic, grounded refusal citing policy clause & escalation path
         grounded_replacement = (
-            f"Under Section 4.2 of Policy {pol_num}, standard mandatory deductibles "
+            f"We truly appreciate your valued loyalty and understand this is a stressful situation. "
+            f"However, under Section 4.2 of Policy {pol_num}, standard mandatory deductibles "
             f"of ₹{deductible:,} apply to roadside dispatches along the NH48 corridor "
             f"and cannot be waived by phone representatives. Your dispatch request remains "
-            f"active under these standard policy terms."
+            f"active under these standard policy terms, and you may submit a waiver review request to customer relations post-incident."
         )
 
         return VetoResult(
