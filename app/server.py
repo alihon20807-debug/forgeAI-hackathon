@@ -42,7 +42,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS middleware for Pratham's supervisor console
+# CORS middleware for supervisor console
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -206,7 +206,7 @@ def get_session_state(session_id: str):
 
 @app.get("/api/mock/turn")
 def get_mock_turn():
-    """Mock endpoint for Pratham's UI and Ojas's evals local development."""
+    """Mock endpoint for supervisor UI (Ojas) and evals (Pratham) local development."""
     return {
         "session_id": "mock-sess-demo",
         "turn_id": 3,
