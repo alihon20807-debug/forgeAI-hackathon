@@ -12,7 +12,7 @@ import httpx
 from app.agent.prompts import V0_BASELINE_PROMPT, V1_PROMPT_FIX_PROMPT, V2_CLAIMGUARD_PROMPT
 from app.agent.tools import execute_tool, get_tool_definitions
 from app.config import LLM_BASE_URL, LLM_API_KEY, LLM_MODEL, USE_MOCK_LLM
-from app.db.database import get_claim_db, lookup_policy_db
+from app.db.database import get_claim_db, get_dispatches_by_claim_db, lookup_policy_db
 from app.enforcement.commit_window import ActionState, get_commit_window
 from app.enforcement.outbound_veto import OutboundVeto
 
@@ -384,6 +384,7 @@ class AgentRunner:
         # -------------------------------------------------------------
         # 3. L3 Enforcement: Outbound Veto (active in v2)
         # -------------------------------------------------------------
+        veto_info = None
         if agent_version == "v2":
             policy = self._session_policies.get(session_id) or lookup_policy_db(policy_number="NH-8821")
             veto_result = self.veto.verify_and_filter(
@@ -391,6 +392,10 @@ class AgentRunner:
                 policy_number=policy["policy_number"] if policy else "NH-8821",
                 deductible_inr=policy["deductible_inr"] if policy else 1500,
             )
+            veto_info = {
+                "passed": veto_result.passed,
+                "reasons": veto_result.veto_reasons,
+            }
             agent_reply = veto_result.filtered_text
 
         # -------------------------------------------------------------
@@ -441,19 +446,25 @@ class AgentRunner:
         current_claim = None
         if claim_id:
             current_claim = get_claim_db(claim_id)
+            if current_claim:
+                current_claim["dispatches"] = get_dispatches_by_claim_db(claim_id)
         elif self._session_policies.get(session_id):
             p = self._session_policies[session_id]
             current_claim = {
                 "claim_id": "NONE",
                 "status": "UNINTIMATED",
                 "deductible_inr": p["deductible_inr"],
+                "liability_ratio": p.get("liability_ratio", 1.0),
                 "locked_fields": ["deductible_inr", "liability_ratio"],
+                "dispatches": [],
             }
 
         response_data = {
             "session_id": session_id,
             "turn_id": turn_id,
             "agent_response": agent_reply,
+            "tools_called": tools_called,
+            "veto": veto_info,
             "state_machine": {
                 "held_actions": cw.get_held_actions(session_id) if agent_version == "v2" else [],
                 "transitions": transitions,

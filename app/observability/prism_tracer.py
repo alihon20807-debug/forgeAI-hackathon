@@ -291,6 +291,11 @@ class TurnTracer:
             metadata=meta,
         )
 
+        return {
+            "trace_id": self.trace_id,
+            "spans_count": len(all_spans),
+        }
+
 
 _GLOBAL_TRACER = PRISMTracer()
 
