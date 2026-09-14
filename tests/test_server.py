@@ -10,6 +10,12 @@ from app.server import app
 @pytest.fixture(autouse=True)
 def setup_test_db():
     init_db()
+    from app.agent.runner import get_agent_runner
+    runner = get_agent_runner()
+    orig_mock = runner.use_mock
+    runner.use_mock = True
+    yield
+    runner.use_mock = orig_mock
 
 
 @pytest.fixture

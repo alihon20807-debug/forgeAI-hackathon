@@ -25,3 +25,17 @@ A voice agent for roadside insurance claims — cancellable dispatches, anti-syc
 ## Setup
 
 Copy `.env.example` to `.env` and fill in your API keys. See `.env.example` for required environment variables.
+
+## Running & Exposing Local Models (for PRISM)
+
+When running models locally on your laptop (`llama-server` on port 8080), cloud services like PRISM (Reverse Proxy / Cloud Evaluators / Synthetic Scenarios) cannot reach `http://127.0.0.1:8080`.
+
+- **Run model with public tunnel**:
+  ```bash
+  ./scripts/run_local_model.sh --expose
+  ```
+- **Expose an already-running local service**:
+  ```bash
+  ./scripts/expose_local_model.sh 8080
+  ```
+  This creates a secure HTTPS tunnel via **Cloudflare Tunnel (`cloudflared`)** (`https://<id>.trycloudflare.com`). Unlike free ngrok, this requires no account/token, has no bandwidth caps, and does not serve HTML interstitial warning pages that break API reverse proxies. Pinggy SSH is also available as an instant zero-binary fallback (`ssh -p 443 -R0:localhost:8080 a.pinggy.io`).

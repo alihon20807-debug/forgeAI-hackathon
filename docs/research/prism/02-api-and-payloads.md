@@ -464,6 +464,11 @@ page) — before any guardrail evaluation time on top.
 Azure AI Foundry: use the OpenAI proxy route with an `x-azure-endpoint`
 header naming your resource (**VERIFIED**, `/docs/integrations`).
 
+### Tunneling local models for PRISM cloud reachability
+If attempting to route PRISM's cloud reverse proxy or cloud-based Synthetic Scenarios / Evaluators to a local model running on your machine (`localhost:8080`), PRISM's cloud servers cannot reach `127.0.0.1` directly.
+- **Solution:** Expose the local port via Cloudflare Tunnel (`cloudflared tunnel --url http://localhost:8080`, wrapped in `scripts/expose_local_model.sh` and `scripts/run_local_model.sh --expose`).
+- **Why Cloudflare Tunnel over ngrok:** Zero account/token setup for ephemeral tunnels, no monthly bandwidth/request caps, and crucially **no HTML interstitial warning page** (`ngrok-skip-browser-warning`) that silently breaks API proxy and JSON forwarding. Pinggy SSH (`ssh -p 443 -R0:localhost:8080 a.pinggy.io`) provides an instant zero-binary fallback.
+
 ---
 
 ## Custom scores / manual annotations — what exists and what doesn't
