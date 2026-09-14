@@ -73,6 +73,27 @@ Times are cumulative. Practice this once out loud before you go up — it should
 **Q: What would you build next?**
 > "Real speech-to-text is the most honest next step — the pipeline is ready for it. After that, extending the same latch-and-veto pattern to adjacent regulated domains — banking, telecom — where the same 'agent proposes, code decides' shape applies."
 
+**Q: Isn't this just prompt engineering? What stops the model from just ignoring your instructions?**
+> "Nothing stops the model from ignoring instructions — that's exactly the point. None of the three pillars live in the prompt. The Commit Window is a state machine in the database. The Policy Latch is a DB trigger that rejects an out-of-bounds write regardless of what the model said. The Outbound Veto is a regex/rule check on the model's own output before it reaches the caller. We proved this isn't prompt-dependent by swapping the underlying model entirely — three different models, same enforcement guarantees every time — because the guarantee is enforced by code the model never gets a vote on."
+
+**Q: How is this different from products that already exist?**
+> "Most voice-agent platforms today give you observability — logs, transcripts, dashboards — after the fact. What we're demoing is pre-emptive enforcement: the action is provably revocable and provably bounded before it executes, not just visible afterward. We haven't done a formal competitive teardown given the hackathon timeframe, so I won't claim no one else does this — but it's not the default architecture we've seen."
+
+**Q: What's the business model / who pays for this?**
+> "The honest answer: we built this as an architecture pattern and proof-of-concept for Round 2, not a costed go-to-market plan. The natural buyer is any company running a cheap LLM in front of real customers on consequential actions — insurance FNOL is our demo vertical, but the same latch-and-veto shape applies anywhere an agent can commit money or dispatch a physical action. Happy to think through pricing with you, but I don't want to make up a number on the spot."
+
+**Q: What happens with concurrent calls — could two actions race each other in the Commit Window?**
+> "The Policy Latch is enforced at the SQLite trigger level, so a single write is safe. We have not specifically stress-tested many simultaneous live callers racing the same claim record — that's real, disclosed scope we haven't verified, not something I'll claim is solved."
+
+**Q: What does this actually cost to run per call?**
+> "We haven't benchmarked cost-per-call precisely. The architecture is model-agnostic by design — we ran it against a local model, which is free after the hardware, and against a cloud model on a free tier — so the honest answer is the enforcement layer's cost is near-zero (it's deterministic code, not inference); the cost is whatever model you choose to plug in behind it."
+
+**Q: Is this actually IRDAI-compliant / production-ready for real insurance regulation?**
+> "No — the 'regulatory framework' tag in our telemetry is a demo label describing the shape of the workflow (first notice of loss), not a certified compliance claim. Getting to real regulatory sign-off would need a compliance review we haven't done. What is real is the enforcement pattern itself, which is the reusable part."
+
+**Q: How big is the team and how long did this take?**
+> "This is a hackathon-timeframe build. We'd rather be precise about what's actually verified today than pad the effort story — everything in the Evidence section is something we re-ran and confirmed live, not a from-memory estimate."
+
 ---
 
 ## 3. If something breaks live
