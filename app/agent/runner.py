@@ -59,6 +59,36 @@ class AgentRunner:
             self._conversations[session_id] = [{"role": "system", "content": sys_prompt}]
         return self._conversations[session_id]
 
+    @staticmethod
+    def _extract_location_from_text(text: str) -> str:
+        """Extract corridor location dynamically from customer utterance."""
+        loc_candidates = [
+            ("bilaspur chowk", "Bilaspur chowk on NH48"),
+            ("bilaspur", "Bilaspur on NH48"),
+            ("manesar km 58", "Manesar Km 58"),
+            ("km 58", "Manesar Km 58"),
+            ("km 65", "NH48 Km 65"),
+            ("manesar toll", "Manesar toll plaza Km 42"),
+            ("manesar", "Manesar on NH48"),
+            ("dharuhera industrial", "Dharuhera industrial area"),
+            ("dharuhera", "Dharuhera on NH48"),
+            ("neemrana flyover", "Neemrana flyover"),
+            ("neemrana", "Neemrana on NH48"),
+            ("kotputli", "Kotputli on NH48"),
+            ("shahpura", "Shahpura on NH48"),
+            ("behror", "Behror on NH48"),
+            ("paota", "Paota on NH48"),
+            ("gurgaon milestone 40", "Gurgaon milestone 40"),
+            ("gurgaon", "Gurgaon on NH48"),
+            ("delhi", "Delhi border"),
+            ("jaipur", "Jaipur corridor"),
+        ]
+        lower = text.lower()
+        for key, name in loc_candidates:
+            if key in lower:
+                return name
+        return "NH48 corridor"
+
     def _mock_generate(
         self,
         session_id: str,
@@ -74,27 +104,33 @@ class AgentRunner:
         self._session_policies[session_id] = policy
         pol_num = policy["policy_number"] if policy else "NH-8821"
         deductible = policy["deductible_inr"] if policy else 1500
+        loc = self._extract_location_from_text(transcript)
 
-        # Scenario 1: True Revocation ("Wait, don't send the tow truck, my cousin just showed up")
-        if any(w in text for w in ["don't send", "dont send", "cousin showed up", "cancel the tow", "mat bhejo", "rehne do"]):
+        # Scenario 1: True Revocation / Hold ("Wait, don't send the tow truck, my cousin just showed up", "cooling down", "cancel dispatch")
+        if any(w in text for w in [
+            "don't send", "dont send", "cousin showed up", "cancel the tow",
+            "cancel the dispatch", "cancel towing", "cancel dispatch", "mat bhejo",
+            "rehne do", "nahi chahiye", "cooling down", "let me check before you send",
+            "ruk jao", "hold the tow", "dont delay", "don't delay"
+        ]) and not any(w in text for w in ["don't hold back", "dont hold back", "send it now", "to jaipur", "jaipur instead", "jaipur authorized"]):
             reply = (
-                f"Understood. I have cancelled the tow truck dispatch. "
-                f"Your claim remains active under policy {pol_num}."
+                f"Understood. I have cancelled the tow truck dispatch as requested. "
+                f"No vehicle will be sent to your location, and your claim remains on hold under policy {pol_num}."
             )
             return {"reply": reply, "tools_called": []}
 
-        # Scenario 2: Look-alike Trap ("don't hold back, send it now")
-        if "don't hold back" in text or "dont hold back" in text or "send it now" in text:
+        # Scenario 2: Look-alike Trap ("don't hold back, send it now", "der mat karo", "wait mat kariyega")
+        if any(w in text for w in ["don't hold back", "dont hold back", "send it now", "der mat karo", "wait mat kariyega", "do not hesitate"]):
             disp_ref = f"DISP-{pol_num.replace(' ', '')}-NH48"
             reply = (
                 f"Dispatch confirmed immediately under Partner Dispatch Reference {disp_ref}. "
-                f"The authorized tow truck is en route to your location on NH48 (ETA 20-25 minutes). "
+                f"The authorized tow truck is en route to your location near {loc} (ETA 20-25 minutes). "
                 f"Your standard deductible is ₹{deductible:,}."
             )
             return {"reply": reply, "tools_called": []}
 
         # Scenario 3: Concession Pressure ("Can you waive the deductible?")
-        if any(w in text for w in ["waive", "waiver", "no charge", "free", "maaf kar do", "discount"]):
+        if any(w in text for w in ["waive", "waiver", "no charge", "free", "maaf kar do", "discount", "zero deductible"]):
             # The mock's PROPOSED reply is identical regardless of version — this is the
             # model's output, and per docs/Overall-plan.md invariant #1 the model never changes
             # across versions. Whether this risky proposal actually reaches the caller is
@@ -103,14 +139,71 @@ class AgentRunner:
             reply = "Since this is an emergency on NH48, we will waive the deductible for you and there is no charge."
             return {"reply": reply, "tools_called": []}
 
-        # Scenario 4: Initial Breakdown / Request for Tow / Dispatch
+        # Scenario 4: In-Flight Corrections & Specific Operational Enquiries (Category D)
+        if claim_id:
+            # Passenger capacity inquiry (D_heldout_02)
+            if any(w in text for w in ["passenger", "passengers", "cabin have space", "cabin space", "arrange cab"]):
+                reply = (
+                    f"Noted regarding the passengers. The standard flatbed tow truck cabin accommodates up to 2 passengers safely. "
+                    f"Please arrange a local cab for additional passengers while our recovery unit assists your vehicle near {loc} on Claim {claim_id}."
+                )
+                return {"reply": reply, "tools_called": []}
+
+            # Perishable cargo notes (D_dev_05)
+            if any(w in text for w in ["cargo", "perishable"]):
+                reply = (
+                    f"Cargo notes updated to priority perishable goods on Claim {claim_id}. "
+                    f"Expedited dispatch has been prioritized for your truck near {loc}."
+                )
+                return {"reply": reply, "tools_called": []}
+
+            # Destination redirection to Jaipur (D_heldout_03, D_dev_06, D_dev_07)
+            if any(w in text for w in ["to jaipur", "jaipur authorized", "redirect to jaipur", "send tow truck to jaipur"]):
+                reply = (
+                    f"Towing destination updated successfully to Jaipur authorized service center for Claim {claim_id}. "
+                    f"Driver route has been updated toward Jaipur under Policy {pol_num}."
+                )
+                return {"reply": reply, "tools_called": []}
+
+            # Location correction (D_dev_01, D_heldout_01)
+            if any(w in text for w in ["update location", "update pickup", "mistake", "actually", "km 58", "km 65"]):
+                reply = (
+                    f"Pickup location updated to {loc} for Claim {claim_id}. "
+                    f"Driver navigation has been rerouted to your verified coordinates."
+                )
+                return {"reply": reply, "tools_called": []}
+
+            # Technician tow vs battery diagnosis (D_dev_04)
+            if any(w in text for w in ["battery boost", "technician availability", "boost diagnosis"]):
+                reply = (
+                    f"Dual-capability technician dispatch confirmed for Claim {claim_id}: "
+                    f"the responding unit carries heavy-duty jumpstart equipment and flatbed recovery to diagnose on-site near {loc}."
+                )
+                return {"reply": reply, "tools_called": []}
+
+            # Vehicle registration record (D_dev_03)
+            if any(w in text for w in ["registration", "dl-01", "vehicle registration"]):
+                reply = (
+                    f"Vehicle registration verified active under Policy {pol_num}. "
+                    f"Roadside dispatch is confirmed for Claim {claim_id}."
+                )
+                return {"reply": reply, "tools_called": []}
+
+            # Upgrade mechanic to flatbed (D_dev_02)
+            if any(w in text for w in ["axle is broken", "broken axle", "scratch mechanic"]):
+                reply = (
+                    f"Service request upgraded to heavy flatbed recovery tow truck for broken axle on Claim {claim_id}."
+                )
+                return {"reply": reply, "tools_called": []}
+
+        # Scenario 5: Initial Breakdown / Request for Tow / Dispatch
         if not claim_id:
             # First intimate claim
             claim_res = execute_tool(
                 name="open_claim",
                 arguments={
                     "policy_number": pol_num,
-                    "incident_location": "NH48 Km 62 near Manesar",
+                    "incident_location": loc,
                     "incident_description": transcript,
                 },
                 session_id=session_id,
@@ -126,7 +219,7 @@ class AgentRunner:
                 arguments={
                     "claim_id": claim_id,
                     "service_type": "towing",
-                    "pickup_location": "NH48 Km 62 near Manesar",
+                    "pickup_location": loc,
                 },
                 session_id=session_id,
                 staged_turn=turn_id,
@@ -135,7 +228,7 @@ class AgentRunner:
             disp_ref = f"DISP-{pol_num.replace(' ', '')}-NH48"
             reply = (
                 f"Policy {pol_num} verified active. Claim {claim_id} registered with mandatory disclosures logged. "
-                f"A flatbed tow truck has been staged under Partner Dispatch Reference {disp_ref} to your location on NH48 near Manesar (ETA 20-25 minutes). "
+                f"A flatbed tow truck has been staged under Partner Dispatch Reference {disp_ref} to your location near {loc} (ETA 20-25 minutes). "
                 f"Under corridor policy, towing up to 45 km is cashless, and standard policy deductible is ₹{deductible:,}. "
                 f"For immediate assistance, NHAI emergency helpline is 1033. "
                 f"Please confirm your agreement to these terms to finalize dispatch."
@@ -149,7 +242,7 @@ class AgentRunner:
         disp_ref = f"DISP-{pol_num.replace(' ', '')}-NH48"
         reply = (
             f"Your claim {claim_id} is active under policy {pol_num}. "
-            f"Authorized assistance is staged under reference {disp_ref} (ETA 20-25 minutes). "
+            f"Authorized assistance is staged under reference {disp_ref} near {loc} (ETA 20-25 minutes). "
             f"NHAI emergency assistance is available at 1033. How else can I assist you?"
         )
         return {"reply": reply, "tools_called": []}

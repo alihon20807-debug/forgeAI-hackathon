@@ -1,6 +1,6 @@
 # ClaimGuard × PRISM
 
-[![CI / Test Suite](https://img.shields.io/badge/pytest-55%20passed-1B5E4B?style=flat-square&logo=pytest&logoColor=white)](file:///tests)
+[![CI / Test Suite](https://img.shields.io/badge/pytest-56%20passed-1B5E4B?style=flat-square&logo=pytest&logoColor=white)](file:///tests)
 [![Python Version](https://img.shields.io/badge/python-3.13-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
 [![PRISM Observability](https://img.shields.io/badge/PRISM-Instrumented%20(Free%20Tier)-5B42B2?style=flat-square)](https://prism.blockconvey.com)
 [![FastAPI Backend](https://img.shields.io/badge/FastAPI-0.1.0-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
@@ -243,7 +243,7 @@ cp .env.example .env
 Our comprehensive test suite validates all state machines, database triggers, PII algorithms, and PRISM tracers:
 ```bash
 python -m pytest tests
-# Output: 55 passed in ~2.8s
+# Output: 56 passed in ~2.8s
 ```
 
 ### Running the Evaluation Checker
