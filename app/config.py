@@ -27,9 +27,12 @@ if _ENV_FILE.exists():
 DB_PATH = Path(os.getenv("CLAIMGUARD_DB_PATH", DATA_DIR / "claimguard.db"))
 
 # LLM inference (llama-server / LiteLLM)
+LLAMA_SERVER_BIN = Path(os.getenv("LLAMA_SERVER_BIN", "/home/aliz/.local/bin/llama-server"))
+DEFAULT_MODEL_PATH = Path(os.getenv("MODEL_PATH", "/home/aliz/Documents/Codes/AI_Stuff/models/Holo/Holo-3.1-9B.i1-Q5_K_M.gguf"))
+FALLBACK_MODEL_PATH = Path("/home/aliz/Documents/Codes/doc2md/models/gemma-4-12B-it-Q4_0.gguf")
 LLM_BASE_URL = os.getenv("LLM_BASE_URL", "http://127.0.0.1:8080/v1")
 LLM_API_KEY = os.getenv("LLM_API_KEY", "no-key-required")
-LLM_MODEL = os.getenv("LLM_MODEL", "local-model")
+LLM_MODEL = os.getenv("LLM_MODEL", "Holo-3.1-9B")
 USE_MOCK_LLM = os.getenv("USE_MOCK_LLM", "false").lower() in ("true", "1", "yes")
 
 # PRISM Telemetry

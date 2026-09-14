@@ -272,39 +272,51 @@ class AgentRunner:
             tools_called = mock_res["tools_called"]
         else:
             try:
-                llm_res = await self._call_llm(conversation, get_tool_definitions())
-                choice = llm_res["choices"][0]["message"]
+                # Multi-round agent execution loop (up to MAX_TOOL_ROUNDS=4)
+                MAX_TOOL_ROUNDS = 4
+                for round_idx in range(MAX_TOOL_ROUNDS):
+                    llm_res = await self._call_llm(conversation, get_tool_definitions())
+                    choice = llm_res["choices"][0]["message"]
 
-                # Extract OpenAI tool_calls or text-based (XML/JSON) tool calls
-                raw_tool_calls = list(choice.get("tool_calls") or [])
-                text_content = choice.get("content") or ""
+                    # Extract OpenAI tool_calls or text-based (XML/JSON) tool calls
+                    raw_tool_calls = list(choice.get("tool_calls") or [])
+                    text_content = choice.get("content") or ""
 
-                if not raw_tool_calls and text_content:
-                    extracted = self._extract_text_tool_calls(text_content)
-                    for idx, ext in enumerate(extracted):
-                        raw_tool_calls.append({
-                            "id": f"call_text_{idx}_{turn_id}",
-                            "type": "function",
-                            "function": {
-                                "name": ext["name"],
-                                "arguments": json.dumps(ext["arguments"]),
-                            },
-                        })
+                    if not raw_tool_calls and text_content:
+                        extracted = self._extract_text_tool_calls(text_content)
+                        for idx, ext in enumerate(extracted):
+                            raw_tool_calls.append({
+                                "id": f"call_text_{idx}_{turn_id}_{round_idx}",
+                                "type": "function",
+                                "function": {
+                                    "name": ext["name"],
+                                    "arguments": json.dumps(ext["arguments"]),
+                                },
+                            })
 
-                if raw_tool_calls:
+                    if not raw_tool_calls:
+                        # Model generated final text response
+                        agent_reply = text_content
+                        if "<tool_call>" in agent_reply:
+                            import re
+                            agent_reply = re.sub(r"<tool_call>.*?</tool_call>", "", agent_reply, flags=re.DOTALL).strip()
+                        break
+
+                    # Append assistant's tool-calling intent
                     conversation.append(choice)
+
                     for tc in raw_tool_calls:
                         fn_name = tc["function"]["name"]
                         fn_args = self._safe_parse_json(tc["function"].get("arguments", "{}"))
 
-                        # Inject existing claim_id into dispatch if omitted by model
-                        if fn_name == "stage_dispatch" and not fn_args.get("claim_id") and session_id in self._session_claims:
+                        # Auto-inject active claim_id if omitted
+                        if fn_name in ("stage_dispatch", "update_claim") and not fn_args.get("claim_id") and session_id in self._session_claims:
                             fn_args["claim_id"] = self._session_claims[session_id]
 
                         tools_called.append(fn_name)
                         tool_output = execute_tool(fn_name, fn_args, session_id, staged_turn=turn_id)
 
-                        # Track session state from successful tool results
+                        # Track session state
                         if fn_name == "open_claim" and isinstance(tool_output, dict) and "claim" in tool_output:
                             self._session_claims[session_id] = tool_output["claim"]["claim_id"]
                             pol_num = tool_output["claim"].get("policy_number", fn_args.get("policy_number", "NH-8821"))
@@ -316,20 +328,13 @@ class AgentRunner:
 
                         conversation.append({
                             "role": "tool",
-                            "tool_call_id": tc.get("id", f"call_{fn_name}_{turn_id}"),
+                            "tool_call_id": tc.get("id", f"call_{fn_name}_{turn_id}_{round_idx}"),
                             "name": fn_name,
                             "content": json.dumps(tool_output),
                         })
-                    # Second pass to get final reply
-                    second_res = await self._call_llm(conversation)
-                    agent_reply = second_res["choices"][0]["message"].get("content") or ""
-                    if "<tool_call>" in agent_reply:
-                        import re
-                        agent_reply = re.sub(r"<tool_call>.*?</tool_call>", "", agent_reply, flags=re.DOTALL).strip()
-                    if not agent_reply.strip():
-                        agent_reply = "I have opened your claim and staged your dispatch under your policy terms."
-                else:
-                    agent_reply = choice.get("content") or ""
+
+                if not agent_reply.strip():
+                    agent_reply = "I have opened your claim and staged your dispatch under your policy terms."
             except Exception as e:
                 logger.warning(f"LLM call failed or unavailable ({e}). Falling back to mock engine.")
                 mock_res = self._mock_generate(session_id, turn_id, masked_transcript, agent_version)

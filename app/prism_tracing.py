@@ -42,6 +42,20 @@ logger = logging.getLogger("claimguard.prism")
 # Match the SDK's own per-field input/output cap.
 _MAX_TEXT = 10_000
 
+# Per Overall-plan.md §13 / HANDOVER.md §4.3: each architecture version gets its
+# own PRISM agent_id so the fleet/session view can separate v0/v1/v2 traces.
+# AGENT_ID from config is the fallback for any agent_version not in this map.
+_AGENT_ID_BY_VERSION: Dict[str, str] = {
+    "v0": "roadside-baseline",
+    "v1": "roadside-prompt-fix",
+    "v2": "roadside-claimguard",
+}
+
+
+def agent_id_for_version(agent_version: str) -> str:
+    """Map an architecture version ('v0'/'v1'/'v2') to its PRISM agent_id."""
+    return _AGENT_ID_BY_VERSION.get(agent_version, AGENT_ID)
+
 # Process-wide cached client. None = not yet initialised; False = unavailable
 # (SDK missing / construction failed) so callers use the raw-HTTP fallback.
 _client: Any = None
@@ -89,6 +103,7 @@ def _emit_via_http(
     latency_ms: int,
     model: str,
     session_id: str,
+    agent_id: str,
     metadata: Dict[str, Any],
 ) -> None:
     """Fire-and-forget ``POST /api/traces`` used when the SDK isn't importable."""
@@ -101,7 +116,7 @@ def _emit_via_http(
         "output_message": output_message,
         "latency_ms": latency_ms,
         "session_id": session_id,
-        "agent_id": AGENT_ID,
+        "agent_id": agent_id,
         "metadata": metadata,
     }
     url = f"{PRISMTRACE_HOST.rstrip('/')}/api/traces"
@@ -132,15 +147,20 @@ def emit_turn_trace(
     agent_version: str,
     tools_called: Optional[List[str]] = None,
     extra_metadata: Optional[Dict[str, Any]] = None,
+    agent_id: Optional[str] = None,
 ) -> None:
     """Emit one flat PRISM trace for a completed turn. Non-blocking, fail-open.
 
     ``input_text`` / ``output_text`` **must already be PII-masked / veto-filtered**
     -- pass ``masked_transcript`` and the outbound-veto reply, never raw input.
+
+    ``agent_id`` defaults to ``agent_id_for_version(agent_version)`` -- callers
+    should not need to pass it explicitly except to override the mapping.
     """
     if not is_enabled():
         return
     try:
+        resolved_agent_id = agent_id or agent_id_for_version(agent_version)
         metadata: Dict[str, Any] = {
             "agent_version": agent_version,
             "tools_called": tools_called or [],
@@ -159,7 +179,7 @@ def emit_turn_trace(
                 input_messages=input_messages,
                 output=output_message,
                 latency_ms=int(latency_ms),
-                agent_id=AGENT_ID,
+                agent_id=resolved_agent_id,
                 agent_name=AGENT_NAME,
                 session_id=session_id,
                 metadata=metadata,
@@ -171,6 +191,7 @@ def emit_turn_trace(
                 latency_ms=int(latency_ms),
                 model=model,
                 session_id=session_id,
+                agent_id=resolved_agent_id,
                 metadata=metadata,
             )
     except Exception as exc:  # belt-and-suspenders: never break the turn
