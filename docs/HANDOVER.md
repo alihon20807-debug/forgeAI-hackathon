@@ -37,6 +37,12 @@ ClaimGuard is an insurance First-Notice-of-Loss (FNOL) voice agent running on a 
 > - **During Development:** Every teammate runs their **own laptop as their local server**. Work against local mock servers or lightweight stubs. Do NOT create cross-machine network dependencies or wait on Ali's machine during dev.
 > - **For Final Demo & Official Benchmark Run:** **Ali’s laptop** has local model execution capacity (GPU, local LLM via llama.cpp/Ollama, local whisper ASR). His machine will act as the unified master server running the full stack for the live evaluation and judge demo.
 > - **Safety Fallback:** If local hardware encounters venue or thermal issues, fall back to a hosted model via PRISM’s proxy or LiteLLM.
+>
+> **PRISM Reverse Proxy & Cloud Reachability (Localhost Caveat):**
+> PRISM is hosted in the cloud (`https://prism-api-prod.up.railway.app` or `prism.blockconvey.com`). When using PRISM as a reverse proxy, or when PRISM's Cloud Evaluator / Synthetic Scenarios engine sends inbound requests to test the model, it **cannot** reach `http://127.0.0.1:8080` (localhost on your laptop resolves inside the cloud container).
+> - **Expose the model:** Run `./scripts/expose_local_model.sh 8080` or `./scripts/run_local_model.sh --expose`.
+> - **Why Cloudflare Tunnel (`cloudflared`) over ngrok:** Zero account/token required, no free-tier HTML interstitial warning page (`ngrok-skip-browser-warning` which silently breaks JSON API reverse proxies), no monthly rate limits, and instant trusted HTTPS (`https://<hash>.trycloudflare.com`). Pinggy SSH fallback is also supported (`ssh -p 443 -R0:localhost:8080 a.pinggy.io`).
+> - **Configuration:** Set the resulting tunnel URL (e.g. `https://xxxx.trycloudflare.com/v1`) as `LLM_BASE_URL` in `.env` or as the upstream target in PRISM's proxy/evaluator settings.
 
 ---
 
