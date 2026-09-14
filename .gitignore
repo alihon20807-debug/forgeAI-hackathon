@@ -60,3 +60,7 @@ recordings/
 models/
 graphify-out/
 
+# Presentation build artifacts (publish targets, not source of project info - see CLAUDE.md)
+presentation/*.html
+presentation/*.pdf
+

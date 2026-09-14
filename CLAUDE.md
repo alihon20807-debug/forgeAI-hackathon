@@ -23,59 +23,75 @@ This project sends live traces to PRISM. Config lives in env vars
 (`PRISMTRACE_API_KEY`, `PRISMTRACE_PROJECT_ID`, `PRISMTRACE_HOST`); the real key
 lives only in the gitignored `.env`, and `.env.example` carries key *names* only.
 
-Tracing is currently wired at: `app/prism_tracing.py` (helper module),
-`app/agent/runner.py` (per-turn trace in `AgentRunner.process_turn`),
-`app/server.py` (client flush on shutdown), `app/config.py` (env + `.env`
-loader), `.env.example`, `.gitignore`, `CLAUDE.md`.
+**Canonical implementation: `app/observability/prism_tracer.py` (`PRISMTracer`
+/ `TurnTracer`). There is exactly one tracer — do not add a second one.**
+A second, parallel tracer (`app/prism_tracing.py`) existed briefly and got
+wired into the live call path *alongside* this one — every turn through
+`app/server.py`'s `/api/call/turn` fired two independent trace requests to
+two different PRISM endpoints, silently doubling credit consumption on a
+98-of-100-credit Free-tier budget and producing duplicate, differently-shaped
+records for the same conversation in the dashboard. That module is now a
+retired stub that raises `ImportError` on import specifically so a stray
+reintroduction fails loudly instead of silently resurrecting the double-fire.
+The reason this one is canonical, not the other: it matches the team's own
+verified research (`research/prism/03-fastapi-agent-integration-recipe.md`'s
+decision table recommends structured `/api/spans/ingest` for exactly this
+architecture — a hand-rolled FastAPI tool-calling agent), it already had
+correct per-version `agent_id` mapping and `category`/`eval_set` support, and
+it produces richer nested spans (tool calls and commit-window transitions as
+separate child spans, not just flat metadata).
+
+Tracing is wired at: `app/observability/prism_tracer.py` (the tracer itself),
+`app/server.py` (`/api/call/turn` builds a `TurnTracer` per request, and calls
+`close()` on shutdown), `evals/checker.py` (builds a `TurnTracer` per replay-set
+turn — same pattern, so replay-set traces carry `category`/`set` too),
+`app/config.py` (env + `.env` loader), `.env.example`, `.gitignore`.
 
 **Standing rule.** Whenever you add or change an agent, chain, graph, tool,
 retriever, or any entry point that calls a model, wire it to PRISM before you
-finish. Unwired code is invisible in the dashboard. If you are unsure whether
-something is covered, assume it is not and wire it.
+finish, by building a `TurnTracer` around that call site the same way
+`app/server.py`/`evals/checker.py` do — **do not** make `AgentRunner.process_turn`
+trace itself internally again; that's what caused the double-fire. Unwired
+code is invisible in the dashboard. If you are unsure whether something is
+covered, assume it is not and wire it, but wire it at the *caller*, not inside
+the shared method both callers already call.
 
 Only ever pass **masked / veto-filtered** content to the tracer — never raw
-caller transcripts or PII. The helper is fail-open: tracing must never break a
+caller transcripts or PII. The tracer is fail-open: tracing must never break a
 turn.
 
 ### How to emit a trace (Python)
 
-Per-turn (what `runner.py` uses):
-
 ```python
-from app.prism_tracing import get_prism_tracer
+from app.observability.prism_tracer import TurnTracer
 
-get_prism_tracer().trace_turn(
+tracer = TurnTracer(
     session_id=session_id,          # one id per conversation -> one trajectory
-    turn_id=turn_id,
-    caller_id=caller_id,
-    user_input=masked_transcript,   # already PII-masked
-    agent_output=agent_reply,       # already outbound-veto-filtered
-    latency_ms=latency_ms,
-    tools_called=[{"name": t} for t in tools_called],
-    transitions=transitions,
-    agent_version=agent_version,
+    user_utterance=masked_transcript,  # already PII-masked
+    agent_version=agent_version,    # "v0" / "v1" / "v2" -> mapped to the right agent_id
+    category=category,              # optional: "A_CLEAN_CONTROL".."F_SPOKEN_IDENTIFIERS"
+    eval_set=eval_set,               # optional: "dev" / "heldout"
 )
+
+# ... call the agent, get back state_machine.transitions ...
+for t in transitions:
+    tracer.record_enforcement_transition(
+        action_id=t["action_id"], action_type=t["action_type"],
+        from_state=t["from_state"], to_state=t["to_state"], reason=t["reason"],
+    )
+
+tracer.finish(agent_reply=agent_reply, extra_metadata={"turn_id": turn_id})
 ```
 
-Low-level (any other model call site):
-
-```python
-from app.prism_tracing import emit_turn_trace
-
-emit_turn_trace(
-    session_id=sid, input_text=masked_in, output_text=filtered_out,
-    latency_ms=200, model="local-model", agent_version="v2",
-)
-```
-
-Auth is the `X-PRISMtrace-Key` header — never `Authorization: Bearer`. The SDK's
-default host differs from ours, so the host is always passed from config.
+Auth is the `X-PRISMtrace-Key` header — never `Authorization: Bearer`.
 
 ### Verify connectivity
 
-```bash
-python -m prismtrace.verify   # reads PRISMTRACE_* from env; exit 0 = credential OK
-```
-
-Read the printed `LIVE CONNECTED` / `WAITING FOR LIVE` line — exit code 0 alone
-does **not** mean the app is sending live traces.
+There's no separate CLI for this (the old `python -m prismtrace.verify` command
+belonged to the now-removed `prismtrace-sdk` dependency, no longer installed).
+To check live connectivity: set real `PRISMTRACE_API_KEY`/`PRISMTRACE_PROJECT_ID`
+in `.env`, run a 3-call smoke test (`python -m evals.checker --version v2 --split dev`
+against a tiny scenario subset, or a manual `/api/call/turn` request), then check
+the PRISM dashboard directly for the session — `data/prism_traces.jsonl` always
+gets a local entry regardless of live credentials, so its presence alone does
+**not** prove a live send succeeded; only the dashboard does.
