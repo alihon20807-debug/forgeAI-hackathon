@@ -1,7 +1,10 @@
 # ForgeAI Hackathon — Project Notes for Anyone (Human or Agent) Working Here
 
 ## Canonical plan
-`Overall-plan.md` at the repo root is the authoritative project plan. `PLAN.md` is an earlier draft — superseded, kept only for reference. Read `Overall-plan.md` first.
+`Overall-plan.md` at the repo root is the sole, authoritative project plan. There is no other plan file — an earlier draft (`PLAN.md`) was folded into it and deleted; don't recreate a second plan document.
+
+## PRISM is the central highlight — not a bolted-on feature
+This project exists to demo PRISM, using ClaimGuard as the vehicle, not the other way round. 40% of the judging rubric (PRISM Evaluation & Diagnosis + Measured AI Improvement) is directly PRISM-dependent. Every future edit to the plan, the deck, or the pitch should keep PRISM load-bearing and visible throughout — in the architecture, the evaluation loop, and the demo — not confined to one slide or one paragraph.
 
 ## Language framing rule for presentation materials
 Written pitch materials (slides, docs, one-pagers) must be **primarily in English**. Frame the product's multilingual capability as **native-language support** in general (Hindi and other Indian languages), not as "Hinglish."

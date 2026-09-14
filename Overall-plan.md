@@ -6,7 +6,8 @@ ForgeAI · graVITas'26 · VIT Vellore
 
 ## 0. Read me first
 
-- **This is the canonical plan.** `PLAN.md` is an earlier technical draft — superseded, kept only as background. Everyone (teammates, and any AI agent working on this repo) should work from this file.
+- **This is the sole canonical plan.** An earlier draft was folded into this document and deleted — there is no second plan file. Everyone (teammates, and any AI agent working on this repo) works from this file.
+- **PRISM is the central highlight, not a feature bolted on at the end.** ClaimGuard exists to give PRISM something real to diagnose and prove an improvement on. 40% of the judging rubric (PRISM Evaluation & Diagnosis + Measured AI Improvement) is directly PRISM-dependent — see §14 and §13, which is why they're the longest sections in this document, deliberately.
 - **This is a pitch and idea document, deliberately code-light.** Right now we are not building — we are designing the thing worth building and the story that sells it. Technical depth below exists only where it feeds the pitch: architecture shape, PRISM integration, evaluation method. No raw code.
 - **Nothing here gets turned into a deck, a build, or a submission without a separate explicit go-ahead.** This document is the thing to approve first.
 - **Judging rubric** — every section below is traceable to one of these lines, and §14 makes that traceability explicit:
@@ -24,7 +25,7 @@ ForgeAI · graVITas'26 · VIT Vellore
 
 ## 1. The pitch, in one breath
 
-> Call-center voice agents are being rolled out on **cheap, fast, small models** because that's what cost and latency allow in production. Cheap models are exactly the ones that get bullied, that mishear an interruption, that leak a card number into a log line. We built **ClaimGuard**, an insurance-claims voice agent on a deliberately small local model — the kind PRISM's own customers actually run — and we used **PRISM, end to end, as the instrument** that finds where it breaks, guides the fix, and re-proves the fix on a held-out set we never touched while fixing. We are not demoing a chatbot. We are demoing what it looks like to run PRISM the way it's meant to be run.
+> This is a PRISM project first and a voice agent second: ClaimGuard is the deliberately breakable subject; PRISM is the instrument doing the diagnosing and the proving. Call-center voice agents are being rolled out on **cheap, fast, small models** because that's what cost and latency allow in production. Cheap models are exactly the ones that get bullied, that mishear an interruption, that leak a card number into a log line. We built **ClaimGuard**, an insurance-claims voice agent on a deliberately small local model — the kind PRISM's own customers actually run — and we used **PRISM, end to end, as the instrument** that finds where it breaks, guides the fix, and re-proves the fix on a held-out set we never touched while fixing. We are not demoing a chatbot. We are demoing what it looks like to run PRISM the way it's meant to be run.
 
 **Tagline:** *Can be interrupted. Can't be bullied. Won't leak.*
 **Thesis:** *The LLM proposes; deterministic code disposes.*
@@ -43,6 +44,7 @@ These are fixed. Every later section must agree with them; if a future edit conf
 6. **Presentation language is primarily English**, with native-language (Hindi-first, extensible) capability demonstrated through the product and through a single labelled example transcript — not through Hinglish-heavy slide copy. See `CLAUDE.md`.
 7. **No real telephony/call-API integration this hackathon** (see §4) — noted as the real deployment path, not attempted, not implied as already working.
 8. **No real insurer name, no real customer data.** Fictional insurer, synthetic identifiers only.
+9. **The minimum viable demo is fixed and non-negotiable:** v0 vs v2, compared on the held-out set, shown live as one uninterrupted call. Everything else in this document — the stretch model comparison, Synthetic Scenarios, the real-voice subset, regional-language expansion — is additive. If time runs short, those are what get cut, in that order, never this core.
 
 ---
 
@@ -64,15 +66,19 @@ These are fixed. Every later section must agree with them; if a future edit conf
 
 **What we do instead:** the **client side stays deliberately simple** — a browser/mic voice capture that stands in for "a phone call comes in." All the engineering investment goes into the **server side**, built to the same audio-in/audio-out contract a real telephony bridge would use, so that swapping in real call infrastructure later is an integration task, not a redesign. We say this plainly in the pitch rather than let the simple client be mistaken for a limitation we didn't notice.
 
+**Does this weaken the "we're building what PRISM's customers run" claim in §5? No — the transport differs, the risk surface doesn't.** Interruption, pressure, and spoken PII are properties of the conversation, not of how the audio arrived. A telephony bridge changes L0 only; it touches nothing in L1–L4. That's the honest version of the claim, and it's the one we say on stage.
+
 This is filed away, not a current priority — revisit only if time remains after the core loop (§9–§13) is solid.
 
 ---
 
 ## 5. Why this is exactly PRISM's world, not a generic AI demo
 
-PRISM's stated territory — reliability, guardrails, evaluation, agent intelligence, root cause — exists because companies run conversational AI agents (support chat, voice, claims, dispatch) in production and need to know when and why they fail. Those companies are, functionally, **call centers**: chat-first or voice-first customer interaction points, run on models chosen for cost, not capability.
+Said precisely, not overstated: PRISM's own marketing names its audiences as **"Conversational AI teams"** (multi-turn dialogue quality — *"Turn four is where conversations break"*) and **"AI Agents teams"** (tool-calling, state, outcomes). It does not say "call centers" anywhere on the site. **Voice-agent support exists at the SDK/docs level** (an `ElevenLabs`-integrated tracer) but isn't mentioned on a single marketing or solutions page — the product already does this, the marketing hasn't caught up to it yet.
 
-By building a small-model voice claims agent for an insurance call center, **we are not demoing a toy adjacent to PRISM's business — we are building the product category PRISM sells into**, then instrumenting it the way a real PRISM customer would. The pitch doubles as a mini case study: *"here is what a disciplined PRISM integration looks like, from a team that had 30 hours and a cheap model."* That is a stronger position with these judges than a generic RAG chatbot with PRISM bolted on at the end.
+**ClaimGuard is our deliberate, concrete instantiation of that gap.** A call-center voice agent is the highest-stakes, most legible real-world example of "conversational AI + AI agent + voice" all at once — which is exactly PRISM's stated territory, just not a case study they've published themselves yet. So the honest version of the claim is: **we didn't build the thing PRISM's marketing says it targets — we built the thing its own SDK already supports and its marketing hasn't shown off.** That is a stronger, more specific line to say out loud than "we built what you target," and it doubles as a genuinely useful gift to a founder-judge: *"your docs already support voice agents — we're one of the first teams putting that path through its paces, with a multilingual, code-switching, safety-critical use case."*
+
+By building a small-model voice claims agent for an insurance call center, instrumented the way a real PRISM customer would instrument it, the pitch doubles as a mini case study: *"here is what a disciplined PRISM integration looks like, from a team that had 30 hours and a cheap model."* That is a stronger position with these judges than a generic RAG chatbot with PRISM bolted on at the end.
 
 ---
 
@@ -153,10 +159,10 @@ By building a small-model voice claims agent for an insurance call center, **we 
 
 ## 10. The small/cheap model bet (this is an Innovation argument, not a limitation)
 
-We are choosing the model to be small **on purpose**, and saying so on stage:
+We are choosing the model to be small **on purpose**, and saying so on stage. The general move has a name in reliability engineering — **deliberately injecting a realistic weakness to see what the system around it can absorb**, the same logic as chaos engineering for infrastructure. Here the "fault" is model capacity, and the system under test is ClaimGuard's enforcement layer, not the model.
 
 - Real call-center deployments run cheap models because cost-per-call and latency force that choice. A strong frontier model in the demo would hide exactly the failure modes PRISM exists to catch — it would be a worse, less honest demo.
-- **Fairness rule:** the model must still pass the clean control conversations. If it can't hold a normal, uninterrupted call, it's a strawman, not a cheap model — we move up exactly one size and say so.
+- **Fairness rule, made precise:** "passes the clean controls" means the model correctly calls the right tool with the right arguments on every Category-A clean-control conversation (§12), with no held/frozen state ever triggered. If it can't clear that bar, it's a strawman, not a cheap model — we move up exactly one size and say so, before any v0 number is reported.
 - **Stretch, not core:** run the v0 baseline once on a larger model (a free-tier hosted model via PRISM's proxy) to answer "does a bigger model fix it?" and report whatever the honest answer is.
 - This is also the argument that makes the architecture (L3) matter: we are explicitly not claiming "our model is better." We are claiming "our model can be wrong and the system still can't be."
 
@@ -190,14 +196,16 @@ A live call is full of self-correction. A naive agent either acts too fast (exec
 
 **The Replay Set** — roughly 60 scripted, pre-labelled roadside/FNOL calls, written and locked **before** any model is run against them.
 
-| Category | What it tests | Expected outcome |
-|---|---|---|
-| A — Clean control | A normal, uninterrupted call | Action `COMMITTED` correctly |
-| B — True revocation | Caller genuinely cancels mid-call | Action `ABORTED`, claim kept open |
-| C — Look-alike traps | Sentences that *sound* like a cancel but aren't ("don't hold back, send it now") | Action still `COMMITTED` — this is what separates real understanding from keyword-matching |
-| D — Corrections / ambiguous | Caller swaps one request for another, or is genuinely unclear | Correct swap, or one clarifying question |
-| E — Pressure + policy questions | Emotional pressure for a concession, real policy questions | No concession granted, grounded answer given |
-| F — Spoken identifiers | A synthetic card or ID number read aloud mid-call | Masked everywhere downstream, with zero exceptions |
+| Category | What it tests | Expected outcome | Dev / Held-out |
+|---|---|---|---|
+| A — Clean control | A normal, uninterrupted call | Action `COMMITTED` correctly | 8 / 4 |
+| B — True revocation | Caller genuinely cancels mid-call | Action `ABORTED`, claim kept open | 7 / 3 |
+| C — Look-alike traps | Sentences that *sound* like a cancel but aren't ("don't hold back, send it now") | Action still `COMMITTED` — this is what separates real understanding from keyword-matching | 8 / 4 |
+| D — Corrections / ambiguous | Caller swaps one request for another, or is genuinely unclear | Correct swap, or one clarifying question | 7 / 3 |
+| E — Pressure + policy questions | Emotional pressure for a concession, real policy questions | No concession granted, grounded answer given | 6 / 4 |
+| F — Spoken identifiers | A synthetic card or ID number read aloud mid-call | Masked everywhere downstream, with zero exceptions | 4 / 2 |
+
+**On sample size, said plainly:** this is a controlled diagnostic set, not a statistically powered sample. We report raw pass/fail counts per category next to any percentage, and treat the held-out numbers as a check against overfitting to the dev set — not as a publishable accuracy claim.
 
 - **Language:** native Indian languages, Hindi-first, with **one** call carried in the pitch materials as an explicit code-mixed example — not the framing for the whole set (see `CLAUDE.md`).
 - **Held-out split:** 40 conversations used while iterating (dev), 20 touched only for the final reported numbers (held-out).
@@ -238,16 +246,26 @@ Every run is tagged by `agent_id` so PRISM's fleet/session views separate the th
 
 ## 14. Heavy PRISM integration — what actually happens at each layer (this is the centerpiece)
 
+Split deliberately into what we can promise regardless of how the PRISM session (§20) goes, and what upgrades the story further if those answers come back yes. Judges will ask which is which — better to answer before they ask.
+
+**Guaranteed — works today on our confirmed dashboard tier:**
+
 | Layer | PRISM touchpoint | What it proves to the judges |
 |---|---|---|
-| L1 Perception | Voice turns posted to PRISM (`/api/voice/turns`) *[confirm non-ElevenLabs acceptance at the PRISM session]* | Real conversations, not synthetic transcripts, are in PRISM |
 | L2 Cognition | Every LLM call and tool call traced as spans, tagged `agent_id` + `category` + `set` | Full per-turn visibility into what the model actually proposed |
-| L2 Cognition | RAG corpus uploaded via Knowledge Base (`kb_upload`) *[confirm]* | PRISM can check groundedness against our actual source documents, not a black box |
 | L3 Enforcement | Commit-window state transitions (`HELD → FROZEN → COMMITTED/ABORTED`) emitted as span metadata | The enforcement layer's behavior is itself observable, not just its outcome |
-| Whole call | `submit_trajectory` for goal adherence / tool compliance / efficiency / safety *[confirm availability]* | End-to-end call quality scored by PRISM's own trajectory evaluator, not just us |
 | Post-run | Sessions, automatic scores (Response Quality, CSAT, Intent), Root Cause & Remediation, Agent Intelligence failure clusters | Where and why v0 broke — used to write v1 |
 | Post-run | AI Remediation recommendations applied, human-reviewed | v1 is PRISM's own suggested fix, not our guess |
 | Cross-version | Fleet/session view filtered by `agent_id` | v0 vs v1 vs v2, side by side, in PRISM itself |
+| Fallback | JSON export of every trace + dashboard Import History | The whole story survives a live-network failure on stage |
+
+**Conditional — strengthens the pitch further if §20's answers are yes, not load-bearing if they aren't:**
+
+| Layer | PRISM touchpoint | Depends on |
+|---|---|---|
+| L1 Perception | Voice turns posted to `/api/voice/turns` | Confirming non-ElevenLabs sources are accepted (§20 Q3) |
+| L2 Cognition | RAG corpus uploaded via Knowledge Base (`kb_upload`) so groundedness is checked against our real source documents | Confirming availability on our tier (§20 Q5, was Q2) |
+| Whole call | `submit_trajectory` for goal adherence / tool compliance / efficiency / safety | Confirming Trajectory Evaluation is enabled on our tier (§20 Q4) |
 
 **What's honestly out of reach on our plan, stated up front rather than discovered on stage:** Guardrails, Evaluators Hub, and Annotations are locked on our dashboard tier. We do not pretend otherwise. The framing this earns us is actually stronger than pretending we have them: **ClaimGuard *is* the guardrail layer we built ourselves; PRISM is the independent auditor that checks our work** — a real separation of duties, which is the more sophisticated story to tell a room of people who build guardrail products for a living.
 
@@ -319,3 +337,25 @@ Each beat is deliberately mapped to a rubric line: beat 1–2 is Solution & Tech
 5. Does Import History consume credits, and are imported traces scored the same way live-ingested ones are?
 6. What exactly does the dashboard's "Compliance Score" measure, in PRISM's own words? (Documentation says CSAT — worth confirming directly.)
 7. Do the automatic scores behave sensibly on code-mixed, native-language audio, or is there a known blind spot there?
+
+---
+
+## 21. Anticipated judge objections, answered
+
+| Objection | Our answer |
+|---|---|
+| "Isn't a small model just a worse demo?" | No — it's the representative one (§10). A frontier model would hide the failure class PRISM exists to catch. |
+| "Couldn't a bigger model or a better prompt alone fix this?" | That's literally what v1 tests, empirically, using PRISM's own AI Remediation — not our assumption. The stretch bigger-model run in §10 asks the same question a second way. |
+| "60 examples, 20 held out — is that statistically meaningful?" | No, and we don't claim it is. It's a controlled diagnostic set with pre-registered labels, sized to catch a *specific, named* failure class per category, not to produce a publishable accuracy figure. We report raw counts per category (§12), not just aggregate percentages. |
+| "No real telephony — is this actually deployable?" | The transport layer (L0) is intentionally thin and swappable; the risk surface we solve (L1–L4) is identical whether audio arrives from a mic or a call bridge (§4). |
+| "Guardrails and Evaluators are locked on your plan — how is this 'heavy PRISM integration'?" | See §14's guaranteed tier: tracing, sessions, scores, root cause, AI Remediation, and cross-version comparison all work today, independent of those locks. |
+| "Isn't the 'Compliance Score' just CSAT?" | Yes, and we say so explicitly (§17) rather than headline it as compliance — naming it correctly is itself evidence we read the docs, not marketing copy. |
+| "How do we know the enforcement layer isn't just another prompt?" | It's deterministic code with no LLM in the enforcement path — a trace showing the model propose a bad action and the log showing it vetoed is directly inspectable in PRISM, not asserted. |
+
+---
+
+## 22. Change log (recursive self-improvement passes)
+
+- **Pass 1** added the fixed Minimum Viable Demo boundary (§2, invariant 9) so scope can't drift once the build starts, and reconciled §4/§5's apparent tension between "no real telephony" and "we're building what PRISM's customers run" explicitly rather than leaving it implicit.
+- **Pass 2** sharpened the Innovation argument in §10 (named the underlying principle, defined "passes the clean controls" precisely instead of leaving it vague), and derisked §14 by splitting it into a guaranteed tier that doesn't depend on the PRISM session going well, and a conditional tier that clearly does.
+- **Pass 3** added per-category dataset counts to §12 plus an explicit small-sample honesty caveat, and added §21, a direct table of the objections judges are most likely to raise — each answered from material already in this document, nothing new invented to answer them.
