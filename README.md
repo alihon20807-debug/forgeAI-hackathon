@@ -39,3 +39,14 @@ When running models locally on your laptop (`llama-server` on port 8080), cloud 
   ./scripts/expose_local_model.sh 8080
   ```
   This creates a secure HTTPS tunnel via **Cloudflare Tunnel (`cloudflared`)** (`https://<id>.trycloudflare.com`). Unlike free ngrok, this requires no account/token, has no bandwidth caps, and does not serve HTML interstitial warning pages that break API reverse proxies. Pinggy SSH is also available as an instant zero-binary fallback (`ssh -p 443 -R0:localhost:8080 a.pinggy.io`).
+
+## Cloud Model Alternative (Google AI Studio Gemma)
+
+For rapid iteration without local GPU thermal/setup overhead, connect ClaimGuard to **Google AI Studio** with **Gemma ~31B** (e.g. `gemma-2-27b-it`) via its OpenAI-compatible endpoint:
+- In `.env`:
+  ```env
+  LLM_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai/
+  LLM_API_KEY=<your-google-ai-studio-api-key>
+  LLM_MODEL=gemma-2-27b-it
+  ```
+- *Free-Tier Caution:* Mind usage limits (e.g. 15 RPM / daily quota). Use `--limit 3` for smoke runs or `USE_MOCK_LLM=true` during heavy testing to avoid 429 rate-limit errors.

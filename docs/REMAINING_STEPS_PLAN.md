@@ -86,13 +86,14 @@ Not blocking (the MVD boundary in `docs/Overall-plan.md` §2 invariant 9 is sati
 - [x] **Multi-round tool chaining & robust parsing:** Added multi-round execution loop (up to 4 rounds) with safe JSON & XML parsing (`_extract_text_tool_calls`), claim ID auto-injection, and fallback handling in `app/agent/runner.py`.
 - [x] **PRISM benchmark tooling & held-out ingestion:** Created `scripts/prism_benchmark.py` (`--smoke`, `--heldout`, `--export`, `--status`). Verified 3-call smoke test, completed 20 held-out calls for v0/v1/v2, and exported 181 trace sessions to `data/prism_traces_export.json` for Import History fallback.
 - [x] **PRISM reverse proxy & cloud reachability tooling ready:** since PRISM runs in the cloud and cannot reach `localhost:8080`, created `scripts/expose_local_model.sh` and added `--expose` flag to `scripts/run_local_model.sh`. Uses Cloudflare Tunnel (`cloudflared`, no sign-up, no HTML interstitial warning screen) to expose local `llama-server` at `https://<tunnel>.trycloudflare.com/v1`.
-- [x] All 50 tests pass offline in `tests/test_server.py`, `tests/test_agent_runner.py`, etc.
+- [x] **Backend inference flexibility — Google AI Studio (Gemma ~31B) for fast/reliable testing:** Given tight timelines, Google AI Studio with Gemma ~31B (e.g. `gemma-2-27b-it`) serves as a high-reliability cloud backend via its OpenAI-compatible endpoint (`https://generativelanguage.googleapis.com/v1beta/openai/`), avoiding local GPU setup/thermal overhead. *Caution:* Mind free-tier usage limits (e.g., 15 RPM / daily quotas); use bounded smoke runs (`--limit 3`) or mock mode (`USE_MOCK_LLM=true`) during rapid test iteration to prevent 429 quota exhaustion.
+- [x] All 53 tests pass offline in `tests/test_server.py`, `tests/test_agent_runner.py`, `tests/test_voice.py`, etc.
 
 ---
 
 ## 5. Phase 3 — Real Voice Audio & STT Validation (Ojas)
 
-- [ ] Fix `assets/audio/manifest.json` — its `filepath` fields are still absolute Windows paths (`C:\Curiosity\Hackathon\...`) from wherever it was generated; convert to relative paths so the pipeline works on any teammate's machine.
+- [x] Fix `assets/audio/manifest.json` — normalized absolute Windows paths to portable relative paths (`assets/audio/...`), regenerated all 20 synthetic clips, cleaned duplicate dictionary keys in generator script, and added automated regression test `test_audio_manifest_integrity` in `tests/test_voice.py`.
 - [ ] Record ~20 real-voice clips across categories A–F, with ambient highway/room noise, per `docs/Overall-plan.md` §12's real-voice-subset plan.
 - [ ] Run clips through `app/voice/transcriber.py`; confirm prompt-biasing captures code-mixed Hindi ("bhejo", "deductible maaf", "rehne do") and spoken digits, and that `app/security/pii_shield.py` still redacts correctly on noisier, real transcripts (not just the clean synthetic ones the checker uses).
 
