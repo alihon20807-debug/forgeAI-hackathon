@@ -164,3 +164,20 @@ async def test_llm_failure_resilience_fallback():
         # Verify fallback succeeded and did not raise an exception
         assert res["session_id"] == session_id
         assert len(res["agent_response"]) > 0
+
+
+def test_llama_cpp_server_wrapper():
+    """Verify LlamaCppServer resolves Holo 9B model path and reports status correctly."""
+    from app.agent.llama_server import LlamaCppServer
+
+    server = LlamaCppServer()
+    # 1. Model resolution
+    resolved = server.resolve_model_path()
+    assert "Holo-3.1-9B" in resolved or "gemma-4-12B" in resolved
+
+    # 2. Status inspection
+    status = server.get_status()
+    assert "healthy" in status
+    assert status["host"] == "127.0.0.1"
+    assert status["port"] == 8080
+

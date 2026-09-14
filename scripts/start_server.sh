@@ -19,4 +19,9 @@ echo " OpenAPI JSON: http://$HOST:$PORT/openapi.json"
 echo " WebSocket: ws://$HOST:$PORT/ws/session/{session_id}"
 echo "========================================================="
 
-exec uv run uvicorn app.server:app --host "$HOST" --port "$PORT" --reload
+UVICORN_BIN="$REPO_DIR/.venv/bin/uvicorn"
+if [ -f "$UVICORN_BIN" ]; then
+    exec "$UVICORN_BIN" app.server:app --host "$HOST" --port "$PORT" --reload
+else
+    exec uv run uvicorn app.server:app --host "$HOST" --port "$PORT" --reload
+fi
