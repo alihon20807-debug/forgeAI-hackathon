@@ -28,6 +28,7 @@ from app.config import (
     PRISMTRACE_HOST,
     PRISMTRACE_PROJECT_ID,
 )
+from app.db.database import init_db
 from app.observability.prism_tracer import PRISMTracer, TurnTracer
 from app.security.pii_shield import redact_pii
 
@@ -181,6 +182,21 @@ async def run_heldout_suite(tracer_client: PRISMTracer) -> None:
     logger.info("\nAll held-out runs completed and dispatched to PRISM.")
 
 
+async def run_trace_count(tracer_client: PRISMTracer, count: int) -> None:
+    """Ingest exactly ``count`` fresh v2 turns for a bounded dashboard check."""
+    if count < 1:
+        raise ValueError("count must be positive")
+
+    scenarios = load_replay_set()["scenarios"]
+    runner = AgentRunner(use_mock=True)
+    for index in range(count):
+        base = scenarios[index % len(scenarios)]
+        scenario = {**base, "id": f"prism50_{index + 1:03d}_{base['id']}", "turns": [base["turns"][0]]}
+        await run_scenario(scenario, version="v2", runner=runner, tracer_client=tracer_client)
+
+    logger.info(f"{count} v2 trace calls completed and dispatched to PRISM.")
+
+
 def export_traces_to_json() -> int:
     """Export local JSONL buffer to clean PRISM Import History JSON array."""
     if not TRACES_FILE.exists():
@@ -208,6 +224,7 @@ def main():
     parser = argparse.ArgumentParser(description="PRISM Telemetry & Benchmark Ingestion")
     parser.add_argument("--smoke", action="store_true", help="Run 3-call smoke test")
     parser.add_argument("--heldout", action="store_true", help="Run 20 held-out calls for v0/v1/v2")
+    parser.add_argument("--count", type=int, help="Run exactly this many fresh v2 trace calls")
     parser.add_argument("--export", action="store_true", help="Export local traces to JSON")
     parser.add_argument("--status", action="store_true", help="Check PRISM endpoint connectivity")
     parser.add_argument("--api-key", default=PRISMTRACE_API_KEY, help="PRISM API Key")
@@ -218,12 +235,17 @@ def main():
 
     tracer_client = PRISMTracer(host=args.host, project_id=args.project_id, api_key=args.api_key)
 
+    if args.smoke or args.heldout or args.count is not None:
+        init_db()
+
     if args.status:
         check_prism_connection(args.host, args.project_id, args.api_key)
     elif args.smoke:
         asyncio.run(run_smoke_test(tracer_client))
     elif args.heldout:
         asyncio.run(run_heldout_suite(tracer_client))
+    elif args.count is not None:
+        asyncio.run(run_trace_count(tracer_client, args.count))
     elif args.export:
         export_traces_to_json()
     else:
