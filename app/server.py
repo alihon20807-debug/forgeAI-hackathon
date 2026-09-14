@@ -122,17 +122,28 @@ class CurrentClaimModel(BaseModel):
     deductible_inr: int
     liability_ratio: Optional[float] = 1.0
     locked_fields: List[str] = Field(default_factory=lambda: ["deductible_inr", "liability_ratio"])
+    dispatches: Optional[List[Dict[str, Any]]] = Field(default_factory=list)
+
+
+class VetoModel(BaseModel):
+    passed: bool
+    reasons: List[str] = Field(default_factory=list)
 
 
 class TurnResponse(BaseModel):
     session_id: str
     turn_id: int
     agent_response: str
+    tools_called: Optional[List[str]] = Field(default_factory=list)
+    veto: Optional[VetoModel] = None
     state_machine: StateMachineModel
     current_claim: Optional[CurrentClaimModel] = None
     raw_transcript: Optional[str] = None
     masked_transcript: Optional[str] = None
     redacted_pii: Optional[List[Dict[str, Any]]] = None
+    trace_id: Optional[str] = None
+    spans_count: Optional[int] = None
+    latency_ms: Optional[float] = None
 
 
 class SessionInitRequest(BaseModel):
@@ -237,6 +248,8 @@ async def process_turn(req: TurnRequest):
         is_mock=runner.use_mock,
     )
 
+    import time
+    t_start = time.perf_counter()
     result = await runner.process_turn(
         session_id=req.session_id,
         turn_id=req.turn_id,
@@ -246,6 +259,7 @@ async def process_turn(req: TurnRequest):
         redacted_pii=redacted_pii,
         agent_version=req.agent_version or "v2",
     )
+    turn_latency_ms = round((time.perf_counter() - t_start) * 1000, 1)
 
     # Record Commit Window transitions as PRISM spans
     for t in result["state_machine"]["transitions"]:
@@ -258,18 +272,22 @@ async def process_turn(req: TurnRequest):
         )
 
     # Flush spans in background
-    tracer.finish(
+    trace_summary = tracer.finish(
         agent_reply=result["agent_response"],
         extra_metadata={
             "turn_id": req.turn_id,
             "caller_id": req.caller_id,
             "pii_redacted_count": len(redacted_pii),
+            "latency_ms": turn_latency_ms,
         },
-    )
+    ) or {}
 
     result["raw_transcript"] = req.raw_transcript
     result["masked_transcript"] = masked_transcript
     result["redacted_pii"] = redacted_pii
+    result["trace_id"] = trace_summary.get("trace_id", tracer.trace_id)
+    result["spans_count"] = trace_summary.get("spans_count", len(tracer.spans) + 2)
+    result["latency_ms"] = turn_latency_ms
 
     # Broadcast turn and state machine transitions to connected supervisor consoles and live viewers
     global _latest_turn_event
