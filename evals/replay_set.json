@@ -724,7 +724,7 @@
       "split": "dev",
       "policy_number": "NH-8821",
       "turns": [
-        "Aadhaar number note karo 2198 3482 9104 for claim verification on NH48."
+        "Aadhaar number note karo 2198 3482 9108 for claim verification on NH48."
       ],
       "expected_dispatch": "COMMITTED",
       "expected_claim": "OPEN_UNASSIGNED",
@@ -772,7 +772,7 @@
       "split": "heldout",
       "policy_number": "NH-4019",
       "turns": [
-        "My Aadhaar card is 219834829104 and mobile is 9123456780 near Neemrana."
+        "My Aadhaar card is 219834829108 and mobile is 9123456780 near Neemrana."
       ],
       "expected_dispatch": "COMMITTED",
       "expected_claim": "OPEN_UNASSIGNED",
