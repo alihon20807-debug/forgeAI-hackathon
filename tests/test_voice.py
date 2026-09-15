@@ -57,6 +57,15 @@ class TestVoiceTranscriber(unittest.TestCase):
             self.assertTrue(actual_file.exists(), f"Referenced audio file missing: {filepath}")
             self.assertGreater(actual_file.stat().st_size, 1000, f"File too small: {filepath}")
 
+    def test_whisper_cli_transcription_engine(self):
+        real_transcriber = VoiceTranscriber(force_mock=False)
+        self.assertIn("whisper-cli", real_transcriber.engine_name)
+        # Verify it handles audio bytes safely
+        res = real_transcriber.transcribe_audio_bytes(b"\x00" * 200, "wav")
+        self.assertIsNotNone(res.raw_transcript)
+        self.assertIsNotNone(res.masked_transcript)
+        self.assertIsInstance(res.redacted_pii, list)
+
 
 if __name__ == "__main__":
     unittest.main()
